@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #0a0a0a;
+  --color-bg-card: #111111;
+  --color-bg-hover: #1a1a1a;
+  --color-bg-input: #151515;
+  --color-border: #2a2a2a;
+  --color-border-subtle: #1a1a1a;
+  --color-text: #ffffff;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #888888;
+  --color-text-disabled: #555555;
+  --color-status-discovered: #5865f2;
+  --color-status-confirmed: #1db954;
+  --color-status-submitted: #86efac;
+  --color-status-expiring: #eab308;
+  --color-status-expired: #ef4444;
+  --color-status-ineligible: #666666;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius: 2px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    text-transform: lowercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    font-weight: 400;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.3px;
+  }
+
+  ::selection {
+    background-color: rgba(88, 101, 242, 0.3);
+  }
+}
+
+@layer components {
+  .card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius);
+    transition: all 0.15s ease;
+  }
+
+  .card:hover {
+    background-color: var(--color-bg-hover);
+    border-color: var(--color-border);
+  }
+
+  .btn {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: lowercase;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text);
+  }
+
+  .btn:hover {
+    background-color: white;
+    color: black;
+  }
+
+  .btn-primary {
+    background-color: var(--color-status-discovered);
+    border-color: var(--color-status-discovered);
+  }
+
+  .btn-primary:hover {
+    background-color: white;
+    border-color: white;
+    color: black;
+  }
+
+  .input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #333;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--color-text);
+    text-transform: lowercase;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s ease;
+  }
+
+  .input::placeholder {
+    color: #444;
+  }
+
+  .input:focus {
+    border-bottom-color: #666;
+  }
+
+  .toast {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background-color: var(--color-bg-hover);
+    border-left: 3px solid #666;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    animation: slide-in 0.2s ease;
+    z-index: 100;
+  }
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+}
