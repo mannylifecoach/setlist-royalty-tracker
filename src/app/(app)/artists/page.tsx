@@ -12,14 +12,15 @@ interface Artist {
 export default function ArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
 
-  useEffect(() => {
-    loadArtists();
-  }, []);
-
   async function loadArtists() {
     const res = await fetch('/api/artists');
     if (res.ok) setArtists(await res.json());
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadArtists();
+  }, []);
 
   async function handleAdd(sfArtist: { mbid: string; name: string }) {
     const res = await fetch('/api/artists', {

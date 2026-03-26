@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
 import type { PerformanceStatus } from '@/lib/constants';
@@ -29,16 +29,17 @@ export default function PerformancesPage() {
   const [filter, setFilter] = useState<string>('all');
   const router = useRouter();
 
-  useEffect(() => {
-    loadData();
-  }, [filter]);
-
-  async function loadData() {
+  const loadData = useCallback(async function loadData() {
     const params = new URLSearchParams();
     if (filter !== 'all') params.set('status', filter);
     const res = await fetch(`/api/performances?${params}`);
     if (res.ok) setData(await res.json());
-  }
+  }, [filter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, [loadData]);
 
   async function handleConfirm(ids: string[]) {
     await fetch('/api/performances/bulk-confirm', {

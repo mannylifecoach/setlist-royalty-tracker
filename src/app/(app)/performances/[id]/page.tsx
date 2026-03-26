@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/status-badge';
 import type { PerformanceStatus } from '@/lib/constants';
@@ -33,11 +33,7 @@ export default function PerformanceDetailPage({
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    loadPerformance();
-  }, [id]);
-
-  async function loadPerformance() {
+  const loadPerformance = useCallback(async function loadPerformance() {
     const res = await fetch('/api/performances');
     if (!res.ok) return;
     const all = await res.json();
@@ -49,7 +45,11 @@ export default function PerformanceDetailPage({
       setSongTitle(match.song.title);
       setArtistName(match.artist.artistName);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    loadPerformance();
+  }, [loadPerformance]);
 
   async function handleSave(field: string, value: string | number | null) {
     setSaving(true);
