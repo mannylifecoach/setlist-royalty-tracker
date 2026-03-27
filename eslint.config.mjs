@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Chrome extension (has its own tsconfig, bundled by esbuild)
+    "extension/**",
   ]),
 ]);
 
