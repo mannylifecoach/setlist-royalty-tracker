@@ -22,7 +22,7 @@ function LoginForm() {
           <p className="text-[13px] text-text-secondary">
             we sent you a magic link. click it to sign in.
           </p>
-          <Link href="/login" className="text-[12px] text-text-muted hover:text-text transition-colors">
+          <Link href="/login" className="text-[12px] text-text-muted hover:opacity-50 transition-opacity">
             try again
           </Link>
         </div>
@@ -43,7 +43,7 @@ function LoginForm() {
         <div className="text-center space-y-2">
           <Link
             href="/"
-            className="text-[14px] font-medium tracking-[-0.3px] hover:text-text-secondary transition-colors"
+            className="text-[14px] tracking-[-0.3px] hover:opacity-50 transition-opacity"
           >
             setlist royalty tracker
           </Link>

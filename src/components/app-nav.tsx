@@ -20,10 +20,10 @@ export function AppNav() {
         <Link
           key={href}
           href={href}
-          className={`text-[12px] transition-colors ${
+          className={`text-[12px] transition-opacity ${
             pathname.startsWith(href)
-              ? 'text-text font-medium'
-              : 'text-text-muted hover:text-text-secondary'
+              ? 'text-text'
+              : 'text-text-muted hover:opacity-60'
           }`}
         >
           {label}
