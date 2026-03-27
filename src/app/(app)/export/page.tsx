@@ -44,6 +44,17 @@ export default function ExportPage() {
           download a csv formatted for your pro. only confirmed performances are
           shown.
         </p>
+        <div className="card p-3 mt-3">
+          <p className="text-[11px] text-text-secondary">
+            <span className="text-status-confirmed">tip:</span> for bmi live,
+            use the{' '}
+            <a href="/settings" className="text-status-discovered hover:underline">
+              chrome extension
+            </a>{' '}
+            to auto-fill forms directly — no csv needed. generate an api key in
+            settings to get started.
+          </p>
+        </div>
       </div>
 
       {data.length > 0 ? (

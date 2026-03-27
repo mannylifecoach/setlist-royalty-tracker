@@ -42,11 +42,24 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="card p-5">
-              <div className="text-[11px] text-text-muted mb-2">export</div>
+              <div className="text-[11px] text-text-muted mb-2">submit</div>
               <p className="text-[12px] text-text-secondary leading-relaxed">
-                download csv formatted for bmi live or ascap onstage submission
+                auto-fill bmi live forms with our chrome extension, or export
+                csv for manual upload
               </p>
             </div>
+          </div>
+
+          <div className="card p-5 text-left space-y-2">
+            <div className="text-[11px] text-text-muted">chrome extension</div>
+            <p className="text-[12px] text-text-secondary leading-relaxed">
+              skip the manual data entry. our chrome extension pre-fills bmi
+              live&apos;s 3-step wizard — performer, venue, dates, setlist — directly
+              from your confirmed performances. just review and click submit.
+            </p>
+            <p className="text-[11px] text-text-disabled">
+              5+ minutes of typing per show → ~30 seconds of review
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -62,8 +75,9 @@ export default function LandingPage() {
             <p className="text-[11px] text-text-muted">
               supports both{' '}
               <span className="text-text-secondary">bmi live</span> and{' '}
-              <span className="text-text-secondary">ascap onstage</span> · 9
-              month expiration tracking · email notifications
+              <span className="text-text-secondary">ascap onstage</span> ·
+              chrome extension auto-fill · csv export · 9 month expiration
+              tracking · email notifications
             </p>
           </div>
         </div>
