@@ -17,6 +17,7 @@ export const users = pgTable('users', {
   image: text('image'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+  apiKey: text('api_key').unique(),
 });
 
 export const accounts = pgTable('accounts', {
@@ -125,6 +126,16 @@ export const performances = pgTable('performances', {
   venueAddress: text('venue_address'),
   venuePhone: text('venue_phone'),
   attendance: integer('attendance'),
+  eventName: text('event_name'),
+  eventType: text('event_type').default('Concert (Most Common)'),
+  startTimeHour: text('start_time_hour'),
+  startTimeAmPm: text('start_time_am_pm'),
+  endTimeHour: text('end_time_hour'),
+  endTimeAmPm: text('end_time_am_pm'),
+  venueZip: text('venue_zip'),
+  venueType: text('venue_type'),
+  venueCapacity: text('venue_capacity'),
+  ticketCharge: text('ticket_charge'),
   status: text('status')
     .$type<'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'>()
     .default('discovered')

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div id="app">
+    <h1>BMI Live Auto-Fill Settings</h1>
+    <p class="subtitle">Connect to your Setlist Royalty Tracker account</p>
+
+    <div class="form-group">
+      <label for="apiUrl">App URL</label>
+      <input type="url" id="apiUrl" placeholder="https://your-app.vercel.app" />
+      <span class="hint">The URL where your Setlist Royalty Tracker is hosted</span>
+    </div>
+
+    <div class="form-group">
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="srt_..." />
+      <span class="hint">Generate this in Settings → Chrome Extension</span>
+    </div>
+
+    <div class="actions">
+      <button id="save" class="btn btn-primary">Save</button>
+      <button id="test" class="btn">Test Connection</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

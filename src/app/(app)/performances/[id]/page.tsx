@@ -4,6 +4,7 @@ import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/status-badge';
 import type { PerformanceStatus } from '@/lib/constants';
+import { BMI_EVENT_TYPES, BMI_VENUE_TYPES, BMI_HOURS } from '@/lib/constants';
 
 interface PerformanceDetail {
   id: string;
@@ -19,6 +20,16 @@ interface PerformanceDetail {
   expiresAt: string | null;
   setlistFmUrl: string | null;
   tourName: string | null;
+  eventName: string | null;
+  eventType: string | null;
+  startTimeHour: string | null;
+  startTimeAmPm: string | null;
+  endTimeHour: string | null;
+  endTimeAmPm: string | null;
+  venueZip: string | null;
+  venueType: string | null;
+  venueCapacity: string | null;
+  ticketCharge: string | null;
 }
 
 export default function PerformanceDetailPage({
@@ -184,6 +195,74 @@ export default function PerformanceDetailPage({
         />
       </div>
 
+      <div className="card p-4 space-y-4">
+        <div className="text-[11px] text-text-muted">bmi live details</div>
+
+        <EditableField
+          label="event name"
+          value={perf.eventName}
+          onSave={(v) => handleSave('eventName', v)}
+        />
+        <SelectField
+          label="event type"
+          value={perf.eventType}
+          options={BMI_EVENT_TYPES as unknown as string[]}
+          onSave={(v) => handleSave('eventType', v)}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField
+            label="start time"
+            value={perf.startTimeHour}
+            options={BMI_HOURS as unknown as string[]}
+            onSave={(v) => handleSave('startTimeHour', v)}
+          />
+          <SelectField
+            label="start am/pm"
+            value={perf.startTimeAmPm}
+            options={['AM', 'PM']}
+            onSave={(v) => handleSave('startTimeAmPm', v)}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField
+            label="end time"
+            value={perf.endTimeHour}
+            options={BMI_HOURS as unknown as string[]}
+            onSave={(v) => handleSave('endTimeHour', v)}
+          />
+          <SelectField
+            label="end am/pm"
+            value={perf.endTimeAmPm}
+            options={['AM', 'PM']}
+            onSave={(v) => handleSave('endTimeAmPm', v)}
+          />
+        </div>
+        <SelectField
+          label="ticket charge"
+          value={perf.ticketCharge}
+          options={['Yes', 'No']}
+          onSave={(v) => handleSave('ticketCharge', v)}
+        />
+        <EditableField
+          label="venue zip"
+          value={perf.venueZip}
+          onSave={(v) => handleSave('venueZip', v)}
+        />
+        <SelectField
+          label="venue type"
+          value={perf.venueType}
+          options={BMI_VENUE_TYPES as unknown as string[]}
+          onSave={(v) => handleSave('venueType', v)}
+        />
+        <EditableField
+          label="venue capacity"
+          value={perf.venueCapacity}
+          onSave={(v) => handleSave('venueCapacity', v)}
+        />
+      </div>
+
+      <BmiReadiness perf={perf} />
+
       <div className="flex gap-2">
         {perf.status === 'discovered' && (
           <button
@@ -278,6 +357,75 @@ function EditableField({
           save
         </button>
       </div>
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  onSave,
+}: {
+  label: string;
+  value: string | null;
+  options: string[];
+  onSave: (value: string | null) => void;
+}) {
+  return (
+    <div>
+      <div className="text-[11px] text-text-muted">{label}</div>
+      <select
+        value={value || ''}
+        onChange={(e) => onSave(e.target.value || null)}
+        className="input text-[13px] w-full"
+      >
+        <option value="">select...</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function BmiReadiness({ perf }: { perf: PerformanceDetail }) {
+  const requiredFields: { label: string; filled: boolean }[] = [
+    { label: 'venue name', filled: !!perf.venueName },
+    { label: 'venue city', filled: !!perf.venueCity },
+    { label: 'venue state', filled: !!perf.venueState },
+    { label: 'venue address', filled: !!perf.venueAddress },
+    { label: 'start time', filled: !!perf.startTimeHour && !!perf.startTimeAmPm },
+    { label: 'end time', filled: !!perf.endTimeHour && !!perf.endTimeAmPm },
+    { label: 'ticket charge', filled: !!perf.ticketCharge },
+  ];
+
+  const filledCount = requiredFields.filter((f) => f.filled).length;
+  const allFilled = filledCount === requiredFields.length;
+
+  return (
+    <div className="card p-4 space-y-2">
+      <div className="flex items-center gap-2">
+        <div
+          className={`w-2 h-2 rounded-full ${
+            allFilled ? 'bg-status-confirmed' : 'bg-status-expiring'
+          }`}
+        />
+        <div className="text-[11px] text-text-muted">
+          bmi ready: {filledCount}/{requiredFields.length} fields
+        </div>
+      </div>
+      {!allFilled && (
+        <div className="text-[11px] text-text-disabled">
+          missing:{' '}
+          {requiredFields
+            .filter((f) => !f.filled)
+            .map((f) => f.label)
+            .join(', ')}
+        </div>
+      )}
     </div>
   );
 }

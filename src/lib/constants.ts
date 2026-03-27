@@ -47,3 +47,57 @@ export const ASCAP_ONSTAGE_FIELDS = [
 
 export const SETLISTFM_BASE_URL = 'https://api.setlist.fm/rest/1.0';
 export const SETLISTFM_RATE_LIMIT_MS = 100;
+
+// BMI Live attendance ranges
+export const BMI_ATTENDANCE_RANGES = [
+  { min: 0, max: 250, label: '0 - 250' },
+  { min: 251, max: 1000, label: '251 - 1000' },
+  { min: 1001, max: 5000, label: '1001 - 5000' },
+  { min: 5001, max: Infinity, label: '5001+' },
+] as const;
+
+export function mapAttendanceToBmiRange(attendance: number | null): string {
+  if (attendance === null || attendance === undefined) return '0 - 250';
+  const range = BMI_ATTENDANCE_RANGES.find(
+    (r) => attendance >= r.min && attendance <= r.max
+  );
+  return range?.label ?? '5001+';
+}
+
+// BMI Live event types
+export const BMI_EVENT_TYPES = [
+  'Concert (Most Common)',
+  'Festival',
+  'Corporate Event',
+  'Private Event',
+  'Benefit/Charity',
+  'Other',
+] as const;
+
+// BMI Live venue types
+export const BMI_VENUE_TYPES = [
+  'Arena',
+  'Amphitheater',
+  'Bar/Lounge',
+  'Casino',
+  'Church',
+  'Club/Nightclub',
+  'College/University',
+  'Concert Hall',
+  'Convention Center',
+  'Fair/Festival Grounds',
+  'Hotel/Resort',
+  'Outdoor Venue',
+  'Performing Arts Center',
+  'Restaurant',
+  'Stadium',
+  'Theater',
+  'Winery/Brewery',
+  'Other',
+] as const;
+
+// BMI time hour options (for dropdowns)
+export const BMI_HOURS = [
+  '12:00', '1:00', '2:00', '3:00', '4:00', '5:00',
+  '6:00', '7:00', '8:00', '9:00', '10:00', '11:00',
+] as const;

@@ -25,6 +25,16 @@ export async function PATCH(
     'venueAddress',
     'venuePhone',
     'attendance',
+    'eventName',
+    'eventType',
+    'startTimeHour',
+    'startTimeAmPm',
+    'endTimeHour',
+    'endTimeAmPm',
+    'venueZip',
+    'venueType',
+    'venueCapacity',
+    'ticketCharge',
   ] as const;
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };
