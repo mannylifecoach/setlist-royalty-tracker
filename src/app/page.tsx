@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HowItWorks } from '@/components/how-it-works';
+import { WhyThisMatters } from '@/components/why-this-matters';
 import { ShaderLines } from '@/components/ui/shader-lines';
 
 export default function LandingPage() {
@@ -40,6 +41,8 @@ export default function LandingPage() {
         <div className="max-w-[640px] text-center space-y-12">
 
           <HowItWorks />
+
+          <WhyThisMatters />
 
           <div className="border border-border-subtle p-6 text-left space-y-3">
             <div className="text-[11px] text-text-muted">chrome extension</div>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ProExplainer } from '@/components/pro-explainer';
 import { DataProvenance } from '@/components/data-provenance';
 import { TrustBadges } from '@/components/trust-badges';
+import { ScreenshotWalkthrough } from '@/components/screenshot-walkthrough';
 import { FAQ } from '@/components/faq';
 
 export default function AboutPage() {
@@ -36,6 +37,8 @@ export default function AboutPage() {
           <ProExplainer />
 
           <DataProvenance />
+
+          <ScreenshotWalkthrough />
 
           <TrustBadges />
 
