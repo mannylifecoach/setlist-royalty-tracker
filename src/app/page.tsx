@@ -8,9 +8,14 @@ export default function LandingPage() {
         <span className="text-[14px] tracking-[-0.3px]">
           setlist royalty tracker
         </span>
-        <Link href="/login" className="btn text-[11px]">
-          sign in
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/about" className="text-[11px] text-text-muted hover:text-text-secondary transition-colors">
+            about
+          </Link>
+          <Link href="/login" className="btn text-[11px]">
+            sign in
+          </Link>
+        </div>
       </nav>
 
       <main className="flex-1 flex items-center justify-center px-[4vw] py-[6vw]">
@@ -50,13 +55,18 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="pt-10 border-t border-border-subtle">
+          <div className="pt-10 border-t border-border-subtle space-y-3">
             <p className="text-[11px] text-text-muted leading-[1.6]">
               supports both{' '}
               <span className="text-text-secondary">bmi live</span> and{' '}
               <span className="text-text-secondary">ascap onstage</span> ·
               chrome extension auto-fill · csv export · 9 month expiration
               tracking · email notifications
+            </p>
+            <p className="text-[11px] text-text-disabled">
+              <Link href="/about" className="underline hover:text-text-muted transition-colors">
+                learn how it works & why you can trust us
+              </Link>
             </p>
           </div>
         </div>
