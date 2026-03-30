@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HowItWorks } from '@/components/how-it-works';
 
 export default function LandingPage() {
   return (
@@ -26,29 +27,7 @@ export default function LandingPage() {
             setlist.fm has 9.6m+ crowdsourced setlists — we bridge that gap.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[1px]">
-            <div className="border border-border-subtle p-6">
-              <div className="text-[11px] text-text-muted mb-3">monitor</div>
-              <p className="text-[12px] text-text-secondary leading-[1.5]">
-                we scan setlist.fm for performances of your songs by artists you
-                track
-              </p>
-            </div>
-            <div className="border border-border-subtle p-6">
-              <div className="text-[11px] text-text-muted mb-3">review</div>
-              <p className="text-[12px] text-text-secondary leading-[1.5]">
-                verify discovered performances, fill in venue details, track
-                expiration dates
-              </p>
-            </div>
-            <div className="border border-border-subtle p-6">
-              <div className="text-[11px] text-text-muted mb-3">submit</div>
-              <p className="text-[12px] text-text-secondary leading-[1.5]">
-                auto-fill bmi live forms with our chrome extension, or export
-                csv for manual upload
-              </p>
-            </div>
-          </div>
+          <HowItWorks />
 
           <div className="border border-border-subtle p-6 text-left space-y-3">
             <div className="text-[11px] text-text-muted">chrome extension</div>
