@@ -12,7 +12,7 @@ export default function AboutPage() {
           setlist royalty tracker
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/about" className="text-[11px] text-text-secondary">
+          <Link href="/about" className="btn text-[11px]">
             about
           </Link>
           <Link href="/login" className="btn text-[11px]">

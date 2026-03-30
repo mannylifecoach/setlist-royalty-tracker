@@ -19,16 +19,16 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative h-[350px] sm:h-[500px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[70vh] sm:h-[85vh] flex items-center justify-center overflow-hidden">
         <ShaderLines />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-[1]" />
         <div className="relative z-[2] text-center space-y-4 sm:space-y-6 px-6 sm:px-[4vw]">
-          <h1 className="text-[28px] sm:text-[36px] font-normal tracking-[-1px] leading-[1.1]">
+          <h1 className="text-[40px] sm:text-[56px] font-normal tracking-[-2px] leading-[1.05]">
             stop leaving royalties
             <br />
             on the table
           </h1>
-          <p className="text-text-secondary text-[13px] sm:text-[14px] leading-[1.5] max-w-[460px] mx-auto">
+          <p className="text-text-secondary text-[15px] sm:text-[17px] leading-[1.5] max-w-[520px] mx-auto">
             bmi and ascap only auto-track the top 200-300 tours. every other
             live performance goes unreported unless you manually log it.
             setlist.fm has 9.6m+ crowdsourced setlists — we bridge that gap.
