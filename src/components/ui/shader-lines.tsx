@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react"
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   interface Window {
-    THREE: typeof import("three")
+    THREE: any
   }
 }
 
