@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 const steps = [
   {
     number: '01',
@@ -124,14 +122,6 @@ export function HowItWorks() {
         ))}
       </div>
 
-      <div className="text-center pt-2">
-        <Link
-          href="/login"
-          className="btn btn-primary inline-block px-10 py-3 text-[13px]"
-        >
-          get started free
-        </Link>
-      </div>
     </section>
   );
 }
