@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BMI Live — Mock Test Environment</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    /* Header */
+    .bmi-header {
+      background: #002b5c;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bmi-header h1 { font-size: 18px; font-weight: 600; }
+    .bmi-header .env-badge {
+      background: #e74c3c;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Wizard container */
+    .wizard {
+      max-width: 720px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    /* Step indicator */
+    .step-indicator {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .step-tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #999;
+      background: #fafafa;
+      border-right: 1px solid #e0e0e0;
+      cursor: default;
+    }
+    .step-tab:last-child { border-right: none; }
+    .step-tab.active { color: #002b5c; background: #fff; border-bottom: 3px solid #002b5c; }
+    .step-tab.completed { color: #27ae60; }
+
+    /* Form content */
+    .step-content { padding: 24px; display: none; }
+    .step-content.active { display: block; }
+
+    .form-section { margin-bottom: 20px; }
+    .form-section h3 {
+      font-size: 14px;
+      color: #002b5c;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .form-group input,
+    .form-group select {
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #002b5c;
+      box-shadow: 0 0 0 2px rgba(0,43,92,0.1);
+    }
+
+    /* Ticket charge radio buttons */
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      padding-top: 4px;
+    }
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      cursor: pointer;
+    }
+
+    /* Song list */
+    .song-catalog {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .song-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .song-list-item:last-child { border-bottom: none; }
+    .song-list-item:hover { background: #f8f9fa; }
+    .song-title { font-size: 14px; }
+    .song-work-id { font-size: 11px; color: #999; margin-left: 8px; }
+    .add-song-btn {
+      background: #002b5c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .add-song-btn:hover { background: #003d80; }
+    .add-song-btn.added {
+      background: #27ae60;
+      cursor: default;
+    }
+
+    /* Added setlist */
+    .added-setlist {
+      margin-top: 16px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 4px;
+    }
+    .added-setlist h4 { font-size: 13px; color: #166534; margin-bottom: 8px; }
+    .added-setlist .added-song {
+      font-size: 13px;
+      padding: 4px 0;
+      color: #333;
+    }
+
+    /* Summary */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .summary-table tr { border-bottom: 1px solid #f0f0f0; }
+    .summary-table td {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .summary-table td:first-child {
+      font-weight: 600;
+      color: #666;
+      width: 140px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 4px;
+    }
+    .checkbox-group label {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #555;
+    }
+
+    /* Buttons */
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-back { background: #e0e0e0; color: #333; }
+    .btn-back:hover { background: #d0d0d0; }
+    button.next, .wizard-next {
+      background: #002b5c;
+      color: #fff;
+    }
+    button.next:hover, .wizard-next:hover { background: #003d80; }
+    button[type="submit"], button[data-action="submit"] {
+      background: #27ae60;
+      color: #fff;
+    }
+    button[type="submit"]:hover { background: #219a52; }
+    button[type="submit"]:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* New Venue Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .modal-backdrop.open { display: flex; align-items: center; justify-content: center; }
+    .modal {
+      background: #fff;
+      border-radius: 8px;
+      width: 480px;
+      max-width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 16px; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; }
+    .modal-body { padding: 20px; }
+    .modal-body .form-group { margin-bottom: 12px; }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #e0e0e0;
+      text-align: right;
+    }
+
+    /* Log panel */
+    .log-panel {
+      max-width: 720px;
+      margin: 16px auto;
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 16px;
+      color: #a0a0c0;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .log-panel h4 { color: #4ade80; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .log-entry { padding: 2px 0; }
+    .log-entry.change { color: #4ade80; }
+    .log-entry.info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+
+<div class="bmi-header">
+  <h1>BMI Live Performance Reporting</h1>
+  <span class="env-badge">Mock Test Environment</span>
+</div>
+
+<!-- Step Indicator -->
+<div class="wizard">
+  <div class="step-indicator">
+    <div class="step-tab active" id="tab-1">1. Performance Details</div>
+    <div class="step-tab" id="tab-2">2. Setlist</div>
+    <div class="step-tab" id="tab-3">3. Summary</div>
+  </div>
+
+  <!-- STEP 1: Details -->
+  <div class="step-content active" id="step-1">
+
+    <div class="form-section">
+      <h3>Performance Information</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="performer">Band / Performer</label>
+          <select name="performer" id="performer" data-field="performer">
+            <option value="">-- Select --</option>
+            <option value="fred-again">Fred Again..</option>
+            <option value="skrillex">Skrillex</option>
+            <option value="four-tet">Four Tet</option>
+            <option value="bicep">Bicep</option>
+            <option value="disclosure">Disclosure</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="eventName">Event Name</label>
+          <input type="text" name="eventName" id="eventName" data-field="eventName" placeholder="e.g. Coachella 2025">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="eventType">Event Type</label>
+          <select name="eventType" id="eventType" data-field="eventType">
+            <option value="">-- Select --</option>
+            <option value="Concert (Most Common)">Concert (Most Common)</option>
+            <option value="Festival">Festival</option>
+            <option value="Club Event">Club Event</option>
+            <option value="Private Event">Private Event</option>
+            <option value="Corporate Event">Corporate Event</option>
+            <option value="Benefit/Charity">Benefit/Charity</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="attendance">Attendance</label>
+          <select name="attendance" id="attendance" data-field="attendance">
+            <option value="">-- Select --</option>
+            <option value="0 - 250">0 - 250</option>
+            <option value="251 - 1000">251 - 1,000</option>
+            <option value="1001 - 5000">1,001 - 5,000</option>
+            <option value="5001+">5,001+</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Date & Time</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Start Date</label>
+          <input type="text" name="startDate" id="startDate" data-field="startDate" placeholder="MM/DD/YYYY">
+        </div>
+        <div class="form-group">
+          <label for="startHour">Start Time</label>
+          <select name="startHour" id="startHour" data-field="startHour">
+            <option value="">-- Hour --</option>
+            <option value="12:00">12:00</option>
+            <option value="1:00">1:00</option>
+            <option value="2:00">2:00</option>
+            <option value="3:00">3:00</option>
+            <option value="4:00">4:00</option>
+            <option value="5:00">5:00</option>
+            <option value="6:00">6:00</option>
+            <option value="7:00">7:00</option>
+            <option value="8:00">8:00</option>
+            <option value="9:00">9:00</option>
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="startAmPm">AM/PM</label>
+          <select name="startAmPm" id="startAmPm" data-field="startAmPm">
+            <option value="">--</option>
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="endDate">End Date</label>
+          <input type="text" name="endDate" id="endDate" data-field="endDate" placeholder="MM/DD/YYYY">
+        </div>
+        <div class="form-group">
+          <label for="endHour">End Time</label>
+          <select name="endHour" id="endHour" data-field="endHour">
+            <option value="">-- Hour --</option>
+            <option value="12:00">12:00</option>
+            <option value="1:00">1:00</option>
+            <option value="2:00">2:00</option>
+            <option value="3:00">3:00</option>
+            <option value="4:00">4:00</option>
+            <option value="5:00">5:00</option>
+            <option value="6:00">6:00</option>
+            <option value="7:00">7:00</option>
+            <option value="8:00">8:00</option>
+            <option value="9:00">9:00</option>
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="endAmPm">AM/PM</label>
+          <select name="endAmPm" id="endAmPm" data-field="endAmPm">
+            <option value="">--</option>
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Ticket Information</h3>
+      <div class="form-group">
+        <label>Ticket Charge</label>
+        <div class="radio-group">
+          <label><input type="radio" name="ticketCharge" data-field="ticketCharge" value="Yes"> Yes</label>
+          <label><input type="radio" name="ticketCharge" data-field="ticketCharge" value="No"> No</label>
+          <label><input type="radio" name="ticketCharge" data-field="ticketCharge" value="Donation"> Donation</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Venue</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="previousVenue">Previously Performed Venues</label>
+          <select name="previousVenue" id="previousVenue" data-field="previousVenue">
+            <option value="">-- Select or Add New --</option>
+            <option value="v1">Madison Square Garden, New York, NY</option>
+            <option value="v2">The Roxy Theatre, Los Angeles, CA</option>
+            <option value="v3">Printworks, London, UK</option>
+            <option value="v4">Avant Gardner, Brooklyn, NY</option>
+            <option value="v5">Red Rocks Amphitheatre, Morrison, CO</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="venueState">State</label>
+          <select name="venueState" id="venueState" data-field="venueState">
+            <option value="">-- Select --</option>
+            <option value="CA">California</option>
+            <option value="CO">Colorado</option>
+            <option value="FL">Florida</option>
+            <option value="IL">Illinois</option>
+            <option value="NY">New York</option>
+            <option value="TX">Texas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="venueCity">City</label>
+          <input type="text" name="venueCity" id="venueCity" data-field="venueCity" placeholder="City">
+        </div>
+        <div class="form-group">
+          <label for="venueName">Venue Name</label>
+          <input type="text" name="venueName" id="venueName" data-field="venueName" placeholder="Venue name">
+        </div>
+      </div>
+      <button type="button" class="btn btn-back" onclick="openNewVenueModal()" style="margin-top: 4px; font-size: 12px; padding: 6px 14px;">+ Add New Venue</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Setlist -->
+  <div class="step-content" id="step-2">
+    <div class="form-section">
+      <h3>Search &amp; Add Songs</h3>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="songSearch">Search BMI Catalog</label>
+        <input type="text" name="songSearch" id="songSearch" data-field="songSearch" placeholder="Search by title or BMI Work ID...">
+      </div>
+
+      <div class="song-catalog" id="songCatalog">
+        <div class="song-list-item" data-song-title="Delilah (pull me out of this)">
+          <div><span class="song-title">Delilah (pull me out of this)</span><span class="song-work-id">BMI: 42091837</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Turn On The Lights again..">
+          <div><span class="song-title">Turn On The Lights again..</span><span class="song-work-id">BMI: 42091838</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Leavemealone">
+          <div><span class="song-title">Leavemealone</span><span class="song-work-id">BMI: 42091839</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Danielle (smile on my face)">
+          <div><span class="song-title">Danielle (smile on my face)</span><span class="song-work-id">BMI: 42091840</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Bleu (better with time)">
+          <div><span class="song-title">Bleu (better with time)</span><span class="song-work-id">BMI: 42091841</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Rumble">
+          <div><span class="song-title">Rumble</span><span class="song-work-id">BMI: 42091842</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="Marea (we've lost dancing)">
+          <div><span class="song-title">Marea (we've lost dancing)</span><span class="song-work-id">BMI: 42091843</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+        <div class="song-list-item" data-song-title="ten">
+          <div><span class="song-title">ten</span><span class="song-work-id">BMI: 42091844</span></div>
+          <button class="add-song-btn" data-action="add-song">+ Add</button>
+        </div>
+      </div>
+
+      <div class="added-setlist" id="addedSetlist" style="display:none;">
+        <h4>Added to Setlist</h4>
+        <div id="addedSongsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Summary -->
+  <div class="step-content" id="step-3">
+    <div class="form-section">
+      <h3>Performance Summary</h3>
+      <table class="summary-table" id="summaryTable">
+        <tr><td>Performer</td><td id="sum-performer">--</td></tr>
+        <tr><td>Event</td><td id="sum-event">--</td></tr>
+        <tr><td>Event Type</td><td id="sum-eventType">--</td></tr>
+        <tr><td>Date</td><td id="sum-date">--</td></tr>
+        <tr><td>Time</td><td id="sum-time">--</td></tr>
+        <tr><td>Venue</td><td id="sum-venue">--</td></tr>
+        <tr><td>Attendance</td><td id="sum-attendance">--</td></tr>
+        <tr><td>Ticket Charge</td><td id="sum-ticket">--</td></tr>
+        <tr><td>Songs</td><td id="sum-songs">--</td></tr>
+      </table>
+
+      <div class="checkbox-group">
+        <input type="checkbox" name="certification" id="certification">
+        <label for="certification">I certify that the above information is true and accurate to the best of my knowledge, and that I am authorized to submit this performance report.</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="form-actions">
+    <button class="btn btn-back" id="btnBack" style="display:none;" onclick="prevStep()">Back</button>
+    <div></div>
+    <button class="btn next wizard-next" id="btnNext" data-action="next" onclick="nextStep()">Next</button>
+    <button class="btn" type="submit" id="btnSubmit" data-action="submit" style="display:none;" onclick="handleSubmit()">Submit Performance</button>
+  </div>
+</div>
+
+<!-- New Venue Modal -->
+<div class="modal-backdrop" id="venueModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Venue</h3>
+      <button class="modal-close" onclick="closeNewVenueModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="newVenueName">Venue Name</label>
+        <input type="text" id="newVenueName" name="newVenueName">
+      </div>
+      <div class="form-group">
+        <label for="newVenueAddress">Address</label>
+        <input type="text" id="newVenueAddress" name="newVenueAddress">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="newVenueCity">City</label>
+          <input type="text" id="newVenueCity" name="newVenueCity">
+        </div>
+        <div class="form-group">
+          <label for="newVenueState">State</label>
+          <select id="newVenueState" name="newVenueState">
+            <option value="">-- Select --</option>
+            <option value="CA">California</option>
+            <option value="CO">Colorado</option>
+            <option value="FL">Florida</option>
+            <option value="IL">Illinois</option>
+            <option value="NY">New York</option>
+            <option value="TX">Texas</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="newVenueZip">ZIP Code</label>
+          <input type="text" id="newVenueZip" name="newVenueZip">
+        </div>
+        <div class="form-group">
+          <label for="newVenuePhone">Phone</label>
+          <input type="text" id="newVenuePhone" name="newVenuePhone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="newVenueType">Venue Type</label>
+          <select id="newVenueType" name="newVenueType">
+            <option value="">-- Select --</option>
+            <option value="Arena">Arena</option>
+            <option value="Amphitheater">Amphitheater</option>
+            <option value="Club/Bar">Club/Bar</option>
+            <option value="Concert Hall">Concert Hall</option>
+            <option value="Festival Grounds">Festival Grounds</option>
+            <option value="Stadium">Stadium</option>
+            <option value="Theater">Theater</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="newVenueCapacity">Capacity</label>
+          <input type="text" id="newVenueCapacity" name="newVenueCapacity">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-back" onclick="closeNewVenueModal()" style="margin-right: 8px;">Cancel</button>
+      <button class="btn next" onclick="saveNewVenue()">Save Venue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Log -->
+<div class="log-panel" id="logPanel">
+  <h4>Form Event Log</h4>
+  <div class="log-entry info">Ready — waiting for extension interaction...</div>
+</div>
+
+<script>
+  let currentStep = 1;
+  const addedSongs = [];
+
+  // Listen for all input/change events and log them
+  document.addEventListener('input', (e) => {
+    if (e.target.name || e.target.id) {
+      logEvent('change', `${e.target.name || e.target.id} = "${e.target.value}"`);
+    }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.name || e.target.id) {
+      logEvent('change', `${e.target.name || e.target.id} changed to "${e.target.value}"`);
+    }
+  });
+
+  // Song add buttons
+  document.querySelectorAll('.add-song-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.song-list-item');
+      const title = item.getAttribute('data-song-title');
+      if (!addedSongs.includes(title)) {
+        addedSongs.push(title);
+        btn.textContent = 'Added';
+        btn.classList.add('added');
+        updateAddedSetlist();
+        logEvent('change', `Song added: "${title}"`);
+      }
+    });
+  });
+
+  // Song search filtering
+  document.getElementById('songSearch').addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.song-list-item').forEach(item => {
+      const title = item.getAttribute('data-song-title').toLowerCase();
+      item.style.display = title.includes(query) || query === '' ? 'flex' : 'none';
+    });
+  });
+
+  function updateAddedSetlist() {
+    const container = document.getElementById('addedSetlist');
+    const list = document.getElementById('addedSongsList');
+    if (addedSongs.length > 0) {
+      container.style.display = 'block';
+      list.innerHTML = addedSongs.map(s => `<div class="added-song">${s}</div>`).join('');
+    } else {
+      container.style.display = 'none';
+    }
+  }
+
+  function nextStep() {
+    if (currentStep >= 3) return;
+    document.getElementById(`step-${currentStep}`).classList.remove('active');
+    document.getElementById(`tab-${currentStep}`).classList.remove('active');
+    document.getElementById(`tab-${currentStep}`).classList.add('completed');
+    currentStep++;
+    document.getElementById(`step-${currentStep}`).classList.add('active');
+    document.getElementById(`tab-${currentStep}`).classList.add('active');
+
+    // Update URL for step detection
+    history.replaceState(null, '', `?step=${currentStep}`);
+
+    updateButtons();
+    if (currentStep === 3) buildSummary();
+    logEvent('info', `Navigated to Step ${currentStep}`);
+  }
+
+  function prevStep() {
+    if (currentStep <= 1) return;
+    document.getElementById(`step-${currentStep}`).classList.remove('active');
+    document.getElementById(`tab-${currentStep}`).classList.remove('active');
+    currentStep--;
+    document.getElementById(`step-${currentStep}`).classList.add('active');
+    document.getElementById(`tab-${currentStep}`).classList.add('active');
+    document.getElementById(`tab-${currentStep}`).classList.remove('completed');
+
+    history.replaceState(null, '', `?step=${currentStep}`);
+
+    updateButtons();
+    logEvent('info', `Navigated back to Step ${currentStep}`);
+  }
+
+  function updateButtons() {
+    document.getElementById('btnBack').style.display = currentStep > 1 ? 'inline-block' : 'none';
+    document.getElementById('btnNext').style.display = currentStep < 3 ? 'inline-block' : 'none';
+    document.getElementById('btnSubmit').style.display = currentStep === 3 ? 'inline-block' : 'none';
+  }
+
+  function buildSummary() {
+    const val = (id) => document.getElementById(id)?.value || '--';
+    const selText = (id) => {
+      const el = document.getElementById(id);
+      return el?.selectedOptions?.[0]?.textContent || el?.value || '--';
+    };
+
+    document.getElementById('sum-performer').textContent = selText('performer');
+    document.getElementById('sum-event').textContent = val('eventName');
+    document.getElementById('sum-eventType').textContent = selText('eventType');
+    document.getElementById('sum-date').textContent = val('startDate');
+    document.getElementById('sum-time').textContent =
+      `${selText('startHour')} ${val('startAmPm')} - ${selText('endHour')} ${val('endAmPm')}`;
+    document.getElementById('sum-venue').textContent =
+      val('venueName') || selText('previousVenue');
+    document.getElementById('sum-attendance').textContent = selText('attendance');
+
+    const ticketRadio = document.querySelector('input[name="ticketCharge"]:checked');
+    document.getElementById('sum-ticket').textContent = ticketRadio?.value || '--';
+
+    document.getElementById('sum-songs').textContent =
+      addedSongs.length > 0 ? addedSongs.join(', ') : '--';
+  }
+
+  function handleSubmit() {
+    const cert = document.getElementById('certification');
+    if (!cert.checked) {
+      alert('Please check the certification checkbox before submitting.');
+      return;
+    }
+    logEvent('info', 'FORM SUBMITTED SUCCESSFULLY');
+    alert('Performance submitted successfully! (Mock)');
+  }
+
+  function openNewVenueModal() {
+    document.getElementById('venueModal').classList.add('open');
+    logEvent('info', 'New venue modal opened');
+  }
+
+  function closeNewVenueModal() {
+    document.getElementById('venueModal').classList.remove('open');
+  }
+
+  function saveNewVenue() {
+    const name = document.getElementById('newVenueName').value;
+    logEvent('change', `New venue saved: "${name}"`);
+    closeNewVenueModal();
+  }
+
+  function logEvent(type, message) {
+    const panel = document.getElementById('logPanel');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    const time = new Date().toLocaleTimeString();
+    entry.textContent = `[${time}] ${message}`;
+    panel.appendChild(entry);
+    panel.scrollTop = panel.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

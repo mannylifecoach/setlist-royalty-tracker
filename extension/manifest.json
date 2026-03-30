@@ -4,13 +4,13 @@
   "version": "1.0.0",
   "description": "Auto-fill BMI Live performance forms from Setlist Royalty Tracker data",
   "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://ols.bmi.com/*"],
+  "host_permissions": ["https://ols.bmi.com/*", "http://localhost:3000/*"],
   "background": {
     "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://ols.bmi.com/*"],
+      "matches": ["https://ols.bmi.com/*", "http://localhost:3000/*"],
       "js": ["content/bmi-filler.js"],
       "css": ["content/bmi-filler.css"]
     }

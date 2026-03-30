@@ -67,6 +67,16 @@ body {
   font-size: 12px;
 }
 
+.step-hint {
+  font-size: 11px;
+  color: #a0a0b0;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
 .event-list {
   display: flex;
   flex-direction: column;
@@ -85,22 +95,79 @@ body {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-.event-artist {
-  font-size: 13px;
-  font-weight: 500;
-  color: #ffffff;
+.event-card.selected {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
 }
 
-.event-meta {
+.event-card.submitted {
+  opacity: 0.5;
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.event-submitted-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #166534;
+  background: rgba(74, 222, 128, 0.25);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.event-number {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.event-artist {
+  font-size: 12px;
+  color: #a0a0b0;
+  margin-top: 1px;
+}
+
+.event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.event-detail-item {
   font-size: 11px;
   color: #808090;
-  margin-top: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .event-songs {
   font-size: 11px;
   color: #a0a0b0;
-  margin-top: 6px;
+  margin-top: 8px;
+  line-height: 1.4;
 }
 
 .event-actions {
@@ -135,18 +202,6 @@ body {
 .btn-primary:hover {
   background: #22c55e;
   border-color: #22c55e;
-}
-
-.btn-setlist {
-  background: #60a5fa;
-  color: #000;
-  border-color: #60a5fa;
-  font-weight: 600;
-}
-
-.btn-setlist:hover {
-  background: #3b82f6;
-  border-color: #3b82f6;
 }
 
 .empty {

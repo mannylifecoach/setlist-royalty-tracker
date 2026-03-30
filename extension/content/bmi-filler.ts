@@ -87,8 +87,49 @@ function clickRadio(selector: string, value: string): boolean {
   return false;
 }
 
+// Clear all form fields before filling (so switching events works)
+function clearFields() {
+  const inputSelectors = [
+    SELECTORS.eventName, SELECTORS.startDate, SELECTORS.endDate,
+    SELECTORS.venueCity, SELECTORS.venueName,
+    SELECTORS.newVenueName, SELECTORS.newVenueAddress,
+    SELECTORS.newVenueCity, SELECTORS.newVenueZip,
+    SELECTORS.newVenueCapacity, SELECTORS.newVenuePhone,
+  ];
+  for (const sel of inputSelectors) {
+    const el = q(sel);
+    if (el instanceof HTMLInputElement) {
+      const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      if (nativeSetter) nativeSetter.call(el, '');
+      else el.value = '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  const selectSelectors = [
+    SELECTORS.bandPerformer, SELECTORS.eventType,
+    SELECTORS.startHour, SELECTORS.startAmPm,
+    SELECTORS.endHour, SELECTORS.endAmPm,
+    SELECTORS.attendance, SELECTORS.previousVenues,
+    SELECTORS.venueState, SELECTORS.newVenueState, SELECTORS.newVenueType,
+  ];
+  for (const sel of selectSelectors) {
+    const el = q(sel);
+    if (el instanceof HTMLSelectElement) {
+      el.selectedIndex = 0;
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  // Uncheck radios
+  const radios = document.querySelectorAll<HTMLInputElement>('input[name="ticketCharge"]');
+  radios.forEach((r) => { r.checked = false; });
+}
+
 // Fill Step 1 — Details
 function fillDetails(event: EventData): FillResult[] {
+  clearFields();
   const results: FillResult[] = [];
 
   const fieldMap: [string, string, string | null][] = [
@@ -346,6 +387,11 @@ function showSummaryOverlay(event: EventData, overlay: HTMLElement) {
 
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === 'GET_CURRENT_STEP') {
+    sendResponse({ step: detectWizardStep() });
+    return;
+  }
+
   if (message.type === 'FILL_DETAILS') {
     const overlay = createOverlay();
     const results = fillDetails(message.event as EventData);
@@ -371,13 +417,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-// Auto-detect which wizard step we're on and show a subtle indicator
+// Auto-detect which wizard step we're on
 function detectWizardStep(): number {
+  // First try DOM: check which step tab is active
+  const activeTabs = document.querySelectorAll('.step-tab.active, [class*="step"][class*="active"]');
+  for (const tab of activeTabs) {
+    const text = tab.textContent?.toLowerCase() || '';
+    if (text.includes('setlist') || text.includes('step 2') || text.includes('2.')) return 2;
+    if (text.includes('summary') || text.includes('step 3') || text.includes('3.')) return 3;
+  }
+
+  // Check which step content is visible
+  const step2 = document.getElementById('step-2');
+  const step3 = document.getElementById('step-3');
+  if (step3 && step3.classList.contains('active')) return 3;
+  if (step2 && step2.classList.contains('active')) return 2;
+
+  // Fallback to URL
   const url = window.location.href.toLowerCase();
-  if (url.includes('setlist') || url.includes('step2') || url.includes('step=2'))
-    return 2;
-  if (url.includes('summary') || url.includes('step3') || url.includes('step=3'))
-    return 3;
+  if (url.includes('setlist') || url.includes('step2') || url.includes('step=2')) return 2;
+  if (url.includes('summary') || url.includes('step3') || url.includes('step=3')) return 3;
   return 1;
 }
 
