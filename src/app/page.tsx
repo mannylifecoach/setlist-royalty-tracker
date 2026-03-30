@@ -1,15 +1,16 @@
 import Link from 'next/link';
 import { HowItWorks } from '@/components/how-it-works';
+import { ShaderLines } from '@/components/ui/shader-lines';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between px-[2vw] py-[1.5vw] border-b border-border-subtle">
+      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-[2vw] py-3 sm:py-[1.5vw] border-b border-border-subtle">
         <span className="text-[14px] tracking-[-0.3px]">
           setlist royalty tracker
         </span>
         <div className="flex items-center gap-4">
-          <Link href="/about" className="text-[11px] text-text-muted hover:text-text-secondary transition-colors">
+          <Link href="/about" className="btn text-[11px]">
             about
           </Link>
           <Link href="/login" className="btn text-[11px]">
@@ -18,19 +19,25 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <main className="flex-1 flex items-center justify-center px-[4vw] py-[6vw]">
-        <div className="max-w-[640px] text-center space-y-12">
-          <h1 className="text-[36px] font-normal tracking-[-1px] leading-[1.1]">
+      <section className="relative h-[350px] sm:h-[500px] flex items-center justify-center overflow-hidden">
+        <ShaderLines />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-[1]" />
+        <div className="relative z-[2] text-center space-y-4 sm:space-y-6 px-6 sm:px-[4vw]">
+          <h1 className="text-[28px] sm:text-[36px] font-normal tracking-[-1px] leading-[1.1]">
             stop leaving royalties
             <br />
             on the table
           </h1>
-
-          <p className="text-text-secondary text-[14px] leading-[1.5] max-w-[460px] mx-auto">
+          <p className="text-text-secondary text-[13px] sm:text-[14px] leading-[1.5] max-w-[460px] mx-auto">
             bmi and ascap only auto-track the top 200-300 tours. every other
             live performance goes unreported unless you manually log it.
             setlist.fm has 9.6m+ crowdsourced setlists — we bridge that gap.
           </p>
+        </div>
+      </section>
+
+      <main className="flex-1 flex items-center justify-center px-[4vw] py-[6vw]">
+        <div className="max-w-[640px] text-center space-y-12">
 
           <HowItWorks />
 
