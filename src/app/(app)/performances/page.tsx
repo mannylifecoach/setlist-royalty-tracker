@@ -27,6 +27,8 @@ const STATUS_FILTERS = ['all', 'discovered', 'confirmed', 'submitted', 'expired'
 export default function PerformancesPage() {
   const [data, setData] = useState<PerformanceRow[]>([]);
   const [filter, setFilter] = useState<string>('all');
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
   const router = useRouter();
 
   const loadData = useCallback(async function loadData() {
@@ -40,6 +42,21 @@ export default function PerformancesPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
+
+  async function handleScan() {
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const res = await fetch('/api/scan', { method: 'POST' });
+      if (res.ok) {
+        const result = await res.json();
+        setScanResult({ scanned: result.scanned, newPerformances: result.newPerformances });
+        await loadData();
+      }
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function handleConfirm(ids: string[]) {
     await fetch('/api/performances/bulk-confirm', {
@@ -72,6 +89,43 @@ export default function PerformancesPage() {
           ))}
         </div>
       </div>
+
+      <div className="flex items-center gap-4">
+        <button onClick={handleScan} disabled={scanning} className="btn">
+          {scanning ? 'scanning...' : 'scan now'}
+        </button>
+        {scanResult && (
+          <span className="text-[12px] text-text-secondary">
+            scanned {scanResult.scanned} setlists —{' '}
+            {scanResult.newPerformances > 0 ? (
+              <span className="text-status-discovered">
+                {scanResult.newPerformances} new performance{scanResult.newPerformances !== 1 ? 's' : ''} found
+              </span>
+            ) : (
+              'no new performances found'
+            )}
+          </span>
+        )}
+      </div>
+
+      {(() => {
+        const confirmedCount = data.filter((d) => d.performance.status === 'confirmed').length;
+        if (confirmedCount === 0) return null;
+        return (
+          <div className="card px-4 py-3 text-[12px] text-text-secondary">
+            <span className="text-status-confirmed">{confirmedCount} confirmed</span>
+            {' — ready to submit. '}
+            <a href="/export" className="text-status-discovered hover:underline">
+              export csv
+            </a>
+            {' for manual upload, or use the '}
+            <a href="/settings" className="text-status-discovered hover:underline">
+              chrome extension
+            </a>
+            {' to auto-fill bmi live directly.'}
+          </div>
+        );
+      })()}
 
       <PerformanceTable
         data={data}

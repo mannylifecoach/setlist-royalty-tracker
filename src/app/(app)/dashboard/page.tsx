@@ -26,6 +26,7 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,9 +69,12 @@ export default function DashboardPage() {
 
   async function handleScan() {
     setScanning(true);
+    setScanResult(null);
     try {
       const res = await fetch('/api/scan', { method: 'POST' });
       if (res.ok) {
+        const result = await res.json();
+        setScanResult({ scanned: result.scanned, newPerformances: result.newPerformances });
         await loadData();
       }
     } finally {
@@ -83,9 +87,22 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-[18px] font-light tracking-[-0.3px]">dashboard</h1>
         <button onClick={handleScan} disabled={scanning} className="btn">
-          {scanning ? 'scanning...' : 'scan now'}
+          {scanning ? 'checking...' : 'check for new performances'}
         </button>
       </div>
+
+      {scanResult && (
+        <div className="card px-4 py-3 text-[12px] text-text-secondary">
+          scanned {scanResult.scanned} setlists —{' '}
+          {scanResult.newPerformances > 0 ? (
+            <span className="text-status-discovered">
+              {scanResult.newPerformances} new performance{scanResult.newPerformances !== 1 ? 's' : ''} found
+            </span>
+          ) : (
+            'no new performances found'
+          )}
+        </div>
+      )}
 
       {data && (
         <>
@@ -153,8 +170,17 @@ export default function DashboardPage() {
                 </div>
               ))}
               {data.recent.length === 0 && (
-                <div className="text-center py-12 text-text-muted text-[13px]">
-                  no performances yet — add songs and artists, then scan
+                <div className="text-center py-12 text-text-muted text-[13px] space-y-3">
+                  <p>no performances yet — get started in three steps:</p>
+                  <div className="flex items-center justify-center gap-4">
+                    <a href="/artists" className="text-status-discovered hover:underline">1. add artists</a>
+                    <span className="text-text-disabled">→</span>
+                    <a href="/songs" className="text-status-discovered hover:underline">2. register songs</a>
+                    <span className="text-text-disabled">→</span>
+                    <button onClick={handleScan} disabled={scanning} className="text-status-discovered hover:underline">
+                      3. scan
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

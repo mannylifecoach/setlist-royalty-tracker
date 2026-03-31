@@ -25,6 +25,8 @@ export default function SongsPage() {
   const [bmiWorkId, setBmiWorkId] = useState('');
   const [ascapWorkId, setAscapWorkId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     loadSongs();
@@ -80,6 +82,23 @@ export default function SongsPage() {
       body: JSON.stringify({ artistId }),
     });
     await loadSongs();
+
+    // Auto-scan after linking an artist to a song
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const res = await fetch('/api/scan', { method: 'POST' });
+      if (res.ok) {
+        const result = await res.json();
+        setScanResult({ scanned: result.scanned, newPerformances: result.newPerformances });
+      } else {
+        console.error('Scan failed:', res.status, await res.text());
+      }
+    } catch (err) {
+      console.error('Scan error:', err);
+    } finally {
+      setScanning(false);
+    }
   }
 
   async function handleUnlinkArtist(songId: string, artistId: string) {
@@ -132,6 +151,59 @@ export default function SongsPage() {
           {loading ? 'adding...' : 'add song'}
         </button>
       </form>
+
+      {scanning && (
+        <div className="card px-4 py-3 text-[12px] text-text-secondary animate-pulse">
+          scanning setlist.fm for matches...
+        </div>
+      )}
+
+      {scanResult && !scanning && (
+        <div className="card px-4 py-3 text-[12px] text-text-secondary">
+          scanned {scanResult.scanned} setlists —{' '}
+          {scanResult.newPerformances > 0 ? (
+            <>
+              <span className="text-status-discovered">
+                {scanResult.newPerformances} new performance{scanResult.newPerformances !== 1 ? 's' : ''} found
+              </span>
+              {' — '}
+              <a href="/performances" className="text-status-discovered hover:underline">
+                view performances
+              </a>
+            </>
+          ) : (
+            <>
+              no new performances found.{' '}
+              <span className="text-text-muted">
+                setlist.fm may not have song data for recent shows yet — try{' '}
+                <a href="/performances" className="text-status-discovered hover:underline">scanning again</a>
+                {' '}later.
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
+      {!scanning && !scanResult && songs.length > 0 && (
+        <div className="card px-4 py-3 text-[12px] text-text-secondary">
+          {songs.some((s) => s.artists.length > 0) ? (
+            <>
+              link songs to artists below.{' '}
+              <span className="text-status-confirmed">ready to scan!</span>{' '}
+              <a href="/performances" className="text-status-discovered hover:underline">
+                go to performances and hit &quot;scan now&quot;
+              </a>
+              {' '}to find matches on setlist.fm.
+            </>
+          ) : (
+            <>
+              <span className="text-status-expiring">link your songs to artists</span>{' '}
+              using the &quot;+ link artist&quot; dropdown on each song below — the scanner
+              needs to know which artist performs each song to find matches.
+            </>
+          )}
+        </div>
+      )}
 
       <div className="space-y-[2px]">
         {songs.map((song) => (
@@ -209,8 +281,16 @@ export default function SongsPage() {
         ))}
 
         {songs.length === 0 && (
-          <div className="text-center py-12 text-text-muted text-[13px]">
-            no songs yet — add your first song above
+          <div className="text-center py-12 text-text-muted text-[13px] space-y-2">
+            <p>no songs yet — add your first song above</p>
+            {artists.length === 0 && (
+              <p>
+                <a href="/artists" className="text-status-discovered hover:underline">
+                  add artists first
+                </a>{' '}
+                so you can link them to your songs
+              </p>
+            )}
           </div>
         )}
       </div>

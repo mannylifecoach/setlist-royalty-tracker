@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const links = [
   { href: '/dashboard', label: 'dashboard' },
-  { href: '/songs', label: 'songs' },
   { href: '/artists', label: 'artists' },
+  { href: '/songs', label: 'songs' },
   { href: '/performances', label: 'performances' },
   { href: '/export', label: 'export' },
 ];
@@ -20,10 +20,10 @@ export function AppNav() {
         <Link
           key={href}
           href={href}
-          className={`text-[12px] transition-opacity ${
+          className={`text-[12px] pb-[2px] transition-all ${
             pathname.startsWith(href)
-              ? 'text-text'
-              : 'text-text-muted hover:opacity-60'
+              ? 'text-text border-b border-white'
+              : 'text-text-muted border-b border-transparent hover:opacity-60'
           }`}
         >
           {label}

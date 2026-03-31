@@ -44,7 +44,7 @@ export default function ExportPage() {
           download a csv formatted for your pro. only confirmed performances are
           shown.
         </p>
-        <div className="card p-3 mt-3">
+        <div className="card p-3 mt-3 space-y-3">
           <p className="text-[11px] text-text-secondary">
             <span className="text-status-confirmed">tip:</span> for bmi live,
             use the{' '}
@@ -54,6 +54,18 @@ export default function ExportPage() {
             to auto-fill forms directly — no csv needed. generate an api key in
             settings to get started.
           </p>
+          <div className="flex items-center gap-3 pt-1 border-t border-border-subtle">
+            <a
+              href="/bmi-mock.html"
+              target="_blank"
+              className="btn text-[11px] px-3 py-1.5"
+            >
+              try demo: bmi live auto-fill
+            </a>
+            <span className="text-[10px] text-text-muted">
+              opens a mock bmi form — use with the chrome extension to test auto-fill
+            </span>
+          </div>
         </div>
       </div>
 

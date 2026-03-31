@@ -32,10 +32,17 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
     .from(trackedArtists)
     .where(eq(trackedArtists.userId, userId));
 
-  for (const artist of artists) {
-    if (!artist.mbid) continue;
+  console.log(`[scan] Found ${artists.length} tracked artists for user ${userId}`);
 
+  for (const artist of artists) {
+    if (!artist.mbid) {
+      console.log(`[scan] Skipping ${artist.artistName} — no MBID`);
+      continue;
+    }
+
+    console.log(`[scan] Scanning ${artist.artistName} (${artist.mbid})...`);
     const result = await scanArtistForUser(userId, artist);
+    console.log(`[scan] ${artist.artistName}: ${result.setlistsFound} setlists, ${result.newPerformances} new performances`);
     results.push(result);
   }
 

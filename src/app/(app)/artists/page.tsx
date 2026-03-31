@@ -102,6 +102,16 @@ export default function ArtistsPage() {
           </div>
         )}
       </div>
+
+      {artists.length > 0 && (
+        <div className="card px-4 py-3 text-[12px] text-text-secondary">
+          <span className="text-status-confirmed">next step:</span>{' '}
+          <a href="/songs" className="text-status-discovered hover:underline">
+            add your songs
+          </a>{' '}
+          and link them to your artists — then scan from the dashboard to find performances
+        </div>
+      )}
     </div>
   );
 }

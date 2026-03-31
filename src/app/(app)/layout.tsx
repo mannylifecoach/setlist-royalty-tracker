@@ -15,17 +15,17 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between px-[2vw] py-[1.2vw] border-b border-border-subtle">
-        <div className="flex items-center gap-6">
-          <Link
-            href="/dashboard"
-            className="text-[14px] tracking-[-0.3px] hover:opacity-50 transition-opacity"
-          >
-            setlist royalty tracker
-          </Link>
+      <nav className="flex items-center px-[2vw] py-[1.2vw] border-b border-border-subtle">
+        <Link
+          href="/"
+          className="text-[14px] tracking-[-0.3px] hover:opacity-50 transition-opacity shrink-0"
+        >
+          setlist royalty tracker
+        </Link>
+        <div className="flex-1 flex justify-center">
           <AppNav />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <span className="text-[11px] text-text-muted">
             {session.user.email}
           </span>
