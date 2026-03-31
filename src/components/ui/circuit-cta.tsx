@@ -11,14 +11,14 @@ interface TraceLine {
   color: { r: number; g: number; b: number }
 }
 
-// palette pulled from the SRT design tokens + complementary accents
+// bright silver / white
 const PULSE_COLORS = [
-  { r: 82, g: 129, b: 235 },   // status-discovered blue
-  { r: 29, g: 185, b: 84 },    // status-confirmed green (spotify)
-  { r: 134, g: 239, b: 172 },  // status-submitted light green
-  { r: 234, g: 179, b: 8 },    // status-expiring gold
-  { r: 168, g: 85, b: 247 },   // purple accent
-  { r: 236, g: 72, b: 153 },   // pink accent
+  { r: 220, g: 220, b: 225 },
+  { r: 200, g: 200, b: 210 },
+  { r: 240, g: 240, b: 245 },
+  { r: 210, g: 215, b: 220 },
+  { r: 230, g: 230, b: 235 },
+  { r: 195, g: 200, b: 210 },
 ]
 
 export function CircuitCTA() {
@@ -74,7 +74,7 @@ export function CircuitCTA() {
         // horizontal-heavy traces travel much further
         const isHorizontal = Math.abs(dir.dx) > Math.abs(dir.dy)
         const maxLen = isHorizontal
-          ? 180 + Math.random() * 220
+          ? 350 + Math.random() * 300
           : 60 + Math.random() * 120
 
         // start near center
@@ -238,8 +238,8 @@ export function CircuitCTA() {
                 (trace.points[i].y - trace.points[i - 1].y) * t2
 
               ctx.beginPath()
-              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.6)`
-              ctx.lineWidth = 1.5
+              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`
+              ctx.lineWidth = 4
               ctx.moveTo(x1, y1)
               ctx.lineTo(x2, y2)
               ctx.stroke()
