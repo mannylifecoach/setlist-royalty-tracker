@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { HowItWorks } from '@/components/how-it-works';
 import { WhyThisMatters } from '@/components/why-this-matters';
 import { ShaderLines } from '@/components/ui/shader-lines';
+import { CircuitCTA } from '@/components/ui/circuit-cta';
 
 export default function LandingPage() {
   return (
@@ -56,14 +57,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            <Link href="/login" className="btn btn-primary inline-block px-10 py-3 text-[13px]">
-              get started
-            </Link>
-            <p className="text-[11px] text-text-disabled">
-              magic link login · no password required
-            </p>
-          </div>
+          <CircuitCTA />
 
           <div className="pt-10 border-t border-border-subtle space-y-3">
             <p className="text-[11px] text-text-muted leading-[1.6]">
