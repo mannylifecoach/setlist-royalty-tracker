@@ -13,7 +13,7 @@ export default function LandingPage() {
       </div>
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-transparent via-transparent via-50% to-black pointer-events-none" />
 
-      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-[2vw] pt-14 sm:pt-16 pb-3">
+      <nav className="relative z-10 flex items-center justify-between px-14 sm:px-20 pt-14 sm:pt-16 pb-3">
         <span className="text-[14px] tracking-[-0.3px]">
           setlist royalty tracker
         </span>
