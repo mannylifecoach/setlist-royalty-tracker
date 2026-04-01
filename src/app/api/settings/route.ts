@@ -11,11 +11,11 @@ export async function GET() {
   }
 
   const [user] = await db
-    .select({ name: users.name, pro: users.pro })
+    .select({ name: users.name, pro: users.pro, role: users.role })
     .from(users)
     .where(eq(users.id, session.user.id));
 
-  return NextResponse.json(user || { name: null, pro: null });
+  return NextResponse.json(user || { name: null, pro: null, role: null });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -24,17 +24,18 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { name, pro } = await request.json();
+  const { name, pro, role } = await request.json();
 
   const [updated] = await db
     .update(users)
     .set({
       name: name ?? undefined,
       pro: pro ?? undefined,
+      role: role ?? undefined,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
     .returning();
 
-  return NextResponse.json({ name: updated.name, pro: updated.pro });
+  return NextResponse.json({ name: updated.name, pro: updated.pro, role: updated.role });
 }

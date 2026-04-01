@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
 
 export default function SettingsPage() {
-  const [pro, setPro] = useState<'bmi' | 'ascap' | ''>('');
+  const [pro, setPro] = useState<'bmi' | 'ascap' | 'sesac' | 'gmr' | ''>('');
+  const [role, setRole] = useState<'songwriter' | 'performer' | 'publisher' | 'manager' | ''>('');
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -19,6 +20,7 @@ export default function SettingsPage() {
       if (res.ok) {
         const data = await res.json();
         setPro(data.pro || '');
+        setRole(data.role || '');
         setName(data.name || '');
       }
     }
@@ -40,7 +42,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pro: pro || null, name: name || null }),
+        body: JSON.stringify({ pro: pro || null, role: role || null, name: name || null }),
       });
       if (res.ok) {
         setSaved(true);
@@ -71,19 +73,31 @@ export default function SettingsPage() {
           <label className="text-[11px] text-text-muted block mb-1">
             pro affiliation
           </label>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setPro('bmi')}
-              className={`btn text-[12px] ${pro === 'bmi' ? 'bg-white text-black' : ''}`}
-            >
-              bmi
-            </button>
-            <button
-              onClick={() => setPro('ascap')}
-              className={`btn text-[12px] ${pro === 'ascap' ? 'bg-white text-black' : ''}`}
-            >
-              ascap
-            </button>
+          <div className="flex gap-2">
+            {(['bmi', 'ascap', 'sesac', 'gmr'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPro(p)}
+                className={`btn text-[12px] ${pro === p ? 'bg-white text-black' : ''}`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[11px] text-text-muted block mb-1">role</label>
+          <div className="flex gap-2 flex-wrap">
+            {(['songwriter', 'performer', 'publisher', 'manager'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRole(r)}
+                className={`btn text-[12px] ${role === r ? 'bg-white text-black' : ''}`}
+              >
+                {r}
+              </button>
+            ))}
           </div>
         </div>
 

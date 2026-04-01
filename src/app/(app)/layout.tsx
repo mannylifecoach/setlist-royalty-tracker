@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { AppNav } from '@/components/app-nav';
 
@@ -11,6 +14,16 @@ export default async function AppLayout({
   const session = await auth();
   if (!session?.user) {
     redirect('/login');
+  }
+
+  // Redirect to onboarding if profile not completed
+  const [user] = await db
+    .select({ onboardingComplete: users.onboardingComplete })
+    .from(users)
+    .where(eq(users.id, session.user.id!));
+
+  if (user && !user.onboardingComplete) {
+    redirect('/onboarding');
   }
 
   return (
