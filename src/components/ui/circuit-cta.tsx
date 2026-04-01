@@ -2,24 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-
-interface TraceLine {
-  points: { x: number; y: number }[]
-  length: number
-  delay: number
-  speed: number
-  color: { r: number; g: number; b: number }
-}
-
-// bright silver / white
-const PULSE_COLORS = [
-  { r: 220, g: 220, b: 225 },
-  { r: 200, g: 200, b: 210 },
-  { r: 240, g: 240, b: 245 },
-  { r: 210, g: 215, b: 220 },
-  { r: 230, g: 230, b: 235 },
-  { r: 195, g: 200, b: 210 },
-]
+import React from "react"
 
 export function CircuitCTA() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -48,128 +31,6 @@ export function CircuitCTA() {
     resize()
     window.addEventListener("resize", resize)
 
-    const generateTraces = (): TraceLine[] => {
-      const parent = canvas.parentElement
-      if (!parent) return []
-      const rect = parent.getBoundingClientRect()
-      const cx = rect.width / 2
-      const cy = rect.height / 2
-      const traces: TraceLine[] = []
-
-      const directions = [
-        { dx: 0, dy: -1 }, { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
-        { dx: 0, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: 1 },
-        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
-        { dx: -0.7, dy: -0.5 }, { dx: 0.7, dy: -0.5 },
-        { dx: -0.7, dy: 0.5 }, { dx: 0.7, dy: 0.5 },
-        { dx: -0.3, dy: -1 }, { dx: 0.3, dy: -1 },
-        { dx: -0.3, dy: 1 }, { dx: 0.3, dy: 1 },
-      ]
-
-      for (let i = 0; i < directions.length; i++) {
-        const dir = directions[i]
-        // build points from outside inward — start far out, end near center
-        const outerPoints: { x: number; y: number }[] = []
-        const segmentCount = 3 + Math.floor(Math.random() * 3)
-        // horizontal-heavy traces travel much further
-        const isHorizontal = Math.abs(dir.dx) > Math.abs(dir.dy)
-        const maxLen = isHorizontal
-          ? 350 + Math.random() * 300
-          : 60 + Math.random() * 120
-
-        // start near center
-        let x = cx + (Math.random() - 0.5) * 40
-        let y = cy + (Math.random() - 0.5) * 20
-        outerPoints.push({ x, y })
-
-        for (let s = 0; s < segmentCount; s++) {
-          const segLen = maxLen / segmentCount + (Math.random() - 0.5) * 20
-          if (s % 2 === 0) {
-            x += dir.dx * segLen
-            outerPoints.push({ x, y })
-          } else {
-            y += dir.dy * segLen
-            outerPoints.push({ x, y })
-          }
-        }
-
-        // reverse so the path goes from outside → center
-        const points = outerPoints.reverse()
-
-        let totalLength = 0
-        for (let p = 1; p < points.length; p++) {
-          totalLength += Math.hypot(
-            points[p].x - points[p - 1].x,
-            points[p].y - points[p - 1].y
-          )
-        }
-
-        traces.push({
-          points,
-          length: totalLength,
-          delay: i * 0.4 + Math.random() * 2,
-          speed: 0.3 + Math.random() * 0.4,
-          color: PULSE_COLORS[i % PULSE_COLORS.length],
-        })
-      }
-
-      return traces
-    }
-
-    let traces = generateTraces()
-
-    const resizeObserver = new ResizeObserver(() => {
-      resize()
-      traces = generateTraces()
-    })
-    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement)
-
-    const drawNode = (
-      ctx: CanvasRenderingContext2D,
-      x: number,
-      y: number,
-      size: number,
-      color: { r: number; g: number; b: number },
-      alpha: number
-    ) => {
-      ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
-      ctx.fillRect(x - size / 2, y - size / 2, size, size)
-    }
-
-    const drawChip = (
-      ctx: CanvasRenderingContext2D,
-      cx: number,
-      cy: number,
-      time: number
-    ) => {
-      const w = 160
-      const h = 56
-      const pulseAlpha = 0.15 + Math.sin(time * 0.8) * 0.05
-
-      ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`
-      ctx.lineWidth = 1
-      ctx.strokeRect(cx - w / 2, cy - h / 2, w, h)
-
-      const pinSize = 3
-      const pinCount = 6
-      const pinAlpha = 0.25 + Math.sin(time * 1.2) * 0.1
-
-      for (let i = 0; i < pinCount; i++) {
-        const px = cx - w / 2 + (w / (pinCount + 1)) * (i + 1)
-        const c = PULSE_COLORS[i % PULSE_COLORS.length]
-        drawNode(ctx, px, cy - h / 2 - 4, pinSize, c, pinAlpha)
-        drawNode(ctx, px, cy + h / 2 + 4, pinSize, c, pinAlpha)
-      }
-
-      const sidePinCount = 2
-      for (let i = 0; i < sidePinCount; i++) {
-        const py = cy - h / 2 + (h / (sidePinCount + 1)) * (i + 1)
-        const c = PULSE_COLORS[(i + 2) % PULSE_COLORS.length]
-        drawNode(ctx, cx - w / 2 - 4, py, pinSize, c, pinAlpha)
-        drawNode(ctx, cx + w / 2 + 4, py, pinSize, c, pinAlpha)
-      }
-    }
-
     const startTime = performance.now()
 
     const animate = () => {
@@ -178,84 +39,82 @@ export function CircuitCTA() {
       const rect = parent.getBoundingClientRect()
       const w = rect.width
       const h = rect.height
-      const cx = w / 2
-      const cy = h / 2
       const time = (performance.now() - startTime) / 1000
 
       ctx.clearRect(0, 0, w, h)
 
-      for (const trace of traces) {
-        const elapsed = time - trace.delay
-        if (elapsed < 0) continue
+      const ribbonCount = 3
+      const ribbonColors = [
+        { r: 230, g: 230, b: 235 },
+        { r: 210, g: 215, b: 220 },
+        { r: 240, g: 240, b: 245 },
+      ]
 
-        const { r, g, b } = trace.color
-        const progress = Math.min((elapsed * trace.speed) / (trace.length / 100), 1)
-        // pulse travels from 1 → 0 (outside → center)
-        const rawPulse = (elapsed * trace.speed * 1.5) % 1.4
-        const pulsePos = 1.2 - rawPulse
+      const centerIdx = (ribbonCount - 1) / 2
 
-        // static trace line
+      for (let r = 0; r < ribbonCount; r++) {
+        const phase = time * 0.8 + r * 0.6
+        // offset from center ribbon — used for spread
+        const offsetFromCenter = (r - centerIdx) * 20
+
         ctx.beginPath()
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.04 + progress * 0.03})`
-        ctx.lineWidth = 1
-        for (let i = 0; i < trace.points.length; i++) {
-          if (i === 0) ctx.moveTo(trace.points[i].x, trace.points[i].y)
-          else ctx.lineTo(trace.points[i].x, trace.points[i].y)
-        }
-        ctx.stroke()
 
-        // animated colored pulse traveling inward along the trace
-        if (progress >= 1) {
-          let accum = 0
-          for (let i = 1; i < trace.points.length; i++) {
-            const segLen = Math.hypot(
-              trace.points[i].x - trace.points[i - 1].x,
-              trace.points[i].y - trace.points[i - 1].y
-            )
-            const segStart = accum / trace.length
-            const segEnd = (accum + segLen) / trace.length
-            accum += segLen
+        // top edge of ribbon
+        for (let x = 0; x <= w; x += 2) {
+          const t = x / w
+          // ribbons stay merged from left to center, fan out from center to right
+          const spread = t <= 0.5 ? 0 : ((t - 0.5) * 2) * ((t - 0.5) * 2)
+          const baseY = h * 0.5 + offsetFromCenter * spread
 
-            const pulseWidth = 0.15
-            const overlapStart = Math.max(segStart, pulsePos - pulseWidth)
-            const overlapEnd = Math.min(segEnd, pulsePos + pulseWidth)
+          const amplitude = (50 + r * 10) * (0.3 + t * 0.7)
+          const wave1 = Math.sin(t * Math.PI * 3 + phase) * amplitude
+          const wave2 = Math.sin(t * Math.PI * 5 - phase * 1.3) * (amplitude * 0.4)
+          const wave3 = Math.sin(t * Math.PI * 1.5 + phase * 0.5) * (amplitude * 0.6)
+          const y = baseY + wave1 + wave2 + wave3
 
-            if (overlapStart < overlapEnd) {
-              const t1 = (overlapStart - segStart) / (segEnd - segStart)
-              const t2 = (overlapEnd - segStart) / (segEnd - segStart)
-
-              const x1 =
-                trace.points[i - 1].x +
-                (trace.points[i].x - trace.points[i - 1].x) * t1
-              const y1 =
-                trace.points[i - 1].y +
-                (trace.points[i].y - trace.points[i - 1].y) * t1
-              const x2 =
-                trace.points[i - 1].x +
-                (trace.points[i].x - trace.points[i - 1].x) * t2
-              const y2 =
-                trace.points[i - 1].y +
-                (trace.points[i].y - trace.points[i - 1].y) * t2
-
-              ctx.beginPath()
-              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`
-              ctx.lineWidth = 4
-              ctx.moveTo(x1, y1)
-              ctx.lineTo(x2, y2)
-              ctx.stroke()
-            }
-          }
+          if (x === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
         }
 
-        // outer endpoint node (start of path)
-        if (progress >= 1) {
-          const first = trace.points[0]
-          const nodeAlpha = 0.3 + Math.sin(time * 1.5 + trace.delay) * 0.15
-          drawNode(ctx, first.x, first.y, 4, trace.color, nodeAlpha)
+        // bottom edge of ribbon
+        for (let x = w; x >= 0; x -= 2) {
+          const t = x / w
+          const spread = t * t
+          const baseY = h * 0.5 + offsetFromCenter * spread
+
+          const amplitude = (50 + r * 10) * (0.3 + t * 0.7)
+          const wave1 = Math.sin(t * Math.PI * 3 + phase) * amplitude
+          const wave2 = Math.sin(t * Math.PI * 5 - phase * 1.3) * (amplitude * 0.4)
+          const wave3 = Math.sin(t * Math.PI * 1.5 + phase * 0.5) * (amplitude * 0.6)
+          const ribbonWidth = 8 + Math.sin(t * Math.PI * 2 + phase) * 3
+          const y = baseY + wave1 + wave2 + wave3 + ribbonWidth
+
+          ctx.lineTo(x, y)
         }
+
+        ctx.closePath()
+
+        const c = ribbonColors[r]
+        const grad = ctx.createLinearGradient(0, 0, w, 0)
+        grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`)
+        grad.addColorStop(0.1, `rgba(${c.r}, ${c.g}, ${c.b}, 0.7)`)
+        grad.addColorStop(0.3, `rgba(${c.r}, ${c.g}, ${c.b}, 0.9)`)
+        grad.addColorStop(0.7, `rgba(${c.r}, ${c.g}, ${c.b}, 0.9)`)
+        grad.addColorStop(0.9, `rgba(${c.r}, ${c.g}, ${c.b}, 0.7)`)
+        grad.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`)
+
+        ctx.fillStyle = grad
+        ctx.fill()
+
+        // glow layer
+        ctx.save()
+        ctx.filter = "blur(8px)"
+        ctx.globalAlpha = 0.4
+        ctx.fillStyle = grad
+        ctx.fill()
+        ctx.restore()
       }
 
-      drawChip(ctx, cx, cy, time)
 
       animRef.current = requestAnimationFrame(animate)
     }
@@ -265,23 +124,28 @@ export function CircuitCTA() {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current)
       window.removeEventListener("resize", resize)
-      resizeObserver.disconnect()
     }
   }, [])
 
   return (
-    <div className="relative w-full py-16">
+    <div className="relative w-full py-10">
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
       />
-      <div className="relative z-10 flex flex-col items-center gap-3">
-        <Link
-          href="/login"
-          className="btn btn-primary inline-block px-10 py-3 text-[13px]"
-        >
-          get started
-        </Link>
+      <div className="relative z-10 flex flex-col items-center gap-3 max-w-[640px] mx-auto px-4">
+        <p className="text-[11px] text-text-muted leading-[1.6] text-center">
+          supports both{' '}
+          <span className="text-text-secondary">bmi live</span> and{' '}
+          <span className="text-text-secondary">ascap onstage</span> ·
+          chrome extension auto-fill · csv export · 9 month expiration
+          tracking · email notifications
+        </p>
+        <p className="text-[11px] text-text-disabled">
+          <Link href="/about" className="underline hover:text-text-muted transition-colors">
+            learn how it works & why you can trust us
+          </Link>
+        </p>
       </div>
     </div>
   )
