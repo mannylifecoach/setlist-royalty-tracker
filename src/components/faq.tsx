@@ -16,7 +16,7 @@ const faqs = [
   {
     question: 'do you submit performances on my behalf?',
     answer:
-      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then export a csv or use the chrome extension to submit directly to your pro. nothing is sent without your explicit action.',
+      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then use the chrome extension to submit directly to your pro, or export a csv. nothing is sent without your explicit action.',
   },
   {
     question: 'how accurate is the song matching?',

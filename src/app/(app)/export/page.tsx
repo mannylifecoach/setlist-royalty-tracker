@@ -37,22 +37,21 @@ export default function ExportPage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-[700px]">
+    <div className="space-y-6 max-w-[700px] mx-auto">
       <div>
-        <h1 className="text-[18px] font-light tracking-[-0.3px]">export</h1>
+        <h1 className="text-[18px] font-light tracking-[-0.3px]">submit</h1>
         <p className="text-[12px] text-text-muted mt-1">
-          download a csv formatted for your pro. only confirmed performances are
-          shown.
+          use the chrome extension to auto-fill bmi live forms directly, or
+          download a csv. only confirmed performances are shown.
         </p>
         <div className="card p-3 mt-3 space-y-3">
           <p className="text-[11px] text-text-secondary">
-            <span className="text-status-confirmed">tip:</span> for bmi live,
-            use the{' '}
+            <span className="text-status-confirmed">recommended:</span> use the{' '}
             <a href="/settings" className="text-status-discovered hover:underline">
               chrome extension
             </a>{' '}
-            to auto-fill forms directly — no csv needed. generate an api key in
-            settings to get started.
+            to auto-fill bmi live forms directly — no csv needed. generate an
+            api key in settings to get started.
           </p>
           <div className="flex items-center gap-3 pt-1 border-t border-border-subtle">
             <a

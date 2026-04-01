@@ -49,7 +49,7 @@ const steps = [
   {
     number: '05',
     title: 'submit & get paid',
-    description: 'export to bmi live or ascap onstage before the 9-month deadline',
+    description: 'auto-fill bmi live via chrome extension or export csv — before the 9-month deadline',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />

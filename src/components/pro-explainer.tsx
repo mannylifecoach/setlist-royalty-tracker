@@ -98,7 +98,7 @@ export function ProExplainer() {
             steps. instead of manually searching for concerts, copying venue
             details, and typing setlists into bmi or ascap forms — we find the
             performances, organize the data, and let you submit in seconds via
-            csv export or our chrome extension that auto-fills the pro forms.
+            our chrome extension that auto-fills the pro forms, or a csv export.
           </p>
         </div>
       </div>

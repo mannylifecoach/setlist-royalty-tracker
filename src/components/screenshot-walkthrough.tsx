@@ -2,28 +2,45 @@ import Image from 'next/image';
 
 const screens = [
   {
-    src: '/screenshots/dashboard.jpg',
-    alt: 'Performance dashboard showing tracked concerts, matched songs, and submission status',
-    title: 'track every performance',
+    src: '/screenshots/artists.png',
+    alt: 'Artists page showing tracked artists with resolved status from setlist.fm',
+    title: 'add your artists once',
     description:
-      'see all your matched concerts in one place — artist, venue, date, songs matched, and submission status at a glance.',
+      'search setlist.fm and add the artists you write for. this is a one-time setup — once added, we\'ll keep scanning for new performances automatically.',
   },
   {
-    src: '/screenshots/export.jpg',
-    alt: 'BMI Live export screen showing setlist data and CSV preview',
-    title: 'export & submit in seconds',
+    src: '/screenshots/songs.png',
+    alt: 'Songs page showing registered songs linked to artists with BMI work IDs',
+    title: 'register your songs',
     description:
-      'one-click export to bmi live or ascap onstage format. review the csv preview, then submit — no manual data entry.',
+      'add your songs and link them to artists. include your bmi or ascap work id if you have it. like artists, you only do this once — unless you release new music.',
+  },
+  {
+    src: '/screenshots/performances.png',
+    alt: 'Performances table showing discovered and confirmed live performances with venue and status',
+    title: 'we find your performances',
+    description:
+      'hit scan and we search setlist.fm\'s 9.6m+ setlists for concerts where your songs were played. review matches, confirm the real ones, and track submission status.',
+  },
+  {
+    src: '/screenshots/export.png',
+    alt: 'Submit page showing Chrome extension auto-fill and CSV export for BMI Live',
+    title: 'submit & collect royalties',
+    description:
+      'use the chrome extension to auto-fill bmi live forms directly from your confirmed performances. prefer manual? download a csv instead. you stay in control — we never submit on your behalf.',
   },
 ];
 
 export function ScreenshotWalkthrough() {
   return (
     <section className="space-y-8">
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <h2 className="text-[11px] text-text-muted tracking-[2px] uppercase">
           see it in action
         </h2>
+        <p className="text-[12px] text-text-secondary max-w-[400px] mx-auto leading-[1.5]">
+          set up your artists and songs once, then let us handle the rest.
+        </p>
       </div>
 
       <div className="space-y-10">
