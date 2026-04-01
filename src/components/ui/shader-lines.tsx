@@ -139,6 +139,7 @@ export function ShaderLines() {
 
     const renderer = new WebGLRendererClass()
     renderer.setPixelRatio(window.devicePixelRatio)
+    ;(renderer as unknown as { setClearColor: (color: number, alpha: number) => void }).setClearColor(0x000000, 1)
     container.appendChild(renderer.domElement)
 
     sceneRef.current = {

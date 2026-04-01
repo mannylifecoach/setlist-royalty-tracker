@@ -7,7 +7,13 @@ import { CircuitCTA } from '@/components/ui/circuit-cta';
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-[2vw] py-3 sm:py-[1.5vw] border-b border-border-subtle">
+      {/* shader as fixed full-bleed background — no seams */}
+      <div className="fixed inset-0 z-0">
+        <ShaderLines />
+      </div>
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-transparent via-transparent via-50% to-black pointer-events-none" />
+
+      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-[2vw] pt-14 sm:pt-16 pb-3">
         <span className="text-[14px] tracking-[-0.3px]">
           setlist royalty tracker
         </span>
@@ -21,10 +27,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative h-[70vh] sm:h-[85vh] flex items-center justify-center overflow-hidden">
-        <ShaderLines />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-[1]" />
-        <div className="relative z-[2] text-center space-y-4 sm:space-y-6 px-6 sm:px-[4vw]">
+      <section className="relative z-[1] h-[100vh] flex items-center justify-center -mt-[52px]">
+        <div className="text-center space-y-4 sm:space-y-6 px-6 sm:px-[4vw]">
           <h1 className="text-[40px] sm:text-[56px] font-normal tracking-[-2px] leading-[1.05]">
             stop leaving royalties
             <br />
@@ -38,7 +42,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <main className="flex-1 flex items-center justify-center px-[4vw] py-[6vw]">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-[4vw] py-[6vw] bg-bg">
         <div className="max-w-[640px] text-center space-y-12">
 
           <HowItWorks />
@@ -76,7 +80,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="px-[2vw] py-[1.5vw] border-t border-border-subtle text-center text-[11px] text-text-disabled">
+      <footer className="relative z-10 bg-bg px-[2vw] py-[1.5vw] border-t border-border-subtle text-center text-[11px] text-text-disabled">
         setlist royalty tracker · powered by setlist.fm api
       </footer>
     </div>
