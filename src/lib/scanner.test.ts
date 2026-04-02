@@ -19,8 +19,8 @@ vi.mock('@/db', () => {
       select: () => ({
         from: (table: unknown) => {
           // Differentiate by table reference
-          const tableName = (table as { [Symbol.for('drizzle:Name')]?: string })?.[Symbol.for('drizzle:Name')]
-            || String(table);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tableName = (table as any)?.[Symbol.for('drizzle:Name')] || String(table);
 
           if (tableName.includes('tracked_artists') || tableName.includes('trackedArtists')) {
             return { where: vi.fn().mockImplementation(() => Promise.resolve(mockDbState.artists)) };

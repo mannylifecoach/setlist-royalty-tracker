@@ -5,6 +5,7 @@ import {
   uuid,
   date,
   integer,
+  boolean,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
@@ -20,6 +21,7 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   apiKey: text('api_key').unique(),
+  emailNotifications: boolean('email_notifications').default(true).notNull(),
 });
 
 export const accounts = pgTable('accounts', {

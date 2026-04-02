@@ -11,11 +11,11 @@ export async function GET() {
   }
 
   const [user] = await db
-    .select({ name: users.name, pro: users.pro, role: users.role })
+    .select({ name: users.name, pro: users.pro, role: users.role, emailNotifications: users.emailNotifications })
     .from(users)
     .where(eq(users.id, session.user.id));
 
-  return NextResponse.json(user || { name: null, pro: null, role: null });
+  return NextResponse.json(user || { name: null, pro: null, role: null, emailNotifications: true });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { name, pro, role } = await request.json();
+  const { name, pro, role, emailNotifications } = await request.json();
 
   const [updated] = await db
     .update(users)
@@ -32,10 +32,11 @@ export async function PATCH(request: NextRequest) {
       name: name ?? undefined,
       pro: pro ?? undefined,
       role: role ?? undefined,
+      emailNotifications: emailNotifications ?? undefined,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
     .returning();
 
-  return NextResponse.json({ name: updated.name, pro: updated.pro, role: updated.role });
+  return NextResponse.json({ name: updated.name, pro: updated.pro, role: updated.role, emailNotifications: updated.emailNotifications });
 }

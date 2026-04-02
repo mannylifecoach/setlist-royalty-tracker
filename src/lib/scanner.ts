@@ -167,7 +167,7 @@ export async function scanAllUsers(): Promise<void> {
 
     // Send email notification if new performances found
     const totalNew = results.reduce((sum, r) => sum + r.newPerformances, 0);
-    if (totalNew > 0 && user.email) {
+    if (totalNew > 0 && user.email && user.emailNotifications) {
       for (const result of results) {
         if (result.newPerformances > 0) {
           await sendNewPerformancesEmail(

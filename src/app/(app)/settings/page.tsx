@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKeyPreview, setApiKeyPreview] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function SettingsPage() {
         setPro(data.pro || '');
         setRole(data.role || '');
         setName(data.name || '');
+        setEmailNotifications(data.emailNotifications ?? true);
       }
     }
     load();
@@ -42,7 +44,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pro: pro || null, role: role || null, name: name || null }),
+        body: JSON.stringify({ pro: pro || null, role: role || null, name: name || null, emailNotifications }),
       });
       if (res.ok) {
         setSaved(true);
@@ -103,6 +105,41 @@ export default function SettingsPage() {
 
         <button onClick={handleSave} disabled={saving} className="btn">
           {saving ? 'saving...' : saved ? 'saved' : 'save settings'}
+        </button>
+      </div>
+
+      <div className="card p-4 space-y-3">
+        <div className="text-[11px] text-text-muted">notifications</div>
+        <button
+          onClick={() => setEmailNotifications(!emailNotifications)}
+          className="flex items-center justify-between w-full group"
+        >
+          <span className="text-[12px] text-text-secondary">
+            email notifications
+          </span>
+          <span
+            className={`relative inline-block w-[36px] h-[18px] border transition-colors ${
+              emailNotifications
+                ? 'bg-white border-white'
+                : 'bg-transparent border-[#222]'
+            }`}
+          >
+            <span
+              className={`absolute top-[2px] w-[12px] h-[12px] transition-all ${
+                emailNotifications
+                  ? 'left-[20px] bg-black'
+                  : 'left-[2px] bg-[#444]'
+              }`}
+            />
+          </span>
+        </button>
+        <p className="text-[11px] text-text-disabled">
+          {emailNotifications
+            ? 'you\'ll receive emails about new performances and expiration warnings.'
+            : 'email notifications are off. you can still check your dashboard for updates.'}
+        </p>
+        <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
+          {saving ? 'saving...' : saved ? 'saved' : 'save'}
         </button>
       </div>
 
