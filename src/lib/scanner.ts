@@ -15,6 +15,7 @@ import {
   calculateExpirationDate,
 } from './setlistfm';
 import { sendNewPerformancesEmail } from './email';
+import { normalizeTitle, findBestMatch } from './fuzzy-match';
 
 interface ScanResult {
   artistName: string;
@@ -69,8 +70,9 @@ async function scanArtistForUser(
 
   if (linkedSongs.length === 0) return result;
 
+  // Build a normalized title map for fuzzy matching
   const songTitleMap = new Map(
-    linkedSongs.map((ls) => [ls.song.title.toLowerCase(), ls.song])
+    linkedSongs.map((ls) => [normalizeTitle(ls.song.title), ls.song])
   );
 
   // 9 months ago cutoff
@@ -94,8 +96,13 @@ async function scanArtistForUser(
       const setlistSongs = extractSongsFromSetlist(setlist);
 
       for (const songName of setlistSongs) {
-        const matchedSong = songTitleMap.get(songName.toLowerCase());
-        if (!matchedSong) continue;
+        const matchResult = findBestMatch(songName, songTitleMap);
+        if (!matchResult) continue;
+        const matchedSong = matchResult.match;
+
+        if (matchResult.method === 'fuzzy') {
+          console.log(`[scan] Fuzzy match: "${songName}" → "${matchedSong.title}" (score: ${matchResult.score.toFixed(2)})`);
+        }
 
         // Check for existing performance (dedup)
         const existing = await db
