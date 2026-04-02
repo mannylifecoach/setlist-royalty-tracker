@@ -45,7 +45,7 @@ async function init() {
   }
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const onBmi = tab?.url?.includes('ols.bmi.com') || tab?.url?.includes('localhost');
+  const onBmi = tab?.url?.includes('ols.bmi.com');
 
   content.innerHTML = '<div class="loading">loading performances...</div>';
 
