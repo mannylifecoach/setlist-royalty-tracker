@@ -2,6 +2,13 @@ import Image from 'next/image';
 
 const screens = [
   {
+    src: '/screenshots/dashboard.png',
+    alt: 'Dashboard showing performance overview, scan status, and recent activity',
+    title: 'your royalty command center',
+    description:
+      'see everything at a glance — discovered performances, submission status, and expiration warnings. hit scan to check for new concerts anytime.',
+  },
+  {
     src: '/screenshots/artists.png',
     alt: 'Artists page showing tracked artists with resolved status from setlist.fm',
     title: 'add your artists once',
@@ -22,13 +29,6 @@ const screens = [
     description:
       'hit scan and we search setlist.fm\'s 9.6m+ setlists for concerts where your songs were played. review matches, confirm the real ones, and track submission status.',
   },
-  {
-    src: '/screenshots/export.png',
-    alt: 'Submit page showing Chrome extension auto-fill and CSV export for BMI Live',
-    title: 'submit & collect royalties',
-    description:
-      'use the chrome extension to auto-fill bmi live forms directly from your confirmed performances. prefer manual? download a csv instead. you stay in control — we never submit on your behalf.',
-  },
 ];
 
 export function ScreenshotWalkthrough() {
@@ -46,15 +46,6 @@ export function ScreenshotWalkthrough() {
       <div className="space-y-10">
         {screens.map((screen, i) => (
           <div key={screen.title} className="space-y-4">
-            <div className="border border-border-subtle overflow-hidden">
-              <Image
-                src={screen.src}
-                alt={screen.alt}
-                width={1280}
-                height={720}
-                className="w-full h-auto"
-              />
-            </div>
             <div className="text-center space-y-2">
               <div className="text-[11px] text-text-disabled">
                 0{i + 1}
@@ -65,6 +56,15 @@ export function ScreenshotWalkthrough() {
               <p className="text-[12px] text-text-secondary leading-[1.5] max-w-[460px] mx-auto">
                 {screen.description}
               </p>
+            </div>
+            <div className="border border-border-subtle overflow-hidden">
+              <Image
+                src={screen.src}
+                alt={screen.alt}
+                width={1280}
+                height={720}
+                className="w-full h-auto"
+              />
             </div>
           </div>
         ))}

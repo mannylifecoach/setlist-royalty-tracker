@@ -40,7 +40,7 @@ export default async function AppLayout({
         </div>
         <div className="flex items-center gap-4 shrink-0">
           <span className="text-[11px] text-text-muted">
-            {session.user.email}
+            {process.env.DEMO_EMAIL || session.user.email}
           </span>
           <Link href="/settings" className="text-[11px] text-text-disabled hover:opacity-50 transition-opacity">
             settings
