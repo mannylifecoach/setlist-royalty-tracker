@@ -4,18 +4,15 @@ import { db } from '@/db';
 import { performances, songs, trackedArtists } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { mapAttendanceToBmiRange } from '@/lib/constants';
+import { getCorsHeaders } from '@/lib/cors';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return new Response(null, { status: 204, headers: getCorsHeaders(request, 'GET, OPTIONS') });
 }
 
 export async function GET(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request, 'GET, OPTIONS');
+
   const user = await authenticateApiKey(request);
   if (!user) {
     return NextResponse.json(

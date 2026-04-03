@@ -3,18 +3,15 @@ import { authenticateApiKey } from '@/lib/api-key-auth';
 import { db } from '@/db';
 import { performances } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
+import { getCorsHeaders } from '@/lib/cors';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return new Response(null, { status: 204, headers: getCorsHeaders(request, 'POST, OPTIONS') });
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request, 'POST, OPTIONS');
+
   const user = await authenticateApiKey(request);
   if (!user) {
     return NextResponse.json(
