@@ -5,12 +5,13 @@ import { performances, songs, trackedArtists } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { mapAttendanceToBmiRange } from '@/lib/constants';
 import { getCorsHeaders } from '@/lib/cors';
+import { withHandler } from '@/lib/api-utils';
 
 export async function OPTIONS(request: NextRequest) {
   return new Response(null, { status: 204, headers: getCorsHeaders(request, 'GET, OPTIONS') });
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withHandler(async (request: NextRequest) => {
   const corsHeaders = getCorsHeaders(request, 'GET, OPTIONS');
 
   const user = await authenticateApiKey(request);
@@ -122,4 +123,4 @@ export async function GET(request: NextRequest) {
   );
 
   return NextResponse.json({ events }, { headers: corsHeaders });
-}
+});

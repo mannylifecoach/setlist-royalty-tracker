@@ -4,8 +4,9 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { withHandler } from '@/lib/api-utils';
 
-export async function POST() {
+export const POST = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -20,9 +21,9 @@ export async function POST() {
     .returning({ apiKey: users.apiKey });
 
   return NextResponse.json({ apiKey: updated.apiKey });
-}
+});
 
-export async function GET() {
+export const GET = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -39,4 +40,4 @@ export async function GET() {
       ? `${user.apiKey.slice(0, 8)}...${user.apiKey.slice(-4)}`
       : null,
   });
-}
+});

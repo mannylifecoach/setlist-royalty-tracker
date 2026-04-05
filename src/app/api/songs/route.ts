@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { songs, songArtists, trackedArtists } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { withHandler, parseBody } from '@/lib/api-utils';
+import { createSongSchema } from '@/lib/schemas';
 
-export async function GET() {
+export const GET = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -30,20 +32,17 @@ export async function GET() {
   );
 
   return NextResponse.json(songsWithArtists);
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { title, iswc, bmiWorkId, ascapWorkId } = body;
-
-  if (!title) {
-    return NextResponse.json({ error: 'title is required' }, { status: 400 });
-  }
+  const result = await parseBody(request, createSongSchema);
+  if ('error' in result) return result.error;
+  const { title, iswc, bmiWorkId, ascapWorkId } = result.data;
 
   const [song] = await db
     .insert(songs)
@@ -57,4 +56,4 @@ export async function POST(request: NextRequest) {
     .returning();
 
   return NextResponse.json(song, { status: 201 });
-}
+});

@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { users, trackedArtists } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { withHandler, parseBody } from '@/lib/api-utils';
+import { onboardingSchema } from '@/lib/schemas';
 
-export async function GET() {
+export const GET = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -20,22 +22,17 @@ export async function GET() {
     .where(eq(users.id, session.user.id));
 
   return NextResponse.json(user || { pro: null, role: null, onboardingComplete: null });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { pro, role, artistName } = await request.json();
-
-  if (!pro || !role || !artistName?.trim()) {
-    return NextResponse.json(
-      { error: 'pro, role, and artistName are required' },
-      { status: 400 }
-    );
-  }
+  const result = await parseBody(request, onboardingSchema);
+  if ('error' in result) return result.error;
+  const { pro, role, artistName } = result.data;
 
   // Update user profile
   await db
@@ -53,9 +50,9 @@ export async function POST(request: NextRequest) {
     .insert(trackedArtists)
     .values({
       userId: session.user.id,
-      artistName: artistName.trim(),
+      artistName,
     })
     .onConflictDoNothing();
 
   return NextResponse.json({ success: true });
-}
+});

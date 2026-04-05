@@ -3,18 +3,18 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { performances } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
+import { withHandler, parseBody } from '@/lib/api-utils';
+import { bulkConfirmSchema } from '@/lib/schemas';
 
-export async function POST(request: NextRequest) {
+export const POST = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { ids } = await request.json();
-
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return NextResponse.json({ error: 'ids array is required' }, { status: 400 });
-  }
+  const result = await parseBody(request, bulkConfirmSchema);
+  if ('error' in result) return result.error;
+  const { ids } = result.data;
 
   await db
     .update(performances)
@@ -28,4 +28,4 @@ export async function POST(request: NextRequest) {
     );
 
   return NextResponse.json({ ok: true, confirmed: ids.length });
-}
+});

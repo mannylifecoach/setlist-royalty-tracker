@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { trackedArtists } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { withHandler, parseBody } from '@/lib/api-utils';
+import { createArtistSchema } from '@/lib/schemas';
 
-export async function GET() {
+export const GET = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -17,19 +19,17 @@ export async function GET() {
     .orderBy(trackedArtists.artistName);
 
   return NextResponse.json(artists);
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { artistName, mbid } = await request.json();
-
-  if (!artistName) {
-    return NextResponse.json({ error: 'artistName is required' }, { status: 400 });
-  }
+  const result = await parseBody(request, createArtistSchema);
+  if ('error' in result) return result.error;
+  const { artistName, mbid } = result.data;
 
   const [artist] = await db
     .insert(trackedArtists)
@@ -41,4 +41,4 @@ export async function POST(request: NextRequest) {
     .returning();
 
   return NextResponse.json(artist, { status: 201 });
-}
+});

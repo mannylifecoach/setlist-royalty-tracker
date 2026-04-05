@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { withHandler, parseBody } from '@/lib/api-utils';
+import { updateSettingsSchema } from '@/lib/schemas';
 
-export async function GET() {
+export const GET = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -16,15 +18,17 @@ export async function GET() {
     .where(eq(users.id, session.user.id));
 
   return NextResponse.json(user || { name: null, pro: null, role: null, emailNotifications: true });
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const { name, pro, role, emailNotifications } = await request.json();
+  const result = await parseBody(request, updateSettingsSchema);
+  if ('error' in result) return result.error;
+  const { name, pro, role, emailNotifications } = result.data;
 
   const [updated] = await db
     .update(users)
@@ -39,4 +43,4 @@ export async function PATCH(request: NextRequest) {
     .returning();
 
   return NextResponse.json({ name: updated.name, pro: updated.pro, role: updated.role, emailNotifications: updated.emailNotifications });
-}
+});

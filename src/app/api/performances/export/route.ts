@@ -4,20 +4,20 @@ import { db } from '@/db';
 import { performances, songs, trackedArtists } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { generateBmiLiveCsv, generateAscapOnStageCsv } from '@/lib/export';
+import { withHandler, parseQuery } from '@/lib/api-utils';
+import { exportQuerySchema } from '@/lib/schemas';
 
-export async function GET(request: NextRequest) {
+export const GET = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
-  const pro = searchParams.get('pro') as 'bmi' | 'ascap';
-  const ids = searchParams.get('ids')?.split(',').filter(Boolean);
-
-  if (!pro || !['bmi', 'ascap'].includes(pro)) {
-    return NextResponse.json({ error: 'pro must be bmi or ascap' }, { status: 400 });
-  }
+  const qResult = parseQuery(searchParams, exportQuerySchema);
+  if ('error' in qResult) return qResult.error;
+  const { pro, ids: idsParam } = qResult.data;
+  const ids = idsParam?.split(',').filter(Boolean);
 
   const conditions = [eq(performances.userId, session.user.id)];
   if (ids && ids.length > 0) {
@@ -48,4 +48,4 @@ export async function GET(request: NextRequest) {
       'Content-Disposition': `attachment; filename="${filename}"`,
     },
   });
-}
+});

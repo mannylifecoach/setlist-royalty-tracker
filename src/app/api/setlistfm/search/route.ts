@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { searchArtists } from '@/lib/setlistfm';
+import { withHandler, parseQuery } from '@/lib/api-utils';
+import { setlistfmSearchSchema } from '@/lib/schemas';
 
-export async function GET(request: NextRequest) {
+export const GET = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q');
+  const qResult = parseQuery(searchParams, setlistfmSearchSchema);
+  if ('error' in qResult) return qResult.error;
 
-  if (!query) {
-    return NextResponse.json({ error: 'q parameter is required' }, { status: 400 });
-  }
-
-  const artists = await searchArtists(query);
+  const artists = await searchArtists(qResult.data.q);
   return NextResponse.json(artists);
-}
+});

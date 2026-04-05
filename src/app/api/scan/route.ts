@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { scanForUser } from '@/lib/scanner';
+import { withHandler } from '@/lib/api-utils';
 
-export async function POST() {
+export const POST = withHandler(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -18,4 +19,4 @@ export async function POST() {
     newPerformances: totalNew,
     results,
   });
-}
+});

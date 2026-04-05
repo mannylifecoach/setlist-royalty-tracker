@@ -3,22 +3,25 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { songArtists, songs } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { withHandler, parseBody, validateUuid } from '@/lib/api-utils';
+import { songArtistSchema } from '@/lib/schemas';
 
-export async function POST(
+export const POST = withHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const { id: songId } = await params;
-  const { artistId } = await request.json();
+  const idCheck = validateUuid(songId);
+  if ('error' in idCheck) return idCheck.error;
 
-  if (!artistId) {
-    return NextResponse.json({ error: 'artistId is required' }, { status: 400 });
-  }
+  const result = await parseBody(request, songArtistSchema);
+  if ('error' in result) return result.error;
+  const { artistId } = result.data;
 
   // Verify song belongs to user
   const [song] = await db
@@ -37,19 +40,24 @@ export async function POST(
     .returning();
 
   return NextResponse.json(link || { songId, artistId }, { status: 201 });
-}
+});
 
-export async function DELETE(
+export const DELETE = withHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const { id: songId } = await params;
-  const { artistId } = await request.json();
+  const idCheck = validateUuid(songId);
+  if ('error' in idCheck) return idCheck.error;
+
+  const result = await parseBody(request, songArtistSchema);
+  if ('error' in result) return result.error;
+  const { artistId } = result.data;
 
   await db
     .delete(songArtists)
@@ -58,4 +66,4 @@ export async function DELETE(
     );
 
   return NextResponse.json({ ok: true });
-}
+});

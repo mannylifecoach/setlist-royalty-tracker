@@ -3,46 +3,26 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { performances } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { withHandler, parseBody, validateUuid } from '@/lib/api-utils';
+import { updatePerformanceSchema } from '@/lib/schemas';
 
-export async function PATCH(
+export const PATCH = withHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const { id } = await params;
-  const body = await request.json();
+  const idCheck = validateUuid(id);
+  if ('error' in idCheck) return idCheck.error;
 
-  const allowedFields = [
-    'status',
-    'venueName',
-    'venueCity',
-    'venueState',
-    'venueCountry',
-    'venueAddress',
-    'venuePhone',
-    'attendance',
-    'eventName',
-    'eventType',
-    'startTimeHour',
-    'startTimeAmPm',
-    'endTimeHour',
-    'endTimeAmPm',
-    'venueZip',
-    'venueType',
-    'venueCapacity',
-    'ticketCharge',
-  ] as const;
+  const result = await parseBody(request, updatePerformanceSchema);
+  if ('error' in result) return result.error;
 
-  const updates: Record<string, unknown> = { updatedAt: new Date() };
-  for (const field of allowedFields) {
-    if (field in body) {
-      updates[field] = body[field];
-    }
-  }
+  const updates: Record<string, unknown> = { updatedAt: new Date(), ...result.data };
 
   const [updated] = await db
     .update(performances)
@@ -57,4 +37,4 @@ export async function PATCH(
   }
 
   return NextResponse.json(updated);
-}
+});

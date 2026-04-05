@@ -3,8 +3,9 @@ import { auth } from '@/lib/auth';
 import { db } from '@/db';
 import { performances, songs, trackedArtists } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { withHandler } from '@/lib/api-utils';
 
-export async function GET(request: NextRequest) {
+export const GET = withHandler(async (request: NextRequest) => {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -40,4 +41,4 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(performances.eventDate));
 
   return NextResponse.json(results);
-}
+});
