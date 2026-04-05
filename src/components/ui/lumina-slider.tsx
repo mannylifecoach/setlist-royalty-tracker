@@ -72,21 +72,21 @@ const SLIDES: Slide[] = [
   {
     title: "2.4 million potential users in the us alone",
     description:
-      "every songwriter registered with a royalty collection organization is a potential customer. that's 2.4 million in the us alone — and the market extends globally across dozens of international organizations.",
+      "every songwriter registered with a performing rights organization is a potential customer. 2.4 million in the us alone — and the market extends globally across dozens of international organizations. we start with the 50k indie artists who actively tour and file their own claims, then expand into publishers managing hundreds of catalogs.",
     stats: [
-      { value: "2.4m+", label: "registered songwriters (us)" },
-      { value: "$800m+", label: "addressable market" },
-      { value: "50k+", label: "indie artists (initial target)" },
+      { value: "$800m+", label: "tam — all us pro members × subscription" },
+      { value: "$54m", label: "sam — 500k active touring songwriters" },
+      { value: "$5.4m", label: "som — 50k indie artists (year 1-2)" },
     ],
   },
   {
     title: "the product pays for itself",
     description:
-      "a single recovered live performance royalty can be worth more than a full year of subscription. when the product literally makes users more money than it costs, churn approaches zero. revenue model is subscription-based with a free tier for discovery and paid tiers for professionals and publishers managing larger catalogs.",
+      "a single recovered live performance royalty averages $15-75 per show — one match can cover a full year of subscription. when the product literally makes users more money than it costs, churn approaches zero. at 1,000 subscribers, we hit $108k arr. at 10,000, we cross $1m. the math scales because the scanning cost per user is near zero.",
     stats: [
-      { value: "free", label: "to start" },
-      { value: "subscription", label: "to unlock full catalog" },
-      { value: ">1x", label: "roi on first recovery" },
+      { value: "$9/mo", label: "pro subscription" },
+      { value: "$15-75", label: "avg royalty per show recovered" },
+      { value: "$108k", label: "arr at 1,000 subscribers" },
     ],
   },
   {
