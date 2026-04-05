@@ -31,9 +31,10 @@ export default async function AppLayout({
       <nav className="flex items-center px-[2vw] py-[1.2vw] border-b border-border-subtle">
         <Link
           href="/"
-          className="text-[14px] tracking-[-0.3px] hover:opacity-50 transition-opacity shrink-0"
+          className="flex flex-col items-start hover:opacity-50 transition-opacity shrink-0"
         >
-          setlist royalty tracker
+          <span className="text-[24px] uppercase tracking-[-2px]" style={{ fontFamily: "var(--font-marker), 'Permanent Marker', cursive" }}>srt</span>
+          <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </Link>
         <div className="flex-1 flex justify-center">
           <AppNav />

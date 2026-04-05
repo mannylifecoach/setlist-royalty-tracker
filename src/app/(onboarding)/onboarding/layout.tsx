@@ -14,8 +14,9 @@ export default async function OnboardingLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="flex items-center px-[2vw] py-[1.2vw] border-b border-border-subtle">
-        <span className="text-[14px] tracking-[-0.3px]">
-          setlist royalty tracker
+        <span className="flex flex-col items-start">
+          <span className="text-[24px] uppercase tracking-[-2px]" style={{ fontFamily: "var(--font-marker), 'Permanent Marker', cursive" }}>srt</span>
+          <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </span>
       </nav>
       <main className="flex-1 px-[2vw] py-[2vw]">{children}</main>

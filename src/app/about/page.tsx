@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MorphingText } from '@/components/ui/morphing-text';
 import { ProExplainer } from '@/components/pro-explainer';
 import { DataProvenance } from '@/components/data-provenance';
 import { TrustBadges } from '@/components/trust-badges';
@@ -9,8 +10,9 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="flex items-center justify-between px-[2vw] py-[1.5vw] border-b border-border-subtle">
-        <Link href="/" className="text-[14px] tracking-[-0.3px] hover:opacity-70 transition-opacity">
-          setlist royalty tracker
+        <Link href="/" className="flex flex-col items-start hover:opacity-70 transition-opacity">
+          <MorphingText className="text-[28px]" />
+          <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/about" className="btn text-[11px]">

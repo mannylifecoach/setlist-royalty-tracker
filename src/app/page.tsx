@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { HowItWorks } from '@/components/how-it-works';
 import { WhyThisMatters } from '@/components/why-this-matters';
 import { ShaderLines } from '@/components/ui/shader-lines';
+import { MorphingText } from '@/components/ui/morphing-text';
 
 
 export default function LandingPage() {
@@ -14,8 +15,9 @@ export default function LandingPage() {
       <div className="fixed inset-0 z-0 bg-gradient-to-b from-transparent via-transparent via-50% to-black pointer-events-none" />
 
       <nav className="relative z-10 flex items-center justify-between px-14 sm:px-20 pt-14 sm:pt-16 pb-3">
-        <span className="text-[14px] tracking-[-0.3px]">
-          setlist royalty tracker
+        <span className="flex flex-col items-start">
+          <MorphingText className="text-[28px] sm:text-[32px]" />
+          <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </span>
         <div className="flex items-center gap-4">
           <Link href="/about" className="btn text-[11px]">

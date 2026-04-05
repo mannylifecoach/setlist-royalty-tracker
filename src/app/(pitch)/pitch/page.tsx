@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react"
 import { LuminaSlider } from "@/components/ui/lumina-slider"
+import { MorphingText } from "@/components/ui/morphing-text"
 
 export default function PitchPage() {
   const [verified, setVerified] = useState(false)
@@ -48,7 +49,10 @@ export default function PitchPage() {
       <div className="min-h-screen flex items-center justify-center bg-black">
         <form onSubmit={handleSubmit} className="w-full max-w-[320px] px-6 space-y-6">
           <div className="space-y-1">
-            <div className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</div>
+            <div className="flex flex-col items-center">
+              <MorphingText className="text-[32px]" />
+              <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
+            </div>
             <div className="text-[11px] text-[#555]">investor preview</div>
           </div>
           <div>

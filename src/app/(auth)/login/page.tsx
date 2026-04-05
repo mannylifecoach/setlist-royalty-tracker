@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { MorphingText } from '@/components/ui/morphing-text';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -43,9 +44,10 @@ function LoginForm() {
         <div className="text-center space-y-2">
           <Link
             href="/"
-            className="text-[14px] tracking-[-0.3px] hover:opacity-50 transition-opacity"
+            className="flex flex-col items-center hover:opacity-50 transition-opacity"
           >
-            setlist royalty tracker
+            <MorphingText className="text-[32px]" />
+            <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
           </Link>
           <h1 className="text-[18px] font-light tracking-[-0.3px]">sign in</h1>
         </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { MorphingText } from "./morphing-text"
 
 declare global {
   interface Window {
@@ -783,7 +784,10 @@ export function LuminaSlider() {
 
       {/* branding — top left */}
       <div className="absolute top-4 left-6 md:top-8 md:left-8 lg:top-12 lg:left-14 z-20">
-        <a href="/" className="text-[12px] md:text-[13px] tracking-[-0.3px] text-white hover:opacity-70 transition-opacity" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.9)" }}>setlist royalty tracker</a>
+        <a href="/" className="flex flex-col items-start hover:opacity-70 transition-opacity">
+          <MorphingText className="text-[24px] md:text-[28px]" />
+          <span className="text-[12px] md:text-[13px] tracking-[-0.3px] text-white" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.9)" }}>setlist royalty tracker</span>
+        </a>
         <div className="text-[9px] md:text-[10px] tracking-[0.5px] mt-[2px]" style={{ color: "#aaa", textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}>investor preview</div>
       </div>
 
