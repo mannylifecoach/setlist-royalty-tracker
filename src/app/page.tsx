@@ -21,6 +21,9 @@ export default function LandingPage() {
           <Link href="/about" className="btn text-[11px]">
             about
           </Link>
+          <Link href="/pitch" className="btn text-[11px]">
+            pitch
+          </Link>
           <Link href="/login" className="btn text-[11px]">
             sign in
           </Link>
