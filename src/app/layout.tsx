@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Permanent_Marker } from 'next/font/google';
+import { Inter, Sora } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import './globals.css';
 
@@ -9,9 +9,9 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const permanentMarker = Permanent_Marker({
+const sora = Sora({
   subsets: ['latin'],
-  weight: '400',
+  weight: ['800'],
   variable: '--font-marker',
 });
 
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${permanentMarker.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${sora.variable} h-full`}>
       <body className="min-h-full font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

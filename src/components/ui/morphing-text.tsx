@@ -80,8 +80,8 @@ export function MorphingText({ className = "" }: { className?: string }) {
     return (
       <span className={`inline-block relative ${className}`}>
         <span
-          className="uppercase tracking-[-2px]"
-          style={{ fontFamily: "var(--font-marker), 'Permanent Marker', cursive" }}
+          className="lowercase tracking-[-2px]"
+          style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
         >
           {WORDS[0]}
         </span>
@@ -107,16 +107,16 @@ export function MorphingText({ className = "" }: { className?: string }) {
       >
         <span
           ref={text2Ref}
-          className="inline-block uppercase tracking-[-2px]"
-          style={{ fontFamily: "var(--font-marker), 'Permanent Marker', cursive" }}
+          className="inline-block lowercase tracking-[-2px]"
+          style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
         >
           {WORDS[0]}
         </span>
         <span
           ref={text1Ref}
-          className="inline-block uppercase tracking-[-2px] absolute left-0 top-0"
+          className="inline-block lowercase tracking-[-2px] absolute left-0 top-0"
           style={{
-            fontFamily: "var(--font-marker), 'Permanent Marker', cursive",
+            fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800,
             opacity: "0%",
           }}
         >

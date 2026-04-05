@@ -33,7 +33,7 @@ export default async function AppLayout({
           href="/"
           className="flex flex-col items-start hover:opacity-50 transition-opacity shrink-0"
         >
-          <span className="text-[24px] uppercase tracking-[-2px]" style={{ fontFamily: "var(--font-marker), 'Permanent Marker', cursive" }}>srt</span>
+          <span className="text-[24px] uppercase tracking-[-2px]" style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}>srt</span>
           <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </Link>
         <div className="flex-1 flex justify-center">
