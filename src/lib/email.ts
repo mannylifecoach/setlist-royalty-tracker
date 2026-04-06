@@ -22,6 +22,8 @@ function layout(content: string): string {
           <!-- header -->
           <tr>
             <td style="padding-bottom:32px;border-bottom:1px solid #222222;">
+              <span style="font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-2px;text-transform:uppercase;font-family:'Sora',Arial,Helvetica,sans-serif;">srt</span>
+              <br>
               <span style="font-size:13px;font-weight:500;color:#ffffff;letter-spacing:0.5px;">setlist royalty tracker</span>
             </td>
           </tr>
