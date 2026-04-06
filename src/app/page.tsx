@@ -3,6 +3,7 @@ import { HowItWorks } from '@/components/how-it-works';
 import { WhyThisMatters } from '@/components/why-this-matters';
 import { ShaderLines } from '@/components/ui/shader-lines';
 import { MorphingText } from '@/components/ui/morphing-text';
+import { MobileNav } from '@/components/mobile-nav';
 
 
 export default function LandingPage() {
@@ -19,7 +20,8 @@ export default function LandingPage() {
           <MorphingText className="text-[28px] sm:text-[32px]" />
           <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </span>
-        <div className="flex items-center gap-4">
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-4">
           <Link href="/about" className="btn text-[11px]">
             about
           </Link>
@@ -29,6 +31,10 @@ export default function LandingPage() {
           <Link href="/login" className="btn text-[11px]">
             sign in
           </Link>
+        </div>
+        {/* Mobile hamburger */}
+        <div className="md:hidden">
+          <MobileNav />
         </div>
       </nav>
 
