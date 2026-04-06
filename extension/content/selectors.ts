@@ -1,46 +1,123 @@
-// BMI Live DOM selectors — centralized so they're easy to update if BMI changes their UI
-// These are best-guess selectors based on typical form patterns for ols.bmi.com
+// BMI Live DOM selectors — label-based strategy from real DOM inspection (2026-04-05)
+// IDs contain dynamic GUIDs that change per session — never rely on them.
+// Use labels, placeholders, name attributes, and tag+type+index as stable selectors.
 
-export const SELECTORS = {
+export interface FieldSelector {
+  label?: string;
+  placeholder?: string;
+  name?: string;
+  id?: string;
+  tag: 'INPUT' | 'SELECT' | 'BUTTON';
+  type?: string;
+  index?: number;
+}
+
+export const FIELD_MAP: Record<string, FieldSelector> = {
   // Step 1 — Details
-  bandPerformer: 'select[name="performer"], #performer, [data-field="performer"]',
-  eventName: 'input[name="eventName"], #eventName, [data-field="eventName"]',
-  eventType: 'select[name="eventType"], #eventType, [data-field="eventType"]',
+  bandPerformer:   { label: 'Band/Performer', tag: 'SELECT' },
+  eventName:       { placeholder: 'Event name', tag: 'INPUT' },
+  eventType:       { label: 'Event type', tag: 'SELECT' },
+  startDate:       { tag: 'INPUT', type: 'date', index: 0 },
+  startTime:       { id: '_time', tag: 'SELECT', index: 0 },
+  startAmPm:       { id: '_ampm', tag: 'SELECT', index: 0 },
+  endDate:         { tag: 'INPUT', type: 'date', index: 1 },
+  endTime:         { id: '_time', tag: 'SELECT', index: 1 },
+  endAmPm:         { id: '_ampm', tag: 'SELECT', index: 1 },
+  eventPromoter:   { placeholder: 'Event promoter', tag: 'INPUT' },
+  attendance:      { label: 'Attendance', tag: 'SELECT' },
+  ticketCharge:    { name: 'coverChargeInd', tag: 'INPUT', type: 'checkbox' },
 
-  startDate: 'input[name="startDate"], #startDate, [data-field="startDate"]',
-  startHour: 'select[name="startHour"], #startHour, [data-field="startHour"]',
-  startAmPm: 'select[name="startAmPm"], #startAmPm, [data-field="startAmPm"]',
-
-  endDate: 'input[name="endDate"], #endDate, [data-field="endDate"]',
-  endHour: 'select[name="endHour"], #endHour, [data-field="endHour"]',
-  endAmPm: 'select[name="endAmPm"], #endAmPm, [data-field="endAmPm"]',
-
-  attendance: 'select[name="attendance"], #attendance, [data-field="attendance"]',
-  ticketCharge: 'input[name="ticketCharge"], [data-field="ticketCharge"]',
-
-  // Venue
-  previousVenues: 'select[name="previousVenue"], #previousVenue, [data-field="previousVenue"]',
-  venueState: 'select[name="venueState"], #venueState, [data-field="venueState"]',
-  venueCity: 'input[name="venueCity"], #venueCity, [data-field="venueCity"]',
-  venueName: 'input[name="venueName"], #venueName, [data-field="venueName"]',
-
-  // Create New Venue modal
-  newVenueName: '#newVenueName, input[name="newVenueName"]',
-  newVenueAddress: '#newVenueAddress, input[name="newVenueAddress"]',
-  newVenueState: '#newVenueState, select[name="newVenueState"]',
-  newVenueCity: '#newVenueCity, input[name="newVenueCity"]',
-  newVenueZip: '#newVenueZip, input[name="newVenueZip"]',
-  newVenueType: '#newVenueType, select[name="newVenueType"]',
-  newVenueCapacity: '#newVenueCapacity, input[name="newVenueCapacity"]',
-  newVenuePhone: '#newVenuePhone, input[name="newVenuePhone"]',
+  // Step 1 — Venue
+  previousVenues:  { label: 'Previously performed venues', tag: 'SELECT' },
+  venueState:      { label: 'State', tag: 'SELECT' },
+  venueCity:       { label: 'City', tag: 'SELECT' },
+  venueName:       { label: 'Venue name', tag: 'INPUT' },
 
   // Step 2 — Setlist
-  songSearchInput: 'input[name="songSearch"], #songSearch, [data-field="songSearch"]',
-  songListItems: '.song-list-item, [data-song-title], .setlist-song',
-  songAddButton: '.add-song-btn, button[data-action="add-song"], .song-list-item button',
-
-  // Navigation
-  nextButton: 'button.next, button[data-action="next"], .wizard-next',
-  submitButton: 'button[type="submit"], button[data-action="submit"]',
-  certificationCheckbox: 'input[type="checkbox"][name="certification"], #certification',
+  songSearch:      { id: 'tbSongSearch', tag: 'INPUT' },
+  showRecents:     { name: 'showRecentsOnTop', tag: 'INPUT', type: 'checkbox' },
 } as const;
+
+/**
+ * Find a DOM element using the label-based field selector strategy.
+ * Priority: id > name > label > placeholder > tag+type+index
+ */
+export function findField(field: FieldSelector): HTMLElement | null {
+  // 1. Try stable ID (only tbSongSearch, _time, _ampm are known stable)
+  if (field.id) {
+    if (field.index !== undefined) {
+      const matches = document.querySelectorAll<HTMLElement>(`#${field.id}`);
+      if (matches[field.index]) return matches[field.index];
+      // IDs with _time/_ampm appear multiple times — also try querySelectorAll
+      const byPartialId = document.querySelectorAll<HTMLElement>(`[id="${field.id}"]`);
+      if (byPartialId[field.index]) return byPartialId[field.index];
+    } else {
+      const el = document.getElementById(field.id);
+      if (el) return el;
+    }
+  }
+
+  // 2. Try name attribute
+  if (field.name) {
+    const el = document.querySelector<HTMLElement>(
+      `${field.tag.toLowerCase()}[name="${field.name}"]`
+    );
+    if (el) return el;
+  }
+
+  // 3. Try label text — find <label> containing text, then resolve its `for` or adjacent element
+  if (field.label) {
+    const labels = document.querySelectorAll('label');
+    for (const lbl of labels) {
+      if (lbl.textContent?.trim() === field.label) {
+        // Try for= attribute
+        const forId = lbl.getAttribute('for');
+        if (forId) {
+          const el = document.getElementById(forId);
+          if (el) return el;
+        }
+        // Try adjacent/sibling/parent element matching the tag
+        const parent = lbl.closest('.e-control-wrapper, .e-float-input, .form-group, [class*="field"]');
+        if (parent) {
+          const el = parent.querySelector<HTMLElement>(field.tag.toLowerCase());
+          if (el) return el;
+        }
+        // Try next sibling
+        const next = lbl.nextElementSibling;
+        if (next?.tagName === field.tag) return next as HTMLElement;
+        const nested = next?.querySelector<HTMLElement>(field.tag.toLowerCase());
+        if (nested) return nested;
+      }
+    }
+
+    // Syncfusion uses e-label-top / e-float-text spans as labels
+    const sfLabels = document.querySelectorAll('.e-label-top, .e-float-text, [class*="label"]');
+    for (const lbl of sfLabels) {
+      if (lbl.textContent?.trim() === field.label) {
+        const wrapper = lbl.closest('.e-control-wrapper, .e-float-input, [class*="field"]');
+        if (wrapper) {
+          const el = wrapper.querySelector<HTMLElement>(field.tag.toLowerCase());
+          if (el) return el;
+        }
+      }
+    }
+  }
+
+  // 4. Try placeholder
+  if (field.placeholder) {
+    const el = document.querySelector<HTMLElement>(
+      `${field.tag.toLowerCase()}[placeholder="${field.placeholder}"]`
+    );
+    if (el) return el;
+  }
+
+  // 5. Fallback: tag + type + index
+  if (field.type && field.index !== undefined) {
+    const matches = document.querySelectorAll<HTMLElement>(
+      `${field.tag.toLowerCase()}[type="${field.type}"]`
+    );
+    if (matches[field.index]) return matches[field.index];
+  }
+
+  return null;
+}

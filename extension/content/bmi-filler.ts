@@ -1,4 +1,4 @@
-import { SELECTORS } from './selectors';
+import { FIELD_MAP, findField } from './selectors';
 
 interface EventData {
   eventKey: string;
@@ -30,16 +30,7 @@ interface FillResult {
   status: 'filled' | 'not_found' | 'skipped';
 }
 
-// Utility: find first matching element from a comma-separated selector
-function q(selector: string): HTMLElement | null {
-  for (const s of selector.split(',')) {
-    const el = document.querySelector<HTMLElement>(s.trim());
-    if (el) return el;
-  }
-  return null;
-}
-
-// Set value on an input/select and dispatch events so React/Angular picks it up
+// Set value on an input/select and dispatch events so Syncfusion picks it up
 function setInputValue(el: HTMLElement, value: string): boolean {
   if (el instanceof HTMLInputElement) {
     const nativeSetter = Object.getOwnPropertyDescriptor(
@@ -50,6 +41,7 @@ function setInputValue(el: HTMLElement, value: string): boolean {
     else el.value = value;
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
     return true;
   }
   if (el instanceof HTMLSelectElement) {
@@ -63,156 +55,88 @@ function setInputValue(el: HTMLElement, value: string): boolean {
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     }
+    // Partial match for attendance ranges like "0 - 250"
+    const partial = Array.from(el.options).find(
+      (o) => o.textContent?.toLowerCase().includes(value.toLowerCase())
+    );
+    if (partial) {
+      el.value = partial.value;
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    }
     return false;
   }
   return false;
 }
 
-// Click a radio/toggle button matching a value
-function clickRadio(selector: string, value: string): boolean {
-  const elements = document.querySelectorAll<HTMLElement>(selector);
-  for (const el of elements) {
-    if (el instanceof HTMLInputElement && el.type === 'radio') {
-      if (el.value.toLowerCase() === value.toLowerCase()) {
-        el.click();
-        return true;
-      }
-    }
-    // For button-style toggles
-    if (el.textContent?.trim().toLowerCase() === value.toLowerCase()) {
+// Toggle a checkbox (Syncfusion uses aria-label="switch" for toggles)
+function setCheckbox(el: HTMLElement, checked: boolean): boolean {
+  if (el instanceof HTMLInputElement && el.type === 'checkbox') {
+    if (el.checked !== checked) {
       el.click();
-      return true;
     }
+    return true;
   }
   return false;
 }
 
-// Clear all form fields before filling (so switching events works)
-function clearFields() {
-  const inputSelectors = [
-    SELECTORS.eventName, SELECTORS.startDate, SELECTORS.endDate,
-    SELECTORS.venueCity, SELECTORS.venueName,
-    SELECTORS.newVenueName, SELECTORS.newVenueAddress,
-    SELECTORS.newVenueCity, SELECTORS.newVenueZip,
-    SELECTORS.newVenueCapacity, SELECTORS.newVenuePhone,
-  ];
-  for (const sel of inputSelectors) {
-    const el = q(sel);
-    if (el instanceof HTMLInputElement) {
-      const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-      if (nativeSetter) nativeSetter.call(el, '');
-      else el.value = '';
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+// Try to fill a single field using the FIELD_MAP
+function fillField(fieldName: string, value: string | null): FillResult {
+  if (!value) return { field: fieldName, status: 'skipped' };
+
+  const spec = FIELD_MAP[fieldName];
+  if (!spec) return { field: fieldName, status: 'not_found' };
+
+  const el = findField(spec);
+  if (!el) return { field: fieldName, status: 'not_found' };
+
+  if (spec.type === 'checkbox') {
+    const ok = setCheckbox(el, value === 'true' || value === 'yes' || value === '1');
+    return { field: fieldName, status: ok ? 'filled' : 'not_found' };
   }
 
-  const selectSelectors = [
-    SELECTORS.bandPerformer, SELECTORS.eventType,
-    SELECTORS.startHour, SELECTORS.startAmPm,
-    SELECTORS.endHour, SELECTORS.endAmPm,
-    SELECTORS.attendance, SELECTORS.previousVenues,
-    SELECTORS.venueState, SELECTORS.newVenueState, SELECTORS.newVenueType,
-  ];
-  for (const sel of selectSelectors) {
-    const el = q(sel);
-    if (el instanceof HTMLSelectElement) {
-      el.selectedIndex = 0;
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }
-
-  // Uncheck radios
-  const radios = document.querySelectorAll<HTMLInputElement>('input[name="ticketCharge"]');
-  radios.forEach((r) => { r.checked = false; });
+  const ok = setInputValue(el, value);
+  return { field: fieldName, status: ok ? 'filled' : 'not_found' };
 }
 
-// Fill Step 1 — Details
+// Fill Step 1 — Details + Venue
 function fillDetails(event: EventData): FillResult[] {
-  clearFields();
   const results: FillResult[] = [];
 
-  const fieldMap: [string, string, string | null][] = [
-    ['bandPerformer', SELECTORS.bandPerformer, event.artistName],
-    ['eventName', SELECTORS.eventName, event.eventName],
-    ['eventType', SELECTORS.eventType, event.eventType],
-    ['startDate', SELECTORS.startDate, event.eventDateFormatted],
-    ['startHour', SELECTORS.startHour, event.startTimeHour],
-    ['startAmPm', SELECTORS.startAmPm, event.startTimeAmPm],
-    ['endDate', SELECTORS.endDate, event.eventDateFormatted],
-    ['endHour', SELECTORS.endHour, event.endTimeHour],
-    ['endAmPm', SELECTORS.endAmPm, event.endTimeAmPm],
-    ['attendance', SELECTORS.attendance, event.attendanceRange],
-  ];
+  // Details fields
+  results.push(fillField('bandPerformer', event.artistName));
+  results.push(fillField('eventName', event.eventName));
+  results.push(fillField('eventType', event.eventType));
+  results.push(fillField('startDate', event.eventDateFormatted));
+  results.push(fillField('startTime', event.startTimeHour));
+  results.push(fillField('startAmPm', event.startTimeAmPm));
+  results.push(fillField('endDate', event.eventDateFormatted));
+  results.push(fillField('endTime', event.endTimeHour));
+  results.push(fillField('endAmPm', event.endTimeAmPm));
+  results.push(fillField('attendance', event.attendanceRange));
+  results.push(fillField('ticketCharge', event.ticketCharge));
 
-  for (const [name, selector, value] of fieldMap) {
-    if (!value) {
-      results.push({ field: name, status: 'skipped' });
-      continue;
-    }
-    const el = q(selector);
-    if (!el) {
-      results.push({ field: name, status: 'not_found' });
-      continue;
-    }
-    const ok = setInputValue(el, value);
-    results.push({ field: name, status: ok ? 'filled' : 'not_found' });
-  }
-
-  // Ticket charge — often a radio/toggle
-  if (event.ticketCharge) {
-    const ok = clickRadio(SELECTORS.ticketCharge, event.ticketCharge);
-    results.push({
-      field: 'ticketCharge',
-      status: ok ? 'filled' : 'not_found',
-    });
-  } else {
-    results.push({ field: 'ticketCharge', status: 'skipped' });
-  }
-
-  // Try previously performed venues dropdown first
+  // Venue — try previously performed venues dropdown first
   if (event.venueName) {
-    const prevVenues = q(SELECTORS.previousVenues);
-    if (prevVenues instanceof HTMLSelectElement) {
-      const matched = Array.from(prevVenues.options).find((o) =>
+    const prevEl = findField(FIELD_MAP.previousVenues);
+    if (prevEl instanceof HTMLSelectElement) {
+      const matched = Array.from(prevEl.options).find((o) =>
         o.textContent?.toLowerCase().includes(event.venueName!.toLowerCase())
       );
       if (matched) {
-        prevVenues.value = matched.value;
-        prevVenues.dispatchEvent(new Event('change', { bubbles: true }));
+        prevEl.value = matched.value;
+        prevEl.dispatchEvent(new Event('change', { bubbles: true }));
         results.push({ field: 'venue', status: 'filled' });
-      } else {
-        // Fall back to manual venue fields
-        fillVenueFields(event, results);
+        return results;
       }
-    } else {
-      fillVenueFields(event, results);
     }
+    // Fall back to manual venue fields
+    results.push(fillField('venueState', event.venueState));
+    results.push(fillField('venueCity', event.venueCity));
+    results.push(fillField('venueName', event.venueName));
   }
 
   return results;
-}
-
-function fillVenueFields(event: EventData, results: FillResult[]) {
-  const venueFields: [string, string, string | null][] = [
-    ['venueState', SELECTORS.venueState, event.venueState],
-    ['venueCity', SELECTORS.venueCity, event.venueCity],
-    ['venueName', SELECTORS.venueName, event.venueName],
-  ];
-
-  for (const [name, selector, value] of venueFields) {
-    if (!value) {
-      results.push({ field: name, status: 'skipped' });
-      continue;
-    }
-    const el = q(selector);
-    if (!el) {
-      results.push({ field: name, status: 'not_found' });
-      continue;
-    }
-    const ok = setInputValue(el, value);
-    results.push({ field: name, status: ok ? 'filled' : 'not_found' });
-  }
 }
 
 // Fill Step 2 — Setlist
@@ -222,29 +146,35 @@ function fillSetlist(
   const matched: string[] = [];
   const notFound: string[] = [];
 
-  // Find all song list items in the BMI catalog
-  const songItems = document.querySelectorAll<HTMLElement>(
-    SELECTORS.songListItems
-  );
+  // Type each song into the search box and look for matches
+  const searchEl = findField(FIELD_MAP.songSearch);
 
   for (const song of songs) {
     let found = false;
 
-    for (const item of songItems) {
-      const titleEl =
-        item.querySelector('[data-song-title]') ||
-        item.querySelector('.song-title') ||
-        item;
-      const titleText = titleEl?.textContent?.trim().toLowerCase();
+    // Try searching by BMI work ID first, then title
+    const searchTerm = song.bmiWorkId || song.title;
+    if (searchEl) {
+      setInputValue(searchEl, searchTerm);
+      // Wait briefly for Syncfusion to filter — we use a synchronous check
+      // since the filter should be near-instant on the client side
+    }
 
+    // Look for song rows in the catalog — Syncfusion grid uses e-row class
+    const rows = document.querySelectorAll<HTMLElement>(
+      'tr.e-row, .e-gridcontent tr, [class*="song-row"], .song-list-item'
+    );
+
+    for (const row of rows) {
+      const titleText = row.textContent?.trim().toLowerCase() || '';
       if (
-        titleText === song.title.toLowerCase() ||
-        titleText?.includes(song.title.toLowerCase())
+        titleText.includes(song.title.toLowerCase()) ||
+        (song.bmiWorkId && titleText.includes(song.bmiWorkId.toLowerCase()))
       ) {
-        // Click the add/+ button
-        const addBtn =
-          item.querySelector<HTMLElement>(SELECTORS.songAddButton) ||
-          item.querySelector<HTMLElement>('button');
+        // Find the add/+ button in this row
+        const addBtn = row.querySelector<HTMLElement>(
+          'button.e-btn, button[class*="add"], button'
+        );
         if (addBtn) {
           addBtn.click();
           matched.push(song.title);
@@ -255,11 +185,6 @@ function fillSetlist(
     }
 
     if (!found) {
-      // Try search input if available
-      const searchInput = q(SELECTORS.songSearchInput);
-      if (searchInput) {
-        setInputValue(searchInput, song.bmiWorkId || song.title);
-      }
       notFound.push(song.title);
     }
   }
@@ -418,25 +343,35 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 // Auto-detect which wizard step we're on
+// BMI uses Syncfusion tab components — look for active tab/step indicators
 function detectWizardStep(): number {
-  // First try DOM: check which step tab is active
-  const activeTabs = document.querySelectorAll('.step-tab.active, [class*="step"][class*="active"]');
+  // Syncfusion tabs use e-active class
+  const activeTabs = document.querySelectorAll(
+    '.e-tab-header .e-active, .e-toolbar-item.e-active, [class*="step"][class*="active"], .step-tab.active'
+  );
   for (const tab of activeTabs) {
     const text = tab.textContent?.toLowerCase() || '';
     if (text.includes('setlist') || text.includes('step 2') || text.includes('2.')) return 2;
     if (text.includes('summary') || text.includes('step 3') || text.includes('3.')) return 3;
   }
 
-  // Check which step content is visible
-  const step2 = document.getElementById('step-2');
-  const step3 = document.getElementById('step-3');
-  if (step3 && step3.classList.contains('active')) return 3;
-  if (step2 && step2.classList.contains('active')) return 2;
+  // Check for summary page indicators (read-only review content)
+  const warrantyCheckbox = document.querySelector('input[type="checkbox"]');
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (warrantyCheckbox && submitBtn) {
+    const bodyText = document.body.textContent?.toLowerCase() || '';
+    if (bodyText.includes('warranty') || bodyText.includes('i certify')) return 3;
+  }
+
+  // Check if song search exists and is visible (Step 2 indicator)
+  const songSearch = document.getElementById('tbSongSearch');
+  if (songSearch && songSearch.offsetParent !== null) return 2;
 
   // Fallback to URL
   const url = window.location.href.toLowerCase();
   if (url.includes('setlist') || url.includes('step2') || url.includes('step=2')) return 2;
   if (url.includes('summary') || url.includes('step3') || url.includes('step=3')) return 3;
+
   return 1;
 }
 
