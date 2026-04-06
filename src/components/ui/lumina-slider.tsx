@@ -401,14 +401,32 @@ export function LuminaSlider() {
     onResize()
     window.addEventListener("resize", onResize)
 
+    let running = true
     const animate = () => {
+      if (!running) return
       sceneRef.current.animationId = requestAnimationFrame(animate)
       uniforms.time.value += 0.016
       renderer.render(scene, camera)
     }
     animate()
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        running = false
+        if (sceneRef.current.animationId) {
+          cancelAnimationFrame(sceneRef.current.animationId)
+          sceneRef.current.animationId = null
+        }
+      } else {
+        running = true
+        animate()
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+
     return () => {
+      running = false
+      document.removeEventListener("visibilitychange", handleVisibility)
       window.removeEventListener("resize", onResize)
       if (sceneRef.current.animationId) cancelAnimationFrame(sceneRef.current.animationId)
       renderer.dispose()
