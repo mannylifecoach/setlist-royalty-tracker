@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 
 export default withSentryConfig(nextConfig, {
   silent: true,
-  org: "srt",
+  org: "setlist-royalty-tracker",
   project: "setlist-royalty-tracker",
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
