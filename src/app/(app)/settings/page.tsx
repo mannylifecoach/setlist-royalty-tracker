@@ -145,9 +145,9 @@ export default function SettingsPage() {
       </div>
 
       <div className="card p-4 space-y-4">
-        <div className="text-[11px] text-text-muted">chrome extension</div>
+        <div className="text-[11px] text-text-muted">chrome extension <span className="text-text-disabled">· requires google chrome</span></div>
         <p className="text-[12px] text-text-secondary">
-          generate an api key to connect the bmi live auto-fill chrome extension.
+          generate an api key to connect the bmi live auto-fill chrome extension. requires google chrome (or any chromium-based browser like edge, brave, or arc). on safari or firefox? use the csv export instead.
         </p>
         {apiKey && (
           <div className="space-y-2">

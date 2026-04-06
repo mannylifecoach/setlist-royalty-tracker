@@ -89,7 +89,7 @@ export async function sendWelcomeEmail(to: string, artistName: string) {
         <td style="padding:16px;">
           <span style="font-size:11px;color:#777777;font-weight:500;">step 4</span>
           <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">confirm matches and submit to your pro</p>
-          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">export a csv or use our chrome extension to auto-fill bmi live.</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">use our chrome extension to auto-fill bmi live in seconds (requires google chrome), or export a csv as a backup.</p>
         </td>
       </tr>
     </table>
@@ -101,7 +101,7 @@ export async function sendWelcomeEmail(to: string, artistName: string) {
     ${button('go to dashboard', `${APP_URL}/dashboard`)}
   `;
 
-  const text = `welcome to setlist royalty tracker!\n\nhere's how to start collecting your live performance royalties:\n\n1. add artists who perform your songs (we added ${artistName} during setup)\n2. register your songs and link them to artists\n3. scan for performances — we search 9.6m+ setlists\n4. confirm matches and submit to your pro\n\nmost songwriters have unreported performances they don't know about. let's find yours.\n\nlog in: ${APP_URL}/dashboard\n\n— setlist royalty tracker`;
+  const text = `welcome to setlist royalty tracker!\n\nhere's how to start collecting your live performance royalties:\n\n1. add artists who perform your songs (we added ${artistName} during setup)\n2. register your songs and link them to artists\n3. scan for performances — we search 9.6m+ setlists\n4. confirm matches and submit to your pro using our chrome extension (requires google chrome) or csv export\n\nmost songwriters have unreported performances they don't know about. let's find yours.\n\nlog in: ${APP_URL}/dashboard\n\n— setlist royalty tracker`;
 
   await getResend().emails.send({
     from: process.env.EMAIL_FROM || 'noreply@example.com',

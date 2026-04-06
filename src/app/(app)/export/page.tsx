@@ -41,8 +41,8 @@ export default function ExportPage() {
       <div>
         <h1 className="text-[18px] font-light tracking-[-0.3px]">submit</h1>
         <p className="text-[12px] text-text-muted mt-1">
-          use the chrome extension to auto-fill bmi live forms directly, or
-          download a csv. only confirmed performances are shown.
+          use the chrome extension to auto-fill bmi live forms directly (requires google chrome), or
+          download a csv as a backup. only confirmed performances are shown.
         </p>
         <div className="card p-3 mt-3 space-y-3">
           <p className="text-[11px] text-text-secondary">
@@ -51,7 +51,7 @@ export default function ExportPage() {
               chrome extension
             </a>{' '}
             to auto-fill bmi live forms directly — no csv needed. generate an
-            api key in settings to get started.
+            api key in settings to get started. <span className="text-text-disabled">requires google chrome.</span>
           </p>
           <div className="flex items-center gap-3 pt-1 border-t border-border-subtle">
             <a

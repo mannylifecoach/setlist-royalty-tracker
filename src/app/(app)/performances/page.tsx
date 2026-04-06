@@ -124,7 +124,7 @@ export default function PerformancesPage() {
             <a href="/settings" className="text-status-discovered hover:underline">
               chrome extension
             </a>
-            {' to auto-fill bmi live directly.'}
+            {' to auto-fill bmi live directly (requires google chrome).'}
           </div>
         );
       })()}

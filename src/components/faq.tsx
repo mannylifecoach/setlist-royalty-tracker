@@ -16,7 +16,7 @@ const faqs = [
   {
     question: 'do you submit performances on my behalf?',
     answer:
-      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then use the chrome extension to submit directly to your pro, or export a csv. nothing is sent without your explicit action.',
+      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then use the chrome extension to submit directly to your pro (requires google chrome), or export a csv as a backup. nothing is sent without your explicit action.',
   },
   {
     question: 'how accurate is the song matching?',
@@ -37,6 +37,11 @@ const faqs = [
     question: 'is my data secure?',
     answer:
       'your account uses passwordless magic link authentication — no passwords stored. your song catalog and performance data are private to your account. the chrome extension authenticates via a unique api key that you generate and can regenerate at any time.',
+  },
+  {
+    question: 'do i need google chrome to use this?',
+    answer:
+      'the auto-fill chrome extension only works in google chrome and other chromium-based browsers (microsoft edge, brave, arc, opera, vivaldi). if you use safari or firefox, you can still use the web app and submit performances via the csv export — the extension just makes it faster.',
   },
 ];
 

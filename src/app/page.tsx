@@ -61,14 +61,14 @@ export default function LandingPage() {
           <WhyThisMatters />
 
           <div className="border border-border-subtle p-6 text-left space-y-3">
-            <div className="text-[11px] text-text-muted">chrome extension</div>
+            <div className="text-[11px] text-text-muted">chrome extension <span className="text-text-disabled">· requires google chrome</span></div>
             <p className="text-[13px] text-text-secondary leading-[1.5]">
               skip the manual data entry. our chrome extension pre-fills bmi
               live&apos;s 3-step wizard — performer, venue, dates, setlist — directly
               from your confirmed performances. just review and click submit.
             </p>
             <p className="text-[11px] text-text-disabled">
-              5+ minutes of typing per show → ~30 seconds of review
+              5+ minutes of typing per show → ~30 seconds of review · csv export available as backup
             </p>
           </div>
 
