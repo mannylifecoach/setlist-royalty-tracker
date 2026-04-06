@@ -53,6 +53,63 @@ function statusBadge(label: string, color: string): string {
   return `<span style="display:inline-block;padding:2px 8px;font-size:11px;color:${color};border:1px solid ${color};opacity:0.8;">${label}</span>`;
 }
 
+export async function sendWelcomeEmail(to: string, artistName: string) {
+  const subject = 'welcome to setlist royalty tracker';
+
+  const content = `
+    <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;font-weight:400;letter-spacing:-0.3px;">
+      you're in. here's how to start collecting your live performance royalties.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;border:1px solid #151515;margin-bottom:24px;">
+      <tr>
+        <td style="padding:16px;border-bottom:1px solid #151515;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">step 1</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">add artists who perform your songs</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">we added <strong style="color:#999999;">${artistName}</strong> during setup — add more anytime.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px;border-bottom:1px solid #151515;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">step 2</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">register your songs and link them to artists</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">the scanner needs to know which songs to look for in setlists.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px;border-bottom:1px solid #151515;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">step 3</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">scan for performances</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">we search 9.6m+ setlists on setlist.fm to find concerts where your songs were played.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">step 4</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">confirm matches and submit to your pro</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">export a csv or use our chrome extension to auto-fill bmi live.</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 24px 0;color:#777777;font-size:12px;">
+      most songwriters have unreported performances they don't know about. let's find yours.
+    </p>
+
+    ${button('go to dashboard', `${APP_URL}/dashboard`)}
+  `;
+
+  const text = `welcome to setlist royalty tracker!\n\nhere's how to start collecting your live performance royalties:\n\n1. add artists who perform your songs (we added ${artistName} during setup)\n2. register your songs and link them to artists\n3. scan for performances — we search 9.6m+ setlists\n4. confirm matches and submit to your pro\n\nmost songwriters have unreported performances they don't know about. let's find yours.\n\nlog in: ${APP_URL}/dashboard\n\n— setlist royalty tracker`;
+
+  await getResend().emails.send({
+    from: process.env.EMAIL_FROM || 'noreply@example.com',
+    to,
+    subject,
+    html: layout(content),
+    text,
+  });
+}
+
 export async function sendNewPerformancesEmail(
   to: string,
   artistName: string,

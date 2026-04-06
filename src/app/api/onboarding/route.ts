@@ -5,6 +5,7 @@ import { users, trackedArtists } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { onboardingSchema } from '@/lib/schemas';
+import { sendWelcomeEmail } from '@/lib/email';
 
 export const GET = withHandler(async () => {
   const session = await auth();
@@ -53,6 +54,11 @@ export const POST = withHandler(async (request: NextRequest) => {
       artistName,
     })
     .onConflictDoNothing();
+
+  // Send welcome email (non-blocking)
+  if (session.user.email) {
+    sendWelcomeEmail(session.user.email, artistName).catch(() => {});
+  }
 
   return NextResponse.json({ success: true });
 });
