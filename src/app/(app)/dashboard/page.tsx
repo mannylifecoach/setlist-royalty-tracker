@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/status-badge';
 import { useRouter } from 'next/navigation';
+import { analytics } from '@/lib/analytics';
 
 interface DashboardData {
   discovered: number;
@@ -71,9 +72,11 @@ export default function DashboardPage() {
     setScanning(true);
     setScanResult(null);
     try {
+      analytics.scanStarted();
       const res = await fetch('/api/scan', { method: 'POST' });
       if (res.ok) {
         const result = await res.json();
+        analytics.scanCompleted({ setlistsScanned: result.scanned, performancesFound: result.newPerformances });
         setScanResult({ scanned: result.scanned, newPerformances: result.newPerformances });
         await loadData();
       }

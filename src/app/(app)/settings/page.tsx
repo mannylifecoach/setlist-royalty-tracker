@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
+import { analytics } from '@/lib/analytics';
 
 export default function SettingsPage() {
   const [pro, setPro] = useState<'bmi' | 'ascap' | 'sesac' | 'gmr' | ''>('');
@@ -170,6 +171,7 @@ export default function SettingsPage() {
               const res = await fetch('/api/settings/api-key', { method: 'POST' });
               if (res.ok) {
                 const data = await res.json();
+                analytics.extensionApiKeyGenerated();
                 setApiKey(data.apiKey);
                 setHasApiKey(true);
                 setApiKeyPreview(null);

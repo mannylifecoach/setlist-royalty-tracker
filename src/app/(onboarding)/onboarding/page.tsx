@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { analytics } from '@/lib/analytics';
 
 const PRO_OPTIONS = [
   { value: 'bmi', label: 'BMI' },
@@ -42,6 +43,7 @@ export default function OnboardingPage() {
       });
 
       if (res.ok) {
+        analytics.onboardingCompleted({ pro, role });
         router.push('/dashboard');
       } else {
         const data = await res.json();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { analytics } from '@/lib/analytics';
 
 interface Artist {
   id: string;
@@ -59,6 +60,7 @@ export default function SongsPage() {
         }),
       });
       if (res.ok) {
+        analytics.songAdded({ title: title.trim() });
         setTitle('');
         setIswc('');
         setBmiWorkId('');
@@ -81,6 +83,7 @@ export default function SongsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ artistId }),
     });
+    analytics.songLinkedToArtist();
     await loadSongs();
 
     // Auto-scan after linking an artist to a song

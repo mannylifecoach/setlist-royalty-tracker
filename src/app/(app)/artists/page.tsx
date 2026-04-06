@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ArtistSearch } from '@/components/artist-search';
+import { analytics } from '@/lib/analytics';
 
 interface Artist {
   id: string;
@@ -31,7 +32,10 @@ export default function ArtistsPage() {
         mbid: sfArtist.mbid,
       }),
     });
-    if (res.ok) await loadArtists();
+    if (res.ok) {
+      analytics.artistAdded({ name: sfArtist.name });
+      await loadArtists();
+    }
   }
 
   async function handleDelete(id: string) {

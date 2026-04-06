@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
+import { analytics } from '@/lib/analytics';
 import type { PerformanceStatus } from '@/lib/constants';
 
 interface PerformanceRow {
@@ -64,6 +65,7 @@ export default function PerformancesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids }),
     });
+    analytics.performanceConfirmed({ count: ids.length });
     await loadData();
   }
 

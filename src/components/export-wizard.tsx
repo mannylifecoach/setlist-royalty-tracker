@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { PerformanceStatus } from '@/lib/constants';
+import { analytics } from '@/lib/analytics';
 
 interface Performance {
   id: string;
@@ -77,6 +78,7 @@ export function ExportWizard({ data }: ExportWizardProps) {
   }
 
   async function handleExport() {
+    analytics.csvExported({ pro, count: selectedIds.size });
     const ids = Array.from(selectedIds).join(',');
     window.location.href = `/api/performances/export?pro=${pro}&ids=${ids}`;
   }
