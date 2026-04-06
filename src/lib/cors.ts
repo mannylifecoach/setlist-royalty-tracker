@@ -1,4 +1,6 @@
 const ALLOWED_ORIGINS = [
+  'https://setlistroyalty.com',
+  'https://www.setlistroyalty.com',
   'https://setlist-royalty-tracker.vercel.app',
   'https://ols.bmi.com',
 ];

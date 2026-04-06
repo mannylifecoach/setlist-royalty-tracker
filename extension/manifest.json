@@ -4,13 +4,13 @@
   "version": "1.0.0",
   "description": "Auto-fill BMI Live performance forms from Setlist Royalty Tracker data",
   "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://ols.bmi.com/*", "https://setlist-royalty-tracker.vercel.app/*"],
+  "host_permissions": ["https://ols.bmi.com/*", "https://setlistroyalty.com/*", "https://setlist-royalty-tracker.vercel.app/*"],
   "background": {
     "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://ols.bmi.com/*", "https://setlist-royalty-tracker.vercel.app/*"],
+      "matches": ["https://ols.bmi.com/*", "https://setlistroyalty.com/*", "https://setlist-royalty-tracker.vercel.app/*"],
       "js": ["content/bmi-filler.js"],
       "css": ["content/bmi-filler.css"]
     }
