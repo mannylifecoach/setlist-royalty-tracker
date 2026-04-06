@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MorphingText } from '@/components/ui/morphing-text';
+
+export const metadata: Metadata = {
+  title: 'how it works — setlist royalty tracker',
+  description: 'learn how setlist royalty tracker finds unreported live performances and helps songwriters collect royalties from bmi and ascap.',
+};
 import { ProExplainer } from '@/components/pro-explainer';
 import { DataProvenance } from '@/components/data-provenance';
 import { TrustBadges } from '@/components/trust-badges';
@@ -58,7 +64,8 @@ export default function AboutPage() {
       </main>
 
       <footer className="px-[2vw] py-[1.5vw] border-t border-border-subtle text-center text-[11px] text-text-disabled">
-        setlist royalty tracker · powered by setlist.fm api
+        setlist royalty tracker · powered by setlist.fm api ·{' '}
+        <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">support@setlistroyalty.com</a>
       </footer>
     </div>
   );

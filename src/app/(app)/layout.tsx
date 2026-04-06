@@ -52,6 +52,11 @@ export default async function AppLayout({
       <main className="flex-1 px-[2vw] py-[2vw]">
         {children}
       </main>
+
+      <footer className="px-[2vw] py-[1vw] border-t border-border-subtle text-center text-[11px] text-text-disabled">
+        setlist royalty tracker · powered by setlist.fm api ·{' '}
+        <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">support@setlistroyalty.com</a>
+      </footer>
     </div>
   );
 }
