@@ -48,6 +48,14 @@ export const ASCAP_ONSTAGE_FIELDS = [
 export const SETLISTFM_BASE_URL = 'https://api.setlist.fm/rest/1.0';
 export const SETLISTFM_RATE_LIMIT_MS = 100;
 
+// Venue capacity enrichment
+export const WIKIDATA_SPARQL_ENDPOINT = 'https://query.wikidata.org/sparql';
+export const WIKIDATA_RATE_LIMIT_MS = 1000;
+export const OSM_OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
+export const OSM_RATE_LIMIT_MS = 1000;
+export const VENUE_CAPACITY_CACHE_TTL_DAYS = 90;
+export const VENUE_CAPACITY_AGREEMENT_THRESHOLD = 0.10;
+
 // BMI Live attendance ranges
 export const BMI_ATTENDANCE_RANGES = [
   { min: 0, max: 250, label: '0 - 250' },

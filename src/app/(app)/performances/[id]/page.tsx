@@ -6,6 +6,15 @@ import { StatusBadge } from '@/components/status-badge';
 import type { PerformanceStatus } from '@/lib/constants';
 import { BMI_EVENT_TYPES, BMI_VENUE_TYPES, BMI_HOURS } from '@/lib/constants';
 
+interface CapacityEnrichmentResult {
+  resolvedCapacity: number | null;
+  wikidataCapacity: number | null;
+  osmCapacity: number | null;
+  confidence: 'high' | 'low' | 'user' | null;
+  source: string;
+  attendanceAutoFilled?: boolean;
+}
+
 interface PerformanceDetail {
   id: string;
   eventDate: string;
@@ -254,10 +263,13 @@ export default function PerformanceDetailPage({
           options={BMI_VENUE_TYPES as unknown as string[]}
           onSave={(v) => handleSave('venueType', v)}
         />
-        <EditableField
-          label="venue capacity"
+        <CapacityField
+          performanceId={id}
           value={perf.venueCapacity}
+          venueName={perf.venueName}
+          venueCity={perf.venueCity}
           onSave={(v) => handleSave('venueCapacity', v)}
+          onEnriched={loadPerformance}
         />
       </div>
 
@@ -387,6 +399,134 @@ function SelectField({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function CapacityField({
+  performanceId,
+  value,
+  venueName,
+  venueCity,
+  onSave,
+  onEnriched,
+}: {
+  performanceId: string;
+  value: string | null;
+  venueName: string | null;
+  venueCity: string | null;
+  onSave: (value: string | null) => void;
+  onEnriched: () => void;
+}) {
+  const [enriching, setEnriching] = useState(false);
+  const [enrichResult, setEnrichResult] =
+    useState<CapacityEnrichmentResult | null>(null);
+
+  async function handleEnrich() {
+    setEnriching(true);
+    setEnrichResult(null);
+    try {
+      const res = await fetch(
+        `/api/performances/${performanceId}/enrich-capacity`,
+        { method: 'POST' }
+      );
+      if (res.ok) {
+        const result: CapacityEnrichmentResult = await res.json();
+        setEnrichResult(result);
+        // Reload performance data to reflect capacity + attendance changes
+        onEnriched();
+      }
+    } finally {
+      setEnriching(false);
+    }
+  }
+
+  async function handlePickCapacity(capacity: number) {
+    onSave(String(capacity));
+    setEnrichResult(null);
+    // Also set attendance to the picked value
+    await fetch(`/api/performances/${performanceId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attendance: capacity }),
+    });
+    onEnriched();
+  }
+
+  return (
+    <div>
+      <EditableField
+        label="venue capacity"
+        value={value}
+        onSave={onSave}
+      />
+      {!value && venueName && venueCity && !enrichResult && (
+        <button
+          onClick={handleEnrich}
+          disabled={enriching}
+          className="mt-1 text-[10px] text-status-discovered hover:underline disabled:opacity-50"
+        >
+          {enriching ? 'looking up capacity + attendance...' : 'auto-fill capacity + attendance'}
+        </button>
+      )}
+      {enrichResult && (
+        <div className="mt-1 text-[10px] space-y-1">
+          {enrichResult.confidence === 'high' && enrichResult.resolvedCapacity !== null && (
+            <div>
+              <span className="text-status-confirmed">
+                verified across 2 sources: {enrichResult.resolvedCapacity.toLocaleString()}
+              </span>
+              {enrichResult.attendanceAutoFilled && (
+                <div className="text-text-muted mt-0.5">
+                  attendance set to venue capacity — adjust if actual attendance was lower
+                </div>
+              )}
+            </div>
+          )}
+          {enrichResult.confidence === 'low' &&
+            enrichResult.wikidataCapacity !== null &&
+            enrichResult.osmCapacity !== null && (
+              <div className="space-y-1">
+                <div className="text-status-expiring">sources disagree — pick one (also sets attendance):</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePickCapacity(enrichResult.wikidataCapacity!)}
+                    className="btn text-[10px] px-2 py-0.5"
+                  >
+                    wikidata: {enrichResult.wikidataCapacity.toLocaleString()}
+                  </button>
+                  <button
+                    onClick={() => handlePickCapacity(enrichResult.osmCapacity!)}
+                    className="btn text-[10px] px-2 py-0.5"
+                  >
+                    osm: {enrichResult.osmCapacity.toLocaleString()}
+                  </button>
+                </div>
+              </div>
+            )}
+          {enrichResult.confidence === 'low' &&
+            enrichResult.resolvedCapacity !== null &&
+            (enrichResult.wikidataCapacity === null || enrichResult.osmCapacity === null) && (
+              <div>
+                <span className="text-text-muted">
+                  single source ({enrichResult.source.replace('_only', '')}): {enrichResult.resolvedCapacity.toLocaleString()}
+                </span>
+                {enrichResult.attendanceAutoFilled && (
+                  <div className="text-text-muted mt-0.5">
+                    attendance set to venue capacity — adjust if actual attendance was lower
+                  </div>
+                )}
+              </div>
+            )}
+          {enrichResult.resolvedCapacity === null &&
+            enrichResult.wikidataCapacity === null &&
+            enrichResult.osmCapacity === null && (
+              <span className="text-text-disabled">
+                no data found — enter manually
+              </span>
+            )}
+        </div>
+      )}
     </div>
   );
 }

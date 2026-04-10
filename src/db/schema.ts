@@ -150,6 +150,30 @@ export const performances = pgTable('performances', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 });
 
+export const venueCapacityCache = pgTable(
+  'venue_capacity_cache',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    venueName: text('venue_name').notNull(),
+    venueCity: text('venue_city').notNull(),
+    wikidataCapacity: integer('wikidata_capacity'),
+    wikidataEntityId: text('wikidata_entity_id'),
+    osmCapacity: integer('osm_capacity'),
+    osmId: text('osm_id'),
+    resolvedCapacity: integer('resolved_capacity'),
+    source: text('source')
+      .$type<'auto' | 'user' | 'wikidata_only' | 'osm_only'>()
+      .notNull(),
+    confidence: text('confidence').$type<'high' | 'low' | 'user'>(),
+    lookedUpAt: timestamp('looked_up_at', { mode: 'date' })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('venue_cache_name_city_idx').on(table.venueName, table.venueCity),
+  ]
+);
+
 export const scanLog = pgTable('scan_log', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id')
