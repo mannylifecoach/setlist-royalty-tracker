@@ -16,6 +16,7 @@ import {
 } from './setlistfm';
 import { sendNewPerformancesEmail } from './email';
 import { normalizeTitle, findBestMatch } from './fuzzy-match';
+import { lookupSongMetadata } from './musicbrainz';
 
 interface ScanResult {
   artistName: string;
@@ -75,6 +76,14 @@ async function scanArtistForUser(
     linkedSongs.map((ls) => [normalizeTitle(ls.song.title), ls.song])
   );
 
+  // Build a Work MBID map for structural matching (the technical moat)
+  // Songs with a workMbid can be matched even when titles diverge (remixes, edits, covers)
+  const workMbidMap = new Map(
+    linkedSongs
+      .filter((ls) => ls.song.workMbid)
+      .map((ls) => [ls.song.workMbid as string, ls.song])
+  );
+
   // 9 months ago cutoff
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 9);
@@ -96,13 +105,26 @@ async function scanArtistForUser(
       const setlistSongs = extractSongsFromSetlist(setlist);
 
       for (const songName of setlistSongs) {
-        const matchResult = findBestMatch(songName, songTitleMap);
-        if (!matchResult) continue;
-        const matchedSong = matchResult.match;
+        // Tier 1: Try fuzzy title matching first (fast, no external API)
+        let matchedSong: typeof songs.$inferSelect | null = null;
 
-        if (matchResult.method === 'fuzzy') {
-          console.log(`[scan] Fuzzy match: "${songName}" → "${matchedSong.title}" (score: ${matchResult.score.toFixed(2)})`);
+        const fuzzyResult = findBestMatch(songName, songTitleMap);
+        if (fuzzyResult) {
+          matchedSong = fuzzyResult.match;
+          if (fuzzyResult.method === 'fuzzy') {
+            console.log(`[scan] Fuzzy match: "${songName}" → "${matchedSong.title}" (score: ${fuzzyResult.score.toFixed(2)})`);
+          }
+        } else if (workMbidMap.size > 0) {
+          // Tier 2: MusicBrainz Work MBID matching — catches remixes, renamed versions, covers
+          // Only attempted if at least one registered song has a Work MBID (avoids unnecessary API calls)
+          const mbResult = await lookupSongMetadata(songName, artist.artistName);
+          if (mbResult?.workMbid && workMbidMap.has(mbResult.workMbid)) {
+            matchedSong = workMbidMap.get(mbResult.workMbid)!;
+            console.log(`[scan] Work MBID match: "${songName}" → "${matchedSong.title}" (work: ${mbResult.workMbid})`);
+          }
         }
+
+        if (!matchedSong) continue;
 
         // Check for existing performance (dedup)
         const existing = await db

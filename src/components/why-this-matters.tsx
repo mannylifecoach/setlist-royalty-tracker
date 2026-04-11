@@ -5,14 +5,14 @@ const stats = [
     detail: 'source: digital music news',
   },
   {
-    value: '2.4M+',
-    label: 'pro members (bmi + ascap)',
-    detail: 'fewer than 0.1% collect live royalties',
+    value: '$120M',
+    label: 'in dj royalties unclaimed annually',
+    detail: 'source: association for electronic music',
   },
   {
     value: '300',
     label: 'tours auto-tracked per quarter',
-    detail: 'everyone else must self-report',
+    detail: 'every other show is self-reported',
   },
   {
     value: '9.9M+',
@@ -31,8 +31,9 @@ export function WhyThisMatters() {
         <p className="text-[15px] text-text-secondary leading-[1.5] max-w-[520px] mx-auto">
           over 2.4 million songwriters are registered with us pros, but only
           ~2,500 acts per year get paid for live performances automatically.
-          the data to fix this already exists — it just isn&apos;t connected to
-          royalty collection.
+          add another $120m/year in unclaimed dj royalties, and the gap is
+          obvious. the data to fix this already exists — it just isn&apos;t
+          connected to royalty collection.
         </p>
       </div>
 

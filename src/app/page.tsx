@@ -47,8 +47,8 @@ export default function LandingPage() {
           </h1>
           <p className="text-text-secondary text-[15px] sm:text-[17px] leading-[1.5] max-w-[520px] mx-auto">
             bmi and ascap only auto-track the top 200-300 tours. every other
-            live performance goes unreported unless you manually log it.
-            setlist.fm has 9.6m+ crowdsourced setlists — we bridge that gap.
+            live performance — band, dj set, festival — goes unreported unless
+            you manually log it. setlist.fm has 9.6m+ setlists. we bridge that gap.
           </p>
         </div>
       </section>
@@ -69,6 +69,21 @@ export default function LandingPage() {
             </p>
             <p className="text-[11px] text-text-disabled">
               5+ minutes of typing per show → ~30 seconds of review · csv export available as backup
+            </p>
+          </div>
+
+          <div className="border border-border-subtle p-6 text-left space-y-3">
+            <div className="text-[11px] text-text-muted">for dj-producers <span className="text-text-disabled">· coming soon</span></div>
+            <p className="text-[13px] text-text-secondary leading-[1.5]">
+              electronic music has a $120m/year royalty gap. dj sets at clubs
+              and festivals almost never get reported to bmi or ascap. upload
+              your serato history, we match the tracks to your registered songs,
+              and the chrome extension files the claims. remixes are matched
+              structurally — &quot;midnight bass (extended mix)&quot; is recognized as
+              the same composition as &quot;midnight bass.&quot;
+            </p>
+            <p className="text-[11px] text-text-disabled">
+              powered by musicbrainz work relationships · serato + resident advisor + 1001tracklists
             </p>
           </div>
 

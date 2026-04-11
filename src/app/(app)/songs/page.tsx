@@ -15,6 +15,8 @@ interface Song {
   iswc: string | null;
   bmiWorkId: string | null;
   ascapWorkId: string | null;
+  workMbid: string | null;
+  recordingMbid: string | null;
   artists: Artist[];
 }
 
@@ -75,6 +77,13 @@ export default function SongsPage() {
   async function handleDelete(id: string) {
     await fetch(`/api/songs/${id}`, { method: 'DELETE' });
     await loadSongs();
+  }
+
+  async function handleEnrich(id: string) {
+    const res = await fetch(`/api/songs/${id}/enrich-metadata`, {
+      method: 'POST',
+    });
+    if (res.ok) await loadSongs();
   }
 
   async function handleLinkArtist(songId: string, artistId: string) {
@@ -230,12 +239,23 @@ export default function SongsPage() {
                   </span>
                 )}
               </div>
-              <button
-                onClick={() => handleDelete(song.id)}
-                className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
-              >
-                delete
-              </button>
+              <div className="flex items-center gap-3">
+                {song.artists.length > 0 && (!song.workMbid || !song.bmiWorkId || !song.ascapWorkId) && (
+                  <button
+                    onClick={() => handleEnrich(song.id)}
+                    className="text-[11px] text-status-discovered hover:underline"
+                    title="look up Work IDs and ISWC via MusicBrainz + Songview"
+                  >
+                    auto-fill ids
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(song.id)}
+                  className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
+                >
+                  delete
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">

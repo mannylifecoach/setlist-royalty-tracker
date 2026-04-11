@@ -1,7 +1,7 @@
 const stages = [
   {
-    label: 'setlist.fm',
-    detail: '9.6m+ crowdsourced setlists',
+    label: 'setlist sources',
+    detail: 'setlist.fm + serato dj + 1001tracklists',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -11,8 +11,8 @@ const stages = [
     ),
   },
   {
-    label: 'song matching',
-    detail: 'compared against your catalog',
+    label: 'work matching',
+    detail: 'remixes matched via musicbrainz',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />

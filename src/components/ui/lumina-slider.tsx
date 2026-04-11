@@ -80,6 +80,39 @@ const SLIDES: Slide[] = [
     ],
   },
   {
+    title: "second market: dj-producers ($120m/year gap)",
+    description:
+      "electronic music is a $12.9 billion industry but live performance royalties for dj sets are almost completely unreported. the association for electronic music estimates $120m/year in unclaimed dj royalties. setlist.fm has near-zero dj coverage. no end-to-end consumer tool exists. we extend the same engine to dj-producers via serato history import, resident advisor venue matching, and 1001tracklists data.",
+    stats: [
+      { value: "$120m", label: "annual unclaimed dj royalties (afem)" },
+      { value: "$12.9b", label: "global electronic music industry (ims 2025)" },
+      { value: "2.5m", label: "active serato dj users" },
+    ],
+  },
+  {
+    title: "the two-sided network: producers get paid even when they're not at the show",
+    description:
+      "this is the unfair-advantage feature. when a dj uploads their serato set, we don't just match against their own catalog — we scan against every registered song on the platform. producer a writes a track. dj b plays it at a club. producer a gets notified and files for royalties. neither needed to know the other. as more djs upload sets, every registered songwriter becomes a beneficiary of the entire network.",
+    bullets: [
+      "every dj upload generates royalty notifications for the songs they played",
+      "every registered song benefits from every dj on the platform",
+      "scales nonlinearly: 100 djs × 50 sets/year × 20 tracks = 100k matching opportunities",
+      "the more users join, the more value every existing user gets — true network effect",
+    ],
+  },
+  {
+    title: "the technical moat: musicbrainz work-relationship matching",
+    description:
+      "every dj plays remixes, edits, and renamed versions. fuzzy string matching breaks on these — \"midnight bass (skrillex remix)\" doesn't look like \"midnight bass.\" we use musicbrainz work entities (the same id system that powers wikipedia and last.fm) to match recordings to their underlying composition. every version of a song — radio edit, extended mix, third-party remix, cover — links back to the same work id. the songwriter gets credited correctly every time. competitors built on string matching cannot retrofit this without rebuilding their core engine.",
+    bullets: [
+      "musicbrainz: free, open-source, ~25 years old, used by last.fm and setlist.fm",
+      "work entity = the abstract composition; recording entity = a specific version",
+      "matching by work id is structurally correct, not heuristic",
+      "songview integration auto-fills bmi and ascap work ids from iswc",
+      "no $500/month gracenote dependency — bootstrap-friendly",
+    ],
+  },
+  {
     title: "the product pays for itself",
     description:
       "a single recovered live performance royalty averages $15-75 per show — one match can cover a full year of subscription. when the product literally makes users more money than it costs, churn approaches zero. at 1,000 subscribers, we hit $108k arr. at 10,000, we cross $1m. the math scales because the scanning cost per user is near zero.",
@@ -106,13 +139,15 @@ const SLIDES: Slide[] = [
     ],
   },
   {
-    title: "no one else does this",
+    title: "competitive landscape",
     description:
-      "there are no direct competitors. the royalty collection organizations themselves provide no tools to discover missing performances. existing music tech companies focus on other types of royalties (streaming, radio) — not live performance. this is an entirely unserved market.",
+      "the closest direct competitor is muzooka (founded 2011, $9m raised, ~12 employees, ~$8m arr). they ship setlist reporting to bmi only — no ascap, no sesac, no gmr after 5+ years of trying. they require manual setlist entry. they have no audio fingerprinting, no mobile app, no dj market. they're a recording academy partner for artist asset management, not royalty automation. audoo (uk) does audio fingerprinting but is europe-only. no us competitor combines automated discovery + multi-pro support + dj market.",
     bullets: [
-      "bmi / ascap — collect royalties but offer no discovery tools",
-      "songtrust, cd baby — focus on streaming and radio royalties",
-      "setlist royalty tracker — the only product connecting concert data to live performance royalty claims",
+      "muzooka — manual entry, bmi-only, no asacp, b2b/major-label focus, stalled since 2020",
+      "audoo (uk) — audio fingerprinting, prs/ppl partnership, no us presence",
+      "songtrust, cd baby, tunecore — streaming and mechanical royalties only, not live",
+      "bmi live, ascap onstage — pro-owned manual portals, no discovery layer",
+      "srt — automated discovery + chrome extension auto-fill + multi-pro + dj market + work-id matching",
     ],
   },
   {
@@ -135,6 +170,9 @@ const NAV_LABELS = [
   "the solution",
   "ai architecture",
   "market",
+  "dj market",
+  "network effect",
+  "technical moat",
   "business model",
   "traction",
   "competition",

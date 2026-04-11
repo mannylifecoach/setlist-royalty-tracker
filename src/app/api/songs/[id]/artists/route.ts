@@ -5,6 +5,7 @@ import { songArtists, songs } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { withHandler, parseBody, validateUuid } from '@/lib/api-utils';
 import { songArtistSchema } from '@/lib/schemas';
+import { enrichSongInBackground } from '@/lib/song-enrichment';
 
 export const POST = withHandler(async (
   request: NextRequest,
@@ -38,6 +39,11 @@ export const POST = withHandler(async (
     .values({ songId, artistId })
     .onConflictDoNothing()
     .returning();
+
+  // Trigger background metadata enrichment if the song lacks MusicBrainz IDs
+  if (!song.workMbid || !song.recordingMbid) {
+    void enrichSongInBackground(songId, session.user.id);
+  }
 
   return NextResponse.json(link || { songId, artistId }, { status: 201 });
 });

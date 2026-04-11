@@ -1,8 +1,8 @@
 const steps = [
   {
     number: '01',
-    title: 'setlist.fm',
-    description: '9.6m+ crowdsourced setlists',
+    title: 'setlist sources',
+    description: 'setlist.fm 9.6m+ setlists, plus serato dj history (coming soon)',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -13,8 +13,8 @@ const steps = [
   },
   {
     number: '02',
-    title: 'song matching',
-    description: 'compared against your catalog',
+    title: 'work-id matching',
+    description: 'remixes and edits matched via musicbrainz work relationships',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />

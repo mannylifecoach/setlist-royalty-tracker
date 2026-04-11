@@ -71,6 +71,8 @@ export const songs = pgTable(
     iswc: text('iswc'),
     bmiWorkId: text('bmi_work_id'),
     ascapWorkId: text('ascap_work_id'),
+    workMbid: text('work_mbid'),
+    recordingMbid: text('recording_mbid'),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },

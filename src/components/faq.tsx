@@ -11,7 +11,7 @@ const faqs = [
   {
     question: 'where does the performance data come from?',
     answer:
-      'we pull setlist data from setlist.fm, a community of 300,000+ contributors who document concert setlists worldwide. setlist.fm has 9.6 million+ setlists cataloged. we match those setlists against the songs you\'ve registered in your account.',
+      'we pull setlist data from setlist.fm, a community of 300,000+ contributors who document concert setlists worldwide. setlist.fm has 9.6 million+ setlists cataloged. for dj-producers, we are adding serato dj history import, resident advisor venue matching, and 1001tracklists data — covering the dj/festival market that setlist.fm misses. we match all sources against the songs you\'ve registered in your account.',
   },
   {
     question: 'do you submit performances on my behalf?',
@@ -21,7 +21,17 @@ const faqs = [
   {
     question: 'how accurate is the song matching?',
     answer:
-      'we match your registered song titles against setlist.fm data. since setlists are crowdsourced, there can be occasional typos or alternate titles. you always review matches before confirming — if something doesn\'t look right, you can mark it as ineligible.',
+      'we use a layered approach: fuzzy title matching catches the obvious cases, and musicbrainz work-relationship matching catches remixes, edits, and renamed versions of your compositions. so "midnight bass (extended mix)" is recognized as the same composition as "midnight bass." you always review matches before confirming — if something doesn\'t look right, you can mark it as ineligible.',
+  },
+  {
+    question: 'i\'m a dj-producer. does this work for my live sets?',
+    answer:
+      'electronic music has a $120m/year royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to bmi or ascap. our dj-producer support is rolling out now: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. you don\'t need to have been at the show — if another dj plays your track and uploads their set, you get notified.',
+  },
+  {
+    question: 'do djs get performance royalties even when they\'re paid to perform?',
+    answer:
+      'yes — they\'re two completely separate revenue streams. the venue pays the dj a performance fee for showing up. bmi and ascap pay the songwriter a performance royalty for the use of their composition. if you wrote the track, you\'re owed performance royalties whether you played it yourself, another dj played it, or you weren\'t at the show at all.',
   },
   {
     question: 'what is the 9-month deadline?',
