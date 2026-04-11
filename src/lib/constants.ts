@@ -56,12 +56,11 @@ export const OSM_RATE_LIMIT_MS = 1000;
 export const VENUE_CAPACITY_CACHE_TTL_DAYS = 90;
 export const VENUE_CAPACITY_AGREEMENT_THRESHOLD = 0.10;
 
-// Song metadata enrichment (MusicBrainz + Songview)
+// Song metadata enrichment via MusicBrainz
 export const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2';
 export const MUSICBRAINZ_RATE_LIMIT_MS = 1100; // 1 req/sec + buffer
 export const MUSICBRAINZ_USER_AGENT =
   'SetlistRoyaltyTracker/1.0 (https://setlistroyalty.com)';
-export const SONGVIEW_BASE_URL = 'https://repertoire.bmi.com/Search';
 
 // BMI Live attendance ranges
 export const BMI_ATTENDANCE_RANGES = [

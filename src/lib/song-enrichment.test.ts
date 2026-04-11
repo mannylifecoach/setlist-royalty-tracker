@@ -3,9 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('./musicbrainz', () => ({
   lookupSongMetadata: vi.fn(),
 }));
-vi.mock('./songview', () => ({
-  lookupWorkIdsByIswc: vi.fn(),
-}));
 
 const { mockSongRows, mockArtistRows, mockUpdate } = vi.hoisted(() => {
   return {
@@ -48,10 +45,8 @@ vi.mock('@/db', () => ({
 
 import { enrichSongMetadata } from './song-enrichment';
 import { lookupSongMetadata } from './musicbrainz';
-import { lookupWorkIdsByIswc } from './songview';
 
 const mockMb = vi.mocked(lookupSongMetadata);
-const mockSv = vi.mocked(lookupWorkIdsByIswc);
 
 const SONG_ID = '11111111-1111-1111-1111-111111111111';
 const USER_ID = '22222222-2222-2222-2222-222222222222';
@@ -93,15 +88,12 @@ describe('enrichSongMetadata', () => {
       title: 'Midnight Bass',
       artistName: 'Producer A',
     });
-    mockSv.mockResolvedValue({ bmiWorkId: 'BMI-1', ascapWorkId: 'ASCAP-1' });
 
     const result = await enrichSongMetadata(SONG_ID, USER_ID);
 
     expect(result.source).toBe('musicbrainz');
     expect(result.workMbid).toBe('work-1');
     expect(result.iswc).toBe('T-123');
-    expect(result.bmiWorkId).toBe('BMI-1');
-    expect(result.ascapWorkId).toBe('ASCAP-1');
     expect(mockUpdate).toHaveBeenCalled();
   });
 
@@ -126,15 +118,12 @@ describe('enrichSongMetadata', () => {
       title: 'Track',
       artistName: 'Artist',
     });
-    mockSv.mockResolvedValue({ bmiWorkId: 'NEW-BMI', ascapWorkId: 'NEW-ASCAP' });
 
     await enrichSongMetadata(SONG_ID, USER_ID);
 
-    // Verify user values were preserved (not in update payload)
+    // Verify user iswc was preserved, workMbid was filled from null
     const updateCall = mockUpdate.mock.calls[0]?.[0];
-    expect(updateCall.iswc).toBeUndefined(); // Not updated
-    expect(updateCall.bmiWorkId).toBeUndefined(); // Not updated
-    expect(updateCall.ascapWorkId).toBeUndefined(); // Not updated
+    expect(updateCall.iswc).toBeUndefined(); // Not updated — user value preserved
     expect(updateCall.workMbid).toBe('work'); // Was null, gets filled
   });
 

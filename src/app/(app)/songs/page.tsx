@@ -240,11 +240,11 @@ export default function SongsPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {song.artists.length > 0 && (!song.workMbid || !song.bmiWorkId || !song.ascapWorkId) && (
+                {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
                   <button
                     onClick={() => handleEnrich(song.id)}
                     className="text-[11px] text-status-discovered hover:underline"
-                    title="look up Work IDs and ISWC via MusicBrainz + Songview"
+                    title="look up Work MBID and ISWC via MusicBrainz"
                   >
                     auto-fill ids
                   </button>

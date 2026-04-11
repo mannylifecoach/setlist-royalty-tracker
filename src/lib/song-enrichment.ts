@@ -2,27 +2,25 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '@/db';
 import { songs, songArtists, trackedArtists } from '@/db/schema';
 import { lookupSongMetadata } from './musicbrainz';
-import { lookupWorkIdsByIswc } from './songview';
 
 export interface SongEnrichmentResult {
   workMbid: string | null;
   recordingMbid: string | null;
   iswc: string | null;
-  bmiWorkId: string | null;
-  ascapWorkId: string | null;
   source: 'musicbrainz' | 'partial' | 'none';
 }
 
 /**
- * Enrich a song's metadata via MusicBrainz + Songview.
+ * Enrich a song's metadata via MusicBrainz.
  *
  * Strategy:
  * 1. Look up the song in MusicBrainz using title + linked artist name
  * 2. Get the Recording MBID, Work MBID, and ISWC from MusicBrainz
- * 3. If we have an ISWC, query Songview for BMI/ASCAP Work IDs
- * 4. Update the song record with whatever we found
+ * 3. Update the song record with whatever we found
  *
  * User-entered values are NEVER overwritten — we only fill in nulls.
+ * BMI/ASCAP Work IDs are entered manually by the user; there is no
+ * public API to look them up programmatically.
  */
 export async function enrichSongMetadata(
   songId: string,
@@ -52,15 +50,13 @@ export async function enrichSongMetadata(
       workMbid: null,
       recordingMbid: null,
       iswc: null,
-      bmiWorkId: null,
-      ascapWorkId: null,
       source: 'none',
     };
   }
 
   const artistName = linkedArtists[0].artist.artistName;
 
-  // Step 1 + 2: MusicBrainz lookup
+  // MusicBrainz lookup
   const mbResult = await lookupSongMetadata(song.title, artistName);
 
   if (!mbResult) {
@@ -68,22 +64,11 @@ export async function enrichSongMetadata(
       workMbid: null,
       recordingMbid: null,
       iswc: null,
-      bmiWorkId: null,
-      ascapWorkId: null,
       source: 'none',
     };
   }
 
-  // Step 3: If we have an ISWC, look up Work IDs via Songview
-  let bmiWorkId: string | null = null;
-  let ascapWorkId: string | null = null;
-  if (mbResult.iswc) {
-    const sv = await lookupWorkIdsByIswc(mbResult.iswc);
-    bmiWorkId = sv.bmiWorkId;
-    ascapWorkId = sv.ascapWorkId;
-  }
-
-  // Step 4: Update the song — only fill nulls, never overwrite user input
+  // Update the song — only fill nulls, never overwrite user input
   const updates: Record<string, unknown> = { updatedAt: new Date() };
 
   if (!song.recordingMbid && mbResult.recordingMbid) {
@@ -94,12 +79,6 @@ export async function enrichSongMetadata(
   }
   if (!song.iswc && mbResult.iswc) {
     updates.iswc = mbResult.iswc;
-  }
-  if (!song.bmiWorkId && bmiWorkId) {
-    updates.bmiWorkId = bmiWorkId;
-  }
-  if (!song.ascapWorkId && ascapWorkId) {
-    updates.ascapWorkId = ascapWorkId;
   }
 
   if (Object.keys(updates).length > 1) {
@@ -112,17 +91,13 @@ export async function enrichSongMetadata(
   const hasAnyData = !!(
     mbResult.recordingMbid ||
     mbResult.workMbid ||
-    mbResult.iswc ||
-    bmiWorkId ||
-    ascapWorkId
+    mbResult.iswc
   );
 
   return {
     workMbid: mbResult.workMbid,
     recordingMbid: mbResult.recordingMbid,
     iswc: mbResult.iswc,
-    bmiWorkId,
-    ascapWorkId,
     source: hasFullMb ? 'musicbrainz' : hasAnyData ? 'partial' : 'none',
   };
 }
