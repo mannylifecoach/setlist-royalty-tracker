@@ -8,6 +8,7 @@ const links = [
   { href: '/artists', label: 'artists' },
   { href: '/songs', label: 'songs' },
   { href: '/performances', label: 'performances' },
+  { href: '/import', label: 'import' },
   { href: '/export', label: 'export' },
 ];
 

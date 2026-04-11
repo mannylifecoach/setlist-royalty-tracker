@@ -6,7 +6,7 @@ import { analytics } from '@/lib/analytics';
 
 export default function SettingsPage() {
   const [pro, setPro] = useState<'bmi' | 'ascap' | 'sesac' | 'gmr' | ''>('');
-  const [role, setRole] = useState<'songwriter' | 'performer' | 'publisher' | 'manager' | ''>('');
+  const [role, setRole] = useState<'songwriter' | 'performer' | 'dj' | 'publisher' | 'manager' | ''>('');
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -92,7 +92,7 @@ export default function SettingsPage() {
         <div>
           <label className="text-[11px] text-text-muted block mb-1">role</label>
           <div className="flex gap-2 flex-wrap">
-            {(['songwriter', 'performer', 'publisher', 'manager'] as const).map((r) => (
+            {(['songwriter', 'performer', 'dj', 'publisher', 'manager'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRole(r)}

@@ -60,7 +60,7 @@ export const updateSettingsSchema = z
   .object({
     name: z.string().max(200).nullish(),
     pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr']).nullish(),
-    role: z.enum(['songwriter', 'performer', 'publisher', 'manager']).nullish(),
+    role: z.enum(['songwriter', 'performer', 'dj', 'publisher', 'manager']).nullish(),
     emailNotifications: z.boolean().optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
@@ -68,7 +68,7 @@ export const updateSettingsSchema = z
 // POST /api/onboarding
 export const onboardingSchema = z.object({
   pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr']),
-  role: z.enum(['songwriter', 'performer', 'publisher', 'manager']),
+  role: z.enum(['songwriter', 'performer', 'dj', 'publisher', 'manager']),
   artistName: z
     .string()
     .min(1, 'artistName is required')
@@ -95,4 +95,13 @@ export const exportQuerySchema = z.object({
 // GET /api/setlistfm/search query params
 export const setlistfmSearchSchema = z.object({
   q: z.string().min(1, 'q parameter is required').max(200),
+});
+
+// POST /api/import/serato — form fields (file is handled separately)
+export const seratoImportSchema = z.object({
+  venueName: z.string().min(1, 'venueName is required').max(500),
+  venueCity: z.string().min(1, 'venueCity is required').max(200),
+  venueState: z.string().max(100).nullish(),
+  venueCountry: z.string().max(100).nullish(),
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDate must be YYYY-MM-DD'),
 });

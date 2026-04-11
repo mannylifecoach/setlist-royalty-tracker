@@ -14,7 +14,7 @@ export const users = pgTable('users', {
   email: text('email').unique().notNull(),
   name: text('name'),
   pro: text('pro').$type<'bmi' | 'ascap' | 'sesac' | 'gmr'>(),
-  role: text('role').$type<'songwriter' | 'performer' | 'publisher' | 'manager'>(),
+  role: text('role').$type<'songwriter' | 'performer' | 'dj' | 'publisher' | 'manager'>(),
   onboardingComplete: timestamp('onboarding_complete', { mode: 'date' }),
   emailVerified: timestamp('email_verified', { mode: 'date' }),
   image: text('image'),
@@ -123,6 +123,11 @@ export const performances = pgTable('performances', {
     .references(() => trackedArtists.id, { onDelete: 'cascade' })
     .notNull(),
   setlistFmId: text('setlist_fm_id'),
+  source: text('source')
+    .$type<'setlist_fm' | 'serato_import' | 'manual'>()
+    .default('setlist_fm')
+    .notNull(),
+  importBatchId: uuid('import_batch_id'),
   eventDate: date('event_date', { mode: 'string' }).notNull(),
   tourName: text('tour_name'),
   venueName: text('venue_name'),
@@ -187,4 +192,20 @@ export const scanLog = pgTable('scan_log', {
   scannedAt: timestamp('scanned_at', { mode: 'date' }).defaultNow().notNull(),
   setlistsFound: integer('setlists_found').default(0).notNull(),
   newPerformances: integer('new_performances').default(0).notNull(),
+});
+
+export const importBatches = pgTable('import_batches', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  source: text('source').$type<'serato' | 'traktor' | 'rekordbox'>().notNull(),
+  venueName: text('venue_name'),
+  venueCity: text('venue_city'),
+  venueState: text('venue_state'),
+  venueCountry: text('venue_country'),
+  eventDate: date('event_date', { mode: 'string' }),
+  tracksFound: integer('tracks_found').default(0).notNull(),
+  performancesCreated: integer('performances_created').default(0).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 });

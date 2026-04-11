@@ -14,6 +14,7 @@ const PRO_OPTIONS = [
 const ROLE_OPTIONS = [
   { value: 'songwriter', label: 'songwriter', desc: 'I write songs performed by others or myself' },
   { value: 'performer', label: 'performer', desc: 'I perform live and want to track my shows' },
+  { value: 'dj', label: 'dj / producer', desc: 'I produce tracks and play dj sets — I want to claim royalties for both my own gigs and when other djs play my music' },
   { value: 'publisher', label: 'publisher', desc: 'I manage royalties for songwriters' },
   { value: 'manager', label: 'manager', desc: 'I manage artists and their catalog' },
 ] as const;
@@ -111,20 +112,22 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Artist / band name */}
+        {/* Artist / band / DJ name */}
         <div className="space-y-2">
           <label className="text-[11px] text-text-muted block">
-            artist or band name
+            {role === 'dj' ? 'dj / stage name' : 'artist or band name'}
           </label>
           <input
             type="text"
             value={artistName}
             onChange={(e) => setArtistName(e.target.value)}
-            placeholder="e.g. Nightly, Fred Again.."
+            placeholder={role === 'dj' ? 'e.g. Fred Again.., Four Tet' : 'e.g. Nightly, Fred Again..'}
             className="input w-full"
           />
           <p className="text-[10px] text-text-disabled">
-            we&apos;ll use this to search setlist.fm for your performances. you can add more later.
+            {role === 'dj'
+              ? "we'll use this to identify your tracks and match performances. you can add collaborators later."
+              : "we'll use this to search setlist.fm for your performances. you can add more later."}
           </p>
         </div>
 
