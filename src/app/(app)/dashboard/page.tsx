@@ -5,6 +5,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { useRouter } from 'next/navigation';
 import { analytics } from '@/lib/analytics';
 
+type Capability = 'write' | 'perform' | 'dj' | 'produce' | 'publish';
+
 interface DashboardData {
   discovered: number;
   confirmed: number;
@@ -26,13 +28,24 @@ interface DashboardData {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     loadData();
+    loadProfile();
   }, []);
+
+  async function loadProfile() {
+    const res = await fetch('/api/onboarding');
+    if (!res.ok) return;
+    const profile = await res.json();
+    if (Array.isArray(profile?.capabilities)) {
+      setCapabilities(profile.capabilities);
+    }
+  }
 
   async function loadData() {
     const res = await fetch('/api/performances');
@@ -173,23 +186,86 @@ export default function DashboardPage() {
                 </div>
               ))}
               {data.recent.length === 0 && (
-                <div className="text-center py-12 text-text-muted text-[13px] space-y-3">
-                  <p>no performances yet — get started in three steps:</p>
-                  <div className="flex items-center justify-center gap-4">
-                    <a href="/artists" className="text-status-discovered hover:underline">1. add artists</a>
-                    <span className="text-text-disabled">→</span>
-                    <a href="/songs" className="text-status-discovered hover:underline">2. register songs</a>
-                    <span className="text-text-disabled">→</span>
-                    <button onClick={handleScan} disabled={scanning} className="text-status-discovered hover:underline">
-                      3. scan
-                    </button>
-                  </div>
-                </div>
+                <EmptyState capabilities={capabilities} />
               )}
             </div>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function EmptyState({ capabilities }: { capabilities: Capability[] }) {
+  const showScan =
+    capabilities.length === 0 ||
+    capabilities.includes('write') ||
+    capabilities.includes('perform') ||
+    capabilities.includes('publish');
+
+  const showImport =
+    capabilities.includes('dj') || capabilities.includes('produce');
+
+  return (
+    <div className="space-y-6 py-8">
+      <p className="text-center text-[13px] text-text-muted">
+        no performances yet — pick a tool to get started
+      </p>
+
+      <div
+        className={`grid gap-4 ${
+          showScan && showImport ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 max-w-[480px] mx-auto'
+        }`}
+      >
+        {showScan && (
+          <a
+            href="/artists"
+            className="card p-5 space-y-3 hover:bg-white/[0.02] transition-colors block"
+          >
+            <div className="text-[11px] text-text-muted tracking-[1px] uppercase">
+              scan setlist.fm
+            </div>
+            <div className="text-[14px] font-medium">
+              find shows for bands & solo artists
+            </div>
+            <p className="text-[12px] text-text-secondary leading-[1.5]">
+              add touring artists who perform your songs. we scan 9.6m+
+              crowdsourced setlists and match them against your catalog.
+            </p>
+            <div className="text-[11px] text-status-discovered pt-1">
+              + add your first artist →
+            </div>
+          </a>
+        )}
+
+        {showImport && (
+          <a
+            href="/import"
+            className="card p-5 space-y-3 hover:bg-white/[0.02] transition-colors block"
+          >
+            <div className="text-[11px] text-text-muted tracking-[1px] uppercase">
+              import dj set
+            </div>
+            <div className="text-[14px] font-medium">
+              upload your serato dj history
+            </div>
+            <p className="text-[12px] text-text-secondary leading-[1.5]">
+              export your set from serato, upload it here. we match tracks to
+              your registered songs — including remixes via musicbrainz work
+              relationships.
+            </p>
+            <div className="text-[11px] text-status-discovered pt-1">
+              + upload a set →
+            </div>
+          </a>
+        )}
+      </div>
+
+      <div className="text-center text-[11px] text-text-disabled">
+        {showScan && showImport
+          ? 'you can use both tools anytime — they feed the same dashboard.'
+          : 'already have songs registered? visit /songs to review them.'}
+      </div>
     </div>
   );
 }

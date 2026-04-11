@@ -19,6 +19,85 @@ export const STATUS_LABELS: Record<PerformanceStatus, string> = {
 export const PRO_OPTIONS = ['bmi', 'ascap'] as const;
 export type ProOption = (typeof PRO_OPTIONS)[number];
 
+// All PROs SRT supports (Chrome extension targets the US PROs for now,
+// but we store the affiliation for non-US users so they're ready when
+// international form support lands).
+export const ALL_PROS = ['bmi', 'ascap', 'sesac', 'gmr', 'prs', 'socan', 'apra', 'gema', 'sacem', 'buma'] as const;
+export type AllPro = (typeof ALL_PROS)[number];
+
+// Country → list of PROs to offer in onboarding.
+// ISO 3166-1 alpha-2 country code → array of PRO options.
+// Countries not listed fall back to showing all PROs.
+export const COUNTRY_PROS: Record<string, AllPro[]> = {
+  US: ['bmi', 'ascap', 'sesac', 'gmr'],
+  CA: ['socan'],
+  GB: ['prs'],
+  UK: ['prs'],
+  AU: ['apra'],
+  NZ: ['apra'],
+  DE: ['gema'],
+  AT: ['gema'],
+  FR: ['sacem'],
+  NL: ['buma'],
+};
+
+// Country list for the onboarding dropdown — ISO alpha-2 → display name.
+// Prioritizes English-speaking and major music markets at the top.
+export const COUNTRY_OPTIONS: Array<{ code: string; name: string }> = [
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'NZ', name: 'New Zealand' },
+  { code: 'IE', name: 'Ireland' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'BE', name: 'Belgium' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'DK', name: 'Denmark' },
+  { code: 'FI', name: 'Finland' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'OTHER', name: 'Other / not listed' },
+];
+
+export function getProsForCountry(country: string | null | undefined): AllPro[] {
+  if (!country) return [...ALL_PROS];
+  return COUNTRY_PROS[country] || [...ALL_PROS];
+}
+
+// User capabilities — multi-select in onboarding.
+// Drives which tools appear on the dashboard.
+export const CAPABILITY_OPTIONS = [
+  { value: 'write', label: 'write songs', desc: 'I compose music or lyrics' },
+  { value: 'perform', label: 'perform live', desc: 'I play shows — solo, band, or singer-songwriter' },
+  { value: 'dj', label: 'dj', desc: 'I play dj sets at clubs, festivals, or events' },
+  { value: 'produce', label: 'produce tracks', desc: 'I make original music in the studio' },
+  { value: 'publish', label: 'publish or manage catalogs', desc: 'I handle royalties or catalogs for others' },
+] as const;
+export type Capability = (typeof CAPABILITY_OPTIONS)[number]['value'];
+
+// Referral sources for the optional "how did you hear about us" field.
+export const REFERRAL_SOURCES = [
+  'friend or referral',
+  'twitter / x',
+  'instagram',
+  'reddit',
+  'google search',
+  'music industry news',
+  'at a show or conference',
+  'other',
+] as const;
+
 // BMI Live requires submission within 9 months of performance
 export const BMI_EXPIRATION_MONTHS = 9;
 

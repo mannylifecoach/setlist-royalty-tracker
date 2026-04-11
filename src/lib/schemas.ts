@@ -59,7 +59,15 @@ export const markSubmittedSchema = z.object({
 export const updateSettingsSchema = z
   .object({
     name: z.string().max(200).nullish(),
-    pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr']).nullish(),
+    firstName: z.string().max(100).nullish(),
+    lastName: z.string().max(100).nullish(),
+    country: z.string().max(20).nullish(),
+    city: z.string().max(200).nullish(),
+    stageName: z.string().max(500).nullish(),
+    pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr', 'prs', 'socan', 'apra', 'gema', 'sacem', 'buma']).nullish(),
+    capabilities: z
+      .array(z.enum(['write', 'perform', 'dj', 'produce', 'publish']))
+      .optional(),
     role: z.enum(['songwriter', 'performer', 'dj', 'publisher', 'manager']).nullish(),
     emailNotifications: z.boolean().optional(),
   })
@@ -67,13 +75,20 @@ export const updateSettingsSchema = z
 
 // POST /api/onboarding
 export const onboardingSchema = z.object({
-  pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr']),
-  role: z.enum(['songwriter', 'performer', 'dj', 'publisher', 'manager']),
-  artistName: z
+  firstName: z.string().min(1, 'first name is required').max(100).transform((s) => s.trim()),
+  lastName: z.string().min(1, 'last name is required').max(100).transform((s) => s.trim()),
+  country: z.string().min(2, 'country is required').max(20),
+  city: z.string().max(200).nullish().transform((s) => s?.trim() || null),
+  stageName: z
     .string()
-    .min(1, 'artistName is required')
+    .min(1, 'stage name is required')
     .max(500)
     .transform((s) => s.trim()),
+  pro: z.enum(['bmi', 'ascap', 'sesac', 'gmr', 'prs', 'socan', 'apra', 'gema', 'sacem', 'buma']).nullish(),
+  capabilities: z
+    .array(z.enum(['write', 'perform', 'dj', 'produce', 'publish']))
+    .min(1, 'please select at least one capability'),
+  referralSource: z.string().max(100).nullish().transform((s) => s?.trim() || null),
 });
 
 // POST & DELETE /api/songs/[id]/artists

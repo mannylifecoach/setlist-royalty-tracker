@@ -13,7 +13,16 @@ export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: text('email').unique().notNull(),
   name: text('name'),
-  pro: text('pro').$type<'bmi' | 'ascap' | 'sesac' | 'gmr'>(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  country: text('country'), // ISO 3166-1 alpha-2 code
+  city: text('city'),
+  stageName: text('stage_name'),
+  capabilities: text('capabilities')
+    .array()
+    .$type<Array<'write' | 'perform' | 'dj' | 'produce' | 'publish'>>(),
+  referralSource: text('referral_source'),
+  pro: text('pro').$type<'bmi' | 'ascap' | 'sesac' | 'gmr' | 'prs' | 'socan' | 'apra' | 'gema' | 'sacem' | 'buma'>(),
   role: text('role').$type<'songwriter' | 'performer' | 'dj' | 'publisher' | 'manager'>(),
   onboardingComplete: timestamp('onboarding_complete', { mode: 'date' }),
   emailVerified: timestamp('email_verified', { mode: 'date' }),

@@ -13,11 +13,35 @@ export const GET = withHandler(async () => {
   }
 
   const [user] = await db
-    .select({ name: users.name, pro: users.pro, role: users.role, emailNotifications: users.emailNotifications })
+    .select({
+      name: users.name,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      country: users.country,
+      city: users.city,
+      stageName: users.stageName,
+      capabilities: users.capabilities,
+      pro: users.pro,
+      role: users.role,
+      emailNotifications: users.emailNotifications,
+    })
     .from(users)
     .where(eq(users.id, session.user.id));
 
-  return NextResponse.json(user || { name: null, pro: null, role: null, emailNotifications: true });
+  return NextResponse.json(
+    user || {
+      name: null,
+      firstName: null,
+      lastName: null,
+      country: null,
+      city: null,
+      stageName: null,
+      capabilities: [],
+      pro: null,
+      role: null,
+      emailNotifications: true,
+    }
+  );
 });
 
 export const PATCH = withHandler(async (request: NextRequest) => {
@@ -28,12 +52,29 @@ export const PATCH = withHandler(async (request: NextRequest) => {
 
   const result = await parseBody(request, updateSettingsSchema);
   if ('error' in result) return result.error;
-  const { name, pro, role, emailNotifications } = result.data;
+  const {
+    name,
+    firstName,
+    lastName,
+    country,
+    city,
+    stageName,
+    capabilities,
+    pro,
+    role,
+    emailNotifications,
+  } = result.data;
 
   const [updated] = await db
     .update(users)
     .set({
       name: name ?? undefined,
+      firstName: firstName ?? undefined,
+      lastName: lastName ?? undefined,
+      country: country ?? undefined,
+      city: city ?? undefined,
+      stageName: stageName ?? undefined,
+      capabilities: capabilities ?? undefined,
       pro: pro ?? undefined,
       role: role ?? undefined,
       emailNotifications: emailNotifications ?? undefined,
@@ -42,5 +83,16 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     .where(eq(users.id, session.user.id))
     .returning();
 
-  return NextResponse.json({ name: updated.name, pro: updated.pro, role: updated.role, emailNotifications: updated.emailNotifications });
+  return NextResponse.json({
+    name: updated.name,
+    firstName: updated.firstName,
+    lastName: updated.lastName,
+    country: updated.country,
+    city: updated.city,
+    stageName: updated.stageName,
+    capabilities: updated.capabilities,
+    pro: updated.pro,
+    role: updated.role,
+    emailNotifications: updated.emailNotifications,
+  });
 });
