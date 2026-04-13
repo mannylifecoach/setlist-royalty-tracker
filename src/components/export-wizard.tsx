@@ -119,7 +119,7 @@ export function ExportWizard({ data }: ExportWizardProps) {
         </div>
       </div>
 
-      <div className="space-y-1">
+      <div>
         {selectedData.map(({ performance, song, artist }) => {
           const missing = getMissingFields(
             { performance, song, artist },
@@ -128,7 +128,7 @@ export function ExportWizard({ data }: ExportWizardProps) {
           return (
             <div
               key={performance.id}
-              className="flex items-center gap-3 px-3 py-2 bg-bg-card border border-border-subtle rounded-[2px]"
+              className="flex items-center gap-3 px-3 py-3 border-b border-border-subtle"
             >
               <input
                 type="checkbox"

@@ -155,12 +155,12 @@ export default function DashboardPage() {
             <h2 className="text-[14px] font-medium tracking-[-0.3px] mb-3">
               recent activity
             </h2>
-            <div className="space-y-[2px]">
+            <div>
               {data.recent.map(({ performance, song, artist }) => (
                 <div
                   key={performance.id}
                   onClick={() => router.push(`/performances/${performance.id}`)}
-                  className="card flex items-center justify-between px-4 py-3 cursor-pointer"
+                  className="flex items-center justify-between px-4 py-3 border-b border-border-subtle cursor-pointer hover:bg-white/[0.02] transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-[12px] text-text-muted w-[80px]">

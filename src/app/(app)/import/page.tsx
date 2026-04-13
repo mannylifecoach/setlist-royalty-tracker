@@ -285,11 +285,11 @@ export default function ImportPage() {
           </div>
 
           {result.matched.length > 0 && (
-            <div className="card p-4 space-y-2">
-              <div className="text-[11px] text-text-muted">matched tracks</div>
-              <div className="space-y-[2px] text-[12px]">
+            <div>
+              <div className="text-[11px] text-text-muted mb-2">matched tracks</div>
+              <div>
                 {result.matched.map((m, i) => (
-                  <div key={i} className="flex justify-between gap-3">
+                  <div key={i} className="flex justify-between gap-3 px-4 py-2 border-b border-border-subtle text-[12px]">
                     <span className="text-text-secondary truncate">
                       {m.trackTitle} → {m.songTitle}
                     </span>

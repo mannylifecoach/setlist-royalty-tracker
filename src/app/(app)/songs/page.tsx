@@ -217,9 +217,9 @@ export default function SongsPage() {
         </div>
       )}
 
-      <div className="space-y-[2px]">
+      <div>
         {songs.map((song) => (
-          <div key={song.id} className="card p-4">
+          <div key={song.id} className="px-4 py-4 border-b border-border-subtle">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <span className="text-[14px] font-medium">{song.title}</span>

@@ -63,11 +63,11 @@ export default function ArtistsPage() {
         <ArtistSearch onSelect={handleAdd} />
       </div>
 
-      <div className="space-y-[2px]">
+      <div>
         {artists.map((artist) => (
           <div
             key={artist.id}
-            className="card flex items-center justify-between px-4 py-3"
+            className="flex items-center justify-between px-4 py-3 border-b border-border-subtle"
           >
             <div className="flex items-center gap-3">
               <span className="text-[13px] font-medium">
