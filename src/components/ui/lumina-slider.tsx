@@ -52,10 +52,10 @@ const SLIDES: Slide[] = [
   {
     title: "$120m/year in dj royalties goes uncollected.",
     description:
-      "when a dj plays your track at a festival, a club, or a warehouse party — you're owed a royalty as the creator of that music. but dj setlists are almost never reported. even dj-producers performing their own music at festivals rarely file because they don't know they can. the association for electronic music estimates $120m/year is lost this way. srt lets producers upload serato dj history files and automatically matches every track — including remixes and edits that don't match by title alone.",
+      "two groups lose money here. dj-producers who perform their own music at clubs and festivals don't file because they don't know performance royalties exist for them. and producers who never dj have their tracks played by other djs worldwide with no way to find out. both are owed money. srt lets dj-producers upload their serato set history — we match every track, including remixes and edits, and surface the performances they can claim. as more djs upload sets, every producer on the platform benefits.",
     stats: [
       { value: "$120m/yr", label: "uncollected (afem estimate)" },
-      { value: "clubs", label: "festivals, events — unreported" },
+      { value: "2 gaps", label: "dj-producers + producers whose tracks get played" },
       { value: "remixes", label: "matched by composition, not title" },
     ],
   },
