@@ -43,12 +43,10 @@ function getMissingFields(row: ExportRow, pro: 'bmi' | 'ascap'): string[] {
   const missing: string[] = [];
   if (!row.performance.venueName) missing.push('venue name');
   if (pro === 'bmi') {
-    if (!row.performance.venueAddress) missing.push('venue address');
+    // venue address and phone are typically filled by BMI's "Previously performed venues"
+    // lookup — we only flag venue name, city, and state which we should have from setlist.fm
     if (!row.performance.venueCity) missing.push('venue city');
     if (!row.performance.venueState) missing.push('venue state');
-    if (!row.performance.venueCountry) missing.push('venue country');
-    if (!row.performance.venuePhone) missing.push('venue phone');
-    if (!row.performance.attendance) missing.push('attendance');
     if (!row.song.bmiWorkId) missing.push('bmi work id');
   }
   if (pro === 'ascap') {
