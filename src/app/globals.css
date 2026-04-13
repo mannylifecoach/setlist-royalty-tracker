@@ -2,15 +2,15 @@
 
 @theme inline {
   --color-bg: #000000;
-  --color-bg-card: #0a0a0a;
-  --color-bg-hover: #111111;
-  --color-bg-input: #0a0a0a;
-  --color-border: #222222;
-  --color-border-subtle: #151515;
+  --color-bg-card: #0d0d0d;
+  --color-bg-hover: #141414;
+  --color-bg-input: #0d0d0d;
+  --color-border: #888888;
+  --color-border-subtle: #666666;
   --color-text: #ffffff;
-  --color-text-secondary: #d5d5d5;
-  --color-text-muted: #777777;
-  --color-text-disabled: #444444;
+  --color-text-secondary: #e0e0e0;
+  --color-text-muted: #aaaaaa;
+  --color-text-disabled: #666666;
   --color-status-discovered: #5281eb;
   --color-status-confirmed: #1db954;
   --color-status-submitted: #86efac;
@@ -88,7 +88,7 @@
   .input {
     background: transparent;
     border: none;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid #888;
     padding: 8px 0;
     font-size: 13px;
     color: var(--color-text);
@@ -99,11 +99,11 @@
   }
 
   .input::placeholder {
-    color: #333;
+    color: #666;
   }
 
   .input:focus {
-    border-bottom-color: #555;
+    border-bottom-color: #999;
   }
 
   .toast {

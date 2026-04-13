@@ -78,7 +78,7 @@ export default function ImportPage() {
   }
 
   return (
-    <div className="max-w-[640px] space-y-8">
+    <div className="max-w-[640px] mx-auto space-y-8">
       <div>
         <h1 className="text-[22px] font-light tracking-[-0.5px]">import dj sets</h1>
         <p className="text-[13px] text-text-muted mt-2 leading-[1.5]">

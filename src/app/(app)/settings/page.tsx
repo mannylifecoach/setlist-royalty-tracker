@@ -103,7 +103,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-[520px]">
+    <div className="space-y-6 max-w-[520px] mx-auto">
       <h1 className="text-[18px] font-light tracking-[-0.3px]">settings</h1>
 
       <div className="card p-4 space-y-5">
