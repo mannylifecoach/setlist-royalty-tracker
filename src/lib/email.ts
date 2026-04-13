@@ -56,7 +56,12 @@ function statusBadge(label: string, color: string): string {
 }
 
 export function magicLinkEmail(url: string): { subject: string; html: string; text: string } {
-  const id = Date.now().toString(36).slice(-4);
+  const time = new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZoneName: 'short',
+  });
 
   const content = `
     <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;font-weight:400;letter-spacing:-0.3px;">
@@ -76,7 +81,7 @@ export function magicLinkEmail(url: string): { subject: string; html: string; te
   `;
 
   return {
-    subject: `sign in to setlistroyalty.com · #${id}`,
+    subject: `sign in to setlistroyalty.com · ${time}`,
     html: layout(content),
     text: `sign in to setlistroyalty.com\n\n${url}\n\nif you did not request this email you can safely ignore it.\nthis link expires in 24 hours and can only be used once.`,
   };
