@@ -95,26 +95,18 @@ export function HowItWorks() {
         ))}
       </div>
 
-      {/* Mobile: vertical flow */}
-      <div className="md:hidden space-y-0">
-        {steps.map((step, i) => (
-          <div key={step.number} className="flex">
-            <div className="flex flex-col items-center mr-4">
-              <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-[12px] text-text-muted shrink-0">
-                {step.number}
-              </div>
-              {i < steps.length - 1 && (
-                <div className="flex-1 w-px bg-border-subtle my-1" />
-              )}
+      {/* Mobile: simple list */}
+      <div className="md:hidden max-w-[320px] mx-auto space-y-6">
+        {steps.map((step) => (
+          <div key={step.number} className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-text-muted shrink-0">
+              {step.icon}
             </div>
-            <div className="pb-8 pt-1">
-              <div className="text-text-muted mb-2">
-                {step.icon}
-              </div>
-              <div className="text-[12px] text-text-secondary mb-1">
+            <div className="pt-1">
+              <div className="text-[13px] text-text font-medium">
                 {step.title}
               </div>
-              <p className="text-[12px] text-text-secondary leading-[1.5]">
+              <p className="text-[12px] text-text-secondary leading-[1.5] mt-1">
                 {step.description}
               </p>
             </div>

@@ -91,24 +91,24 @@ export function DataProvenance() {
       </div>
 
       {/* Mobile: vertical pipeline */}
-      <div className="md:hidden max-w-[300px] mx-auto">
+      <div className="md:hidden max-w-[320px] mx-auto">
         {stages.map((stage, i) => (
           <div key={stage.label}>
-            <div className="flex items-center gap-3 py-2">
+            <div className="flex items-start gap-4 py-2">
               <div className="w-10 h-10 border border-border flex items-center justify-center text-text-muted shrink-0">
                 {stage.icon}
               </div>
-              <div>
-                <div className="text-[12px] text-text font-medium">
+              <div className="pt-1">
+                <div className="text-[13px] text-text font-medium">
                   {stage.label}
                 </div>
-                <div className="text-[11px] text-text-secondary">
+                <div className="text-[12px] text-text-secondary">
                   {stage.detail}
                 </div>
               </div>
             </div>
             {i < stages.length - 1 && (
-              <div className="flex justify-center py-1">
+              <div className="pl-[17px] py-1">
                 <svg width="12" height="16" viewBox="0 0 12 16" className="text-text-disabled">
                   <line x1="6" y1="0" x2="6" y2="12" stroke="currentColor" strokeWidth="1" />
                   <polyline points="2,10 6,14 10,10" fill="none" stroke="currentColor" strokeWidth="1" />

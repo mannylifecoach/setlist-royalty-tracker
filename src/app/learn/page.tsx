@@ -186,7 +186,7 @@ export default function LearnPage() {
               station logs, and digital service reports. it happens automatically.
             </p>
             <p className="text-[13px] text-text-secondary leading-[1.7]">
-              <strong className="text-text">live performance royalties are different.</strong> there&apos;s
+              <strong className="text-text">live performance royalties are different.</strong>{' '}there&apos;s
               no microphone in every bar listening to what&apos;s being played. pros survey
               the highest-grossing concert tours each quarter using pollstar data, but
               everyone else — the vast majority of working songwriters —

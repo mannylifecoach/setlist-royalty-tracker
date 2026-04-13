@@ -22,7 +22,7 @@ export function ProExplainer() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="border border-border-subtle p-5 space-y-3">
+          <div className="border border-border-subtle p-5 space-y-3 text-left">
             <div className="flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -31,7 +31,7 @@ export function ProExplainer() {
               </svg>
               <span className="text-[13px] text-text font-medium">bmi live</span>
             </div>
-            <ul className="space-y-2 text-[13px] text-text font-medium leading-[1.6]">
+            <ul className="space-y-2 text-[12px] text-text-secondary leading-[1.6]">
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
                 report via ols.bmi.com
@@ -55,7 +55,7 @@ export function ProExplainer() {
             </ul>
           </div>
 
-          <div className="border border-border-subtle p-5 space-y-3">
+          <div className="border border-border-subtle p-5 space-y-3 text-left">
             <div className="flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
                 <path d="M18 20V10" />
@@ -64,7 +64,7 @@ export function ProExplainer() {
               </svg>
               <span className="text-[13px] text-text font-medium">ascap onstage</span>
             </div>
-            <ul className="space-y-2 text-[13px] text-text font-medium leading-[1.6]">
+            <ul className="space-y-2 text-[12px] text-text-secondary leading-[1.6]">
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
                 report via members.ascap.com
@@ -89,7 +89,7 @@ export function ProExplainer() {
           </div>
         </div>
 
-        <div className="border border-status-confirmed/20 p-5 space-y-3">
+        <div className="border border-status-confirmed/20 p-5 space-y-3 text-left">
           <div className="text-[12px] text-status-confirmed">
             where we help
           </div>
