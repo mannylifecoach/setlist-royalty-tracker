@@ -19,11 +19,11 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    title: "$2.5 billion in music royalties go uncollected every year. we fix that.",
+    title: "billions in music royalties go uncollected every year. we fix that.",
     description:
-      "every time a song is performed live at a concert, the songwriter earns a royalty — but only if someone reports it. the organizations responsible for collecting that money only auto-track about 300 major tours. the other millions of performances? no one is filing those claims. we use ai to find the missing performances and help songwriters get paid.",
+      "every time a song is performed live at a concert, the songwriter earns a royalty — but only if someone reports it. the organizations responsible for collecting that money only auto-track the highest-grossing tours. the other millions of performances? no one is filing those claims. we use ai to find the missing performances and help songwriters get paid.",
     stats: [
-      { value: "$2.5b+", label: "left on the table annually" },
+      { value: "billions", label: "left on the table annually" },
       { value: "9.9m", label: "concerts in our database" },
       { value: "0", label: "competitors" },
     ],
@@ -31,11 +31,11 @@ const SLIDES: Slide[] = [
   {
     title: "the music industry has a blind spot",
     description:
-      "songwriters are owed royalties for every live performance of their music. organizations called performing rights organizations (bmi, ascap) are supposed to collect this money — but they only auto-track the biggest 200-300 tours each quarter. every other performance requires the songwriter to manually report it. most don't know, don't have time, or miss the 9-month filing deadline.",
+      "songwriters are owed royalties for every live performance of their music. performing rights organizations (bmi, ascap) are supposed to collect this money — but they only auto-track the highest-grossing tours each quarter. every other performance requires the songwriter to manually report it. most don't know, don't have time, or miss the 9-month filing deadline.",
     stats: [
-      { value: "$2.5b+", label: "uncollected annually" },
+      { value: "billions", label: "uncollected annually (industry est.)" },
       { value: "9 mo", label: "filing deadline" },
-      { value: "~300", label: "tours auto-tracked" },
+      { value: "top tours", label: "only ones auto-tracked" },
     ],
   },
   {
@@ -82,7 +82,7 @@ const SLIDES: Slide[] = [
   {
     title: "second market: dj-producers ($120m/year gap)",
     description:
-      "electronic music is a $12.9 billion industry but live performance royalties for dj sets are almost completely unreported. the association for electronic music estimates $120m/year in unclaimed dj royalties. setlist.fm has near-zero dj coverage. no end-to-end consumer tool exists. we extend the same engine to dj-producers via serato history import, resident advisor venue matching, and 1001tracklists data.",
+      "electronic music is a $12.9 billion industry but live performance royalties for dj sets are almost completely unreported. the association for electronic music estimates $120m/year in unclaimed dj royalties. setlist.fm has near-zero dj coverage. no end-to-end consumer tool exists. we extend the same engine to dj-producers via serato history import and musicbrainz work-relationship matching.",
     stats: [
       { value: "$120m", label: "annual unclaimed dj royalties (afem)" },
       { value: "$12.9b", label: "global electronic music industry (ims 2025)" },

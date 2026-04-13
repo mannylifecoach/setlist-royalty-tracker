@@ -22,8 +22,8 @@ export default function AboutPage() {
           <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/about" className="btn text-[11px]">
-            about
+          <Link href="/learn" className="btn text-[11px]">
+            learn
           </Link>
           <Link href="/login" className="btn text-[11px]">
             sign in
@@ -40,6 +40,11 @@ export default function AboutPage() {
             <p className="text-text-muted text-[13px] leading-[1.6] max-w-[460px] mx-auto">
               how pro live reporting works, where our data comes from,
               and why you stay in control the whole time.
+            </p>
+            <p className="text-[11px] text-text-disabled">
+              <Link href="/learn" className="underline hover:text-text-muted transition-colors">
+                new to performance royalties? start with our plain-language guide
+              </Link>
             </p>
           </div>
 

@@ -1,7 +1,7 @@
 const stages = [
   {
     label: 'setlist sources',
-    detail: 'setlist.fm + serato dj + 1001tracklists',
+    detail: 'setlist.fm + serato dj history',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -58,7 +58,7 @@ export function DataProvenance() {
   return (
     <section className="space-y-6">
       <div className="text-center">
-        <span className="text-[11px] text-text-muted tracking-[2px]">
+        <span className="text-[12px] text-text-muted tracking-[2px]">
           your data, your control
         </span>
       </div>
@@ -71,10 +71,10 @@ export function DataProvenance() {
               <div className="w-12 h-12 border border-border flex items-center justify-center text-text-muted mb-2">
                 {stage.icon}
               </div>
-              <div className="text-[11px] text-text-secondary mb-1">
+              <div className="text-[12px] text-text font-medium mb-1">
                 {stage.label}
               </div>
-              <div className="text-[10px] text-text-muted max-w-[110px]">
+              <div className="text-[11px] text-text-secondary max-w-[120px]">
                 {stage.detail}
               </div>
             </div>
@@ -99,10 +99,10 @@ export function DataProvenance() {
                 {stage.icon}
               </div>
               <div>
-                <div className="text-[11px] text-text-secondary">
+                <div className="text-[12px] text-text font-medium">
                   {stage.label}
                 </div>
-                <div className="text-[10px] text-text-muted">
+                <div className="text-[11px] text-text-secondary">
                   {stage.detail}
                 </div>
               </div>
@@ -119,7 +119,7 @@ export function DataProvenance() {
         ))}
       </div>
 
-      <p className="text-[10px] text-text-disabled text-center max-w-[400px] mx-auto leading-[1.6]">
+      <p className="text-[12px] text-text-muted text-center max-w-[460px] mx-auto leading-[1.6]">
         we never submit anything on your behalf. every performance passes through
         your review before it reaches bmi live or ascap onstage.
       </p>

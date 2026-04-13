@@ -63,7 +63,7 @@ export function HowItWorks() {
   return (
     <section className="space-y-10">
       <div className="text-center">
-        <span className="text-[11px] text-text-muted tracking-[2px]">
+        <span className="text-[12px] text-text-muted tracking-[2px]">
           how it works
         </span>
       </div>
@@ -82,7 +82,7 @@ export function HowItWorks() {
               <div className="text-[12px] text-text-secondary mb-2">
                 {step.title}
               </div>
-              <p className="text-[11px] text-text-muted leading-[1.5] max-w-[160px]">
+              <p className="text-[12px] text-text-secondary leading-[1.5] max-w-[160px]">
                 {step.description}
               </p>
             </div>
@@ -114,7 +114,7 @@ export function HowItWorks() {
               <div className="text-[12px] text-text-secondary mb-1">
                 {step.title}
               </div>
-              <p className="text-[11px] text-text-muted leading-[1.5]">
+              <p className="text-[12px] text-text-secondary leading-[1.5]">
                 {step.description}
               </p>
             </div>

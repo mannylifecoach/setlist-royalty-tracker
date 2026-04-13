@@ -1,18 +1,18 @@
 const stats = [
   {
-    value: '$2.5B+',
+    value: 'billions',
     label: 'in royalties go uncollected yearly',
-    detail: 'source: digital music news',
+    detail: 'across all royalty types · industry estimates',
   },
   {
     value: '$120M',
     label: 'in dj royalties unclaimed annually',
-    detail: 'source: association for electronic music',
+    detail: 'source: afem (association for electronic music)',
   },
   {
-    value: '300',
-    label: 'tours auto-tracked per quarter',
-    detail: 'every other show is self-reported',
+    value: 'top tours',
+    label: 'are the only ones auto-tracked',
+    detail: 'everyone else must self-report',
   },
   {
     value: '9.9M+',
@@ -29,11 +29,11 @@ export function WhyThisMatters() {
           why this matters
         </h2>
         <p className="text-[15px] text-text-secondary leading-[1.5] max-w-[520px] mx-auto">
-          over 2.4 million songwriters are registered with us pros, but only
-          ~2,500 acts per year get paid for live performances automatically.
-          add another $120m/year in unclaimed dj royalties, and the gap is
-          obvious. the data to fix this already exists — it just isn&apos;t
-          connected to royalty collection.
+          millions of songwriters are registered with us pros, but only the
+          highest-grossing tours get tracked automatically. everyone else must
+          self-report every show to collect. add the electronic music royalty
+          gap, and the scale of unclaimed money is massive. the data to fix
+          this already exists — it just isn&apos;t connected to royalty collection.
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export function WhyThisMatters() {
       </div>
 
       <p className="text-[10px] text-text-disabled text-center leading-[1.6]">
-        sources: bmi.com · ascap.com · digital music news · setlist.fm · pollstar
+        sources: bmi.com · ascap.com · afem · setlist.fm
       </p>
     </section>
   );

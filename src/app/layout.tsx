@@ -18,11 +18,11 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: 'setlist royalty tracker',
-  description: 'bmi and ascap only auto-track the top 200-300 tours. we find unreported live performances using 9.6m+ crowdsourced setlists — so songwriters get paid.',
+  description: 'bmi and ascap only auto-track the the highest-grossing tours. we find unreported live performances using 9.6m+ crowdsourced setlists — so songwriters get paid.',
   metadataBase: new URL('https://setlistroyalty.com'),
   openGraph: {
     title: 'stop leaving royalties on the table',
-    description: 'bmi and ascap only auto-track the top 200-300 tours. we find the rest using 9.6m+ crowdsourced setlists.',
+    description: 'bmi and ascap only auto-track the the highest-grossing tours. we find the rest using 9.6m+ crowdsourced setlists.',
     url: 'https://setlistroyalty.com',
     siteName: 'setlist royalty tracker',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'setlist royalty tracker' }],
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'stop leaving royalties on the table',
-    description: 'bmi and ascap only auto-track the top 200-300 tours. we find the rest using 9.6m+ crowdsourced setlists.',
+    description: 'bmi and ascap only auto-track the the highest-grossing tours. we find the rest using 9.6m+ crowdsourced setlists.',
     images: ['/og-image.png'],
   },
 };

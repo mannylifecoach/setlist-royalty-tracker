@@ -47,6 +47,13 @@ export function MobileNav() {
             about
           </Link>
           <Link
+            href="/learn"
+            className="btn text-[11px] text-center"
+            onClick={() => setOpen(false)}
+          >
+            learn
+          </Link>
+          <Link
             href="/pitch"
             className="btn text-[11px] text-center"
             onClick={() => setOpen(false)}

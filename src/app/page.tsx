@@ -25,6 +25,9 @@ export default function LandingPage() {
           <Link href="/about" className="btn text-[11px]">
             about
           </Link>
+          <Link href="/learn" className="btn text-[11px]">
+            learn
+          </Link>
           <Link href="/pitch" className="btn text-[11px]">
             pitch
           </Link>
@@ -46,7 +49,7 @@ export default function LandingPage() {
             on the table
           </h1>
           <p className="text-text-secondary text-[15px] sm:text-[17px] leading-[1.5] max-w-[520px] mx-auto">
-            bmi and ascap only auto-track the top 200-300 tours. every other
+            bmi and ascap only auto-track the highest-grossing tours. every other
             live performance — band, dj set, festival — goes unreported unless
             you manually log it. setlist.fm has 9.6m+ setlists. we bridge that gap.
           </p>
@@ -83,7 +86,7 @@ export default function LandingPage() {
               the same composition as &quot;midnight bass.&quot;
             </p>
             <p className="text-[11px] text-text-disabled">
-              powered by musicbrainz work relationships · serato + resident advisor + 1001tracklists
+              powered by musicbrainz work relationships · serato dj history import
             </p>
           </div>
 
@@ -104,9 +107,12 @@ export default function LandingPage() {
               chrome extension auto-fill · csv export · 9 month expiration
               tracking · email notifications
             </p>
-            <p className="text-[11px] text-text-disabled">
+            <p className="text-[11px] text-text-disabled space-x-3">
+              <Link href="/learn" className="underline hover:text-text-muted transition-colors">
+                new to performance royalties?
+              </Link>
               <Link href="/about" className="underline hover:text-text-muted transition-colors">
-                learn how it works & why you can trust us
+                how it works
               </Link>
             </p>
           </div>

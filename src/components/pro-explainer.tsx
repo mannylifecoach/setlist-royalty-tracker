@@ -2,21 +2,21 @@ export function ProExplainer() {
   return (
     <section className="space-y-6">
       <div className="text-center">
-        <span className="text-[11px] text-text-muted tracking-[2px]">
+        <span className="text-[12px] text-text-muted tracking-[2px]">
           how pro live reporting works
         </span>
       </div>
 
       <div className="max-w-[540px] mx-auto space-y-6">
         <div className="border border-border-subtle p-5 space-y-3">
-          <div className="text-[12px] text-text-secondary">
+          <div className="text-[13px] text-text font-medium">
             the problem
           </div>
-          <p className="text-[11px] text-text-muted leading-[1.7]">
+          <p className="text-[13px] text-text-secondary leading-[1.7]">
             when your song is performed live at a concert, festival, or event,
             you&apos;re owed performance royalties through your pro (performing
             rights organization). but bmi and ascap only automatically survey
-            the top 200–300 touring acts. if you&apos;re not on that list, the
+            the highest-grossing tours. if you&apos;re not on that list, the
             only way to collect is to manually report each performance yourself.
           </p>
         </div>
@@ -29,9 +29,9 @@ export function ProExplainer() {
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
-              <span className="text-[12px] text-text-secondary">bmi live</span>
+              <span className="text-[13px] text-text font-medium">bmi live</span>
             </div>
-            <ul className="space-y-2 text-[11px] text-text-muted leading-[1.6]">
+            <ul className="space-y-2 text-[13px] text-text font-medium leading-[1.6]">
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
                 report via ols.bmi.com
@@ -62,9 +62,9 @@ export function ProExplainer() {
                 <path d="M12 20V4" />
                 <path d="M6 20v-6" />
               </svg>
-              <span className="text-[12px] text-text-secondary">ascap onstage</span>
+              <span className="text-[13px] text-text font-medium">ascap onstage</span>
             </div>
-            <ul className="space-y-2 text-[11px] text-text-muted leading-[1.6]">
+            <ul className="space-y-2 text-[13px] text-text font-medium leading-[1.6]">
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
                 report via members.ascap.com
@@ -93,7 +93,7 @@ export function ProExplainer() {
           <div className="text-[12px] text-status-confirmed">
             where we help
           </div>
-          <p className="text-[11px] text-text-muted leading-[1.7]">
+          <p className="text-[13px] text-text-secondary leading-[1.7]">
             setlist royalty tracker automates the discovery and data-gathering
             steps. instead of manually searching for concerts, copying venue
             details, and typing setlists into bmi or ascap forms — we find the

@@ -11,7 +11,7 @@ const faqs = [
   {
     question: 'where does the performance data come from?',
     answer:
-      'we pull setlist data from setlist.fm, a community of 300,000+ contributors who document concert setlists worldwide. setlist.fm has 9.6 million+ setlists cataloged. for dj-producers, we are adding serato dj history import, resident advisor venue matching, and 1001tracklists data — covering the dj/festival market that setlist.fm misses. we match all sources against the songs you\'ve registered in your account.',
+      'we pull setlist data from setlist.fm, a community of 300,000+ contributors who document concert setlists worldwide. setlist.fm has 9.6 million+ setlists cataloged. for dj-producers, serato dj history import is live today — upload your csv and we match tracks against your registered songs. we match all sources against the songs you\'ve registered in your account.',
   },
   {
     question: 'do you submit performances on my behalf?',
@@ -26,12 +26,12 @@ const faqs = [
   {
     question: 'i\'m a dj-producer. does this work for my live sets?',
     answer:
-      'electronic music has a $120m/year royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to bmi or ascap. our dj-producer support is live today: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. you don\'t need to have been at the show — if another dj plays your track and uploads their set, you get notified.',
+      'electronic music has a significant royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to pros. our dj-producer support is live today: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. important: performance royalties go to the songwriter — if you produce original tracks, you earn royalties when other djs play them. if you only dj other artists\' music, the royalties belong to those songwriters.',
   },
   {
-    question: 'do djs get performance royalties even when they\'re paid to perform?',
+    question: 'do dj-producers get performance royalties even when they\'re paid to perform?',
     answer:
-      'yes — they\'re two completely separate revenue streams. the venue pays the dj a performance fee for showing up. bmi and ascap pay the songwriter a performance royalty for the use of their composition. if you wrote the track, you\'re owed performance royalties whether you played it yourself, another dj played it, or you weren\'t at the show at all.',
+      'yes — if you wrote the music. they\'re two completely separate revenue streams. the venue pays the dj a performance fee for showing up. your pro pays the songwriter a performance royalty for the use of their composition. if you wrote the track, you\'re owed performance royalties whether you played it yourself, another dj played it, or you weren\'t at the show at all. djs who only play other artists\' music do not earn performance royalties — those belong to the original songwriters.',
   },
   {
     question: 'what is the 9-month deadline?',

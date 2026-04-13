@@ -2,7 +2,7 @@ export function TrustBadges() {
   return (
     <section className="space-y-4">
       <div className="text-center">
-        <span className="text-[11px] text-text-muted tracking-[2px]">
+        <span className="text-[12px] text-text-muted tracking-[2px]">
           built on industry infrastructure
         </span>
       </div>
@@ -19,7 +19,7 @@ export function TrustBadges() {
             <circle cx="12" cy="12" r="6" />
             <circle cx="12" cy="12" r="2" />
           </svg>
-          <span className="text-[10px] text-text-muted">setlist.fm</span>
+          <span className="text-[12px] text-text-secondary">setlist.fm</span>
         </a>
 
         <a
@@ -33,7 +33,7 @@ export function TrustBadges() {
             <path d="M2 12h20" />
             <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
           </svg>
-          <span className="text-[10px] text-text-muted">musicbrainz</span>
+          <span className="text-[12px] text-text-secondary">musicbrainz</span>
         </a>
 
         <div className="flex flex-col items-center gap-2 opacity-40">
@@ -42,7 +42,7 @@ export function TrustBadges() {
             <line x1="8" y1="21" x2="16" y2="21" />
             <line x1="12" y1="17" x2="12" y2="21" />
           </svg>
-          <span className="text-[10px] text-text-muted">bmi live</span>
+          <span className="text-[12px] text-text-secondary">bmi live</span>
         </div>
 
         <div className="flex flex-col items-center gap-2 opacity-40">
@@ -51,11 +51,11 @@ export function TrustBadges() {
             <path d="M12 20V4" />
             <path d="M6 20v-6" />
           </svg>
-          <span className="text-[10px] text-text-muted">ascap onstage</span>
+          <span className="text-[12px] text-text-secondary">ascap onstage</span>
         </div>
       </div>
 
-      <p className="text-[10px] text-text-disabled text-center">
+      <p className="text-[11px] text-text-muted text-center">
         not affiliated with or endorsed by any pro · we automate your existing workflow
       </p>
     </section>
