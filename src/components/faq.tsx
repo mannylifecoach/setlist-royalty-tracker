@@ -26,7 +26,7 @@ const faqs = [
   {
     question: 'i\'m a dj-producer. does this work for my live sets?',
     answer:
-      'electronic music has a $120m/year royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to bmi or ascap. our dj-producer support is rolling out now: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. you don\'t need to have been at the show — if another dj plays your track and uploads their set, you get notified.',
+      'electronic music has a $120m/year royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to bmi or ascap. our dj-producer support is live today: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. you don\'t need to have been at the show — if another dj plays your track and uploads their set, you get notified.',
   },
   {
     question: 'do djs get performance royalties even when they\'re paid to perform?',

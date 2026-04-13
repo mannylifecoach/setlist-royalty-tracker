@@ -2,7 +2,7 @@ const steps = [
   {
     number: '01',
     title: 'setlist sources',
-    description: 'setlist.fm 9.6m+ setlists, plus serato dj history (coming soon)',
+    description: 'setlist.fm 9.6m+ setlists, plus serato dj history import',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />

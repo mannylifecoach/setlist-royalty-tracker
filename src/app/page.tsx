@@ -73,7 +73,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border border-border-subtle p-6 text-left space-y-3">
-            <div className="text-[11px] text-text-muted">for dj-producers <span className="text-text-disabled">· coming soon</span></div>
+            <div className="text-[11px] text-text-muted">for dj-producers <span className="text-status-confirmed">· live now</span></div>
             <p className="text-[13px] text-text-secondary leading-[1.5]">
               electronic music has a $120m/year royalty gap. dj sets at clubs
               and festivals almost never get reported to bmi or ascap. upload
