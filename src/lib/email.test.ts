@@ -67,7 +67,7 @@ describe('sendNewPerformancesEmail', () => {
 
   it('HTML uses dark theme styling', async () => {
     await sendNewPerformancesEmail('user@test.com', 'Fred Again..', 1, ['Delilah']);
-    expect(sentEmails[0].html).toContain('background-color:#000000');
+    expect(sentEmails[0].html).toContain('background-color:#1a1a1a');
     expect(sentEmails[0].html).toContain('setlist royalty tracker');
   });
 });
