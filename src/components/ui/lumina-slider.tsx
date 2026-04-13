@@ -19,160 +19,120 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    title: "billions in music royalties go uncollected every year. we fix that.",
+    title: "every live performance is worth money. most creators never collect it.",
     description:
-      "every time a song is performed live at a concert, the songwriter earns a royalty — but only if someone reports it. the organizations responsible for collecting that money only auto-track the highest-grossing tours. the other millions of performances? no one is filing those claims. we use ai to find the missing performances and help songwriters get paid.",
+      "if you created the music — wrote it, produced it, composed it — and it gets performed live at a concert, a festival, or a club, you're owed a royalty. it doesn't matter if you're on stage or not. a songwriter whose song gets covered, a producer whose beat gets played in a dj set, an artist performing their own music at a bar — all owed money. but the system to collect it is broken, and most creators don't even know these royalties exist.",
     stats: [
-      { value: "billions", label: "left on the table annually" },
-      { value: "9.9m", label: "concerts in our database" },
-      { value: "0", label: "competitors" },
+      { value: "9.9m+", label: "live performances we scan" },
+      { value: "9 mo", label: "deadline before money is gone" },
+      { value: "billions", label: "unclaimed every year" },
     ],
   },
   {
-    title: "the music industry has a blind spot",
+    title: "the system only works for the biggest artists.",
     description:
-      "songwriters are owed royalties for every live performance of their music. performing rights organizations (bmi, ascap) are supposed to collect this money — but they only auto-track the highest-grossing tours each quarter. every other performance requires the songwriter to manually report it. most don't know, don't have time, or miss the 9-month filing deadline.",
+      "performing rights organizations like bmi and ascap collect royalties from venues and distribute them to creators. but they only auto-track the highest-grossing tours using pollstar data. everyone else — indie artists, touring bands, dj-producers — must manually report every single show through online portals like bmi live or ascap onstage. most don't know these portals exist. those who do face 5+ minutes of data entry per show. miss the 9-month deadline and the money is gone forever.",
     stats: [
-      { value: "billions", label: "uncollected annually (industry est.)" },
-      { value: "9 mo", label: "filing deadline" },
       { value: "top tours", label: "only ones auto-tracked" },
+      { value: "5+ min", label: "manual entry per show" },
+      { value: "9 mo", label: "miss it, lose it" },
     ],
   },
   {
-    title: "the data finally exists",
+    title: "we automate what the industry won't.",
     description:
-      "fans have crowdsourced 9.9 million concert setlists on setlist.fm — every song played at every show. at the same time, royalty collection agencies moved their submission forms online. ai matching has matured. the three pieces needed to solve this problem finally exist — no one has connected them until now.",
-    stats: [
-      { value: "9.9m+", label: "concert setlists" },
-      { value: "online", label: "submission portals" },
-      { value: "0", label: "tools connecting them" },
-    ],
-  },
-  {
-    title: "scan. match. review. submit.",
-    description:
-      "setlist royalty tracker connects to the world's largest concert database, matches setlists against a songwriter's catalog using ai, and surfaces unreported performances — then helps file the claim with a browser extension that auto-fills royalty submission forms in seconds.",
+      "setlist royalty tracker scans 9.9 million crowdsourced concert setlists, matches them against a creator's registered songs, and surfaces performances they didn't know about. then our chrome extension auto-fills the submission form in seconds — replacing the manual work that stops most creators from ever filing.",
     bullets: [
-      "songwriter registers their songs and the artists who perform them",
-      "ai scans millions of concert setlists for matches",
-      "songwriter reviews and confirms discovered performances",
-      "one-click export or auto-fill directly into the submission portal",
+      "register your songs and the artists who perform them",
+      "we scan 9.9m+ setlists and surface your matches",
+      "you review and confirm — nothing submits without your approval",
+      "chrome extension auto-fills the pro form in ~30 seconds per show",
     ],
   },
   {
-    title: "compound ai — not a wrapper",
+    title: "$120m/year in dj royalties goes uncollected.",
     description:
-      "three resilience layers work together so the system keeps functioning even when external websites change. this isn't a single api call — it's an intelligent pipeline that adapts.",
-    bullets: [
-      "layer 1: smart matching — catches alternate titles, remixes, live versions, and misspellings using fuzzy text analysis",
-      "layer 2: adaptive form filling — auto-fills submission forms using techniques that survive website redesigns",
-      "layer 3: ai vision fallback — when form layouts change unexpectedly, ai reads the screen visually and fills fields anyway (~$0.01 per use)",
-    ],
-  },
-  {
-    title: "2.4 million potential users in the us alone",
-    description:
-      "every songwriter registered with a performing rights organization is a potential customer. 2.4 million in the us alone — and the market extends globally across dozens of international organizations. we start with the 50k indie artists who actively tour and file their own claims, then expand into publishers managing hundreds of catalogs.",
+      "when a dj plays your track at a festival, a club, or a warehouse party — you're owed a royalty as the creator of that music. but dj setlists are almost never reported. even dj-producers performing their own music at festivals rarely file because they don't know they can. the association for electronic music estimates $120m/year is lost this way. srt lets producers upload serato dj history files and automatically matches every track — including remixes and edits that don't match by title alone.",
     stats: [
-      { value: "$800m+", label: "tam — all us pro members × subscription" },
-      { value: "$54m", label: "sam — 500k active touring songwriters" },
-      { value: "$5.4m", label: "som — 50k indie artists (year 1-2)" },
+      { value: "$120m/yr", label: "uncollected (afem estimate)" },
+      { value: "clubs", label: "festivals, events — unreported" },
+      { value: "remixes", label: "matched by composition, not title" },
     ],
   },
   {
-    title: "second market: dj-producers ($120m/year gap)",
+    title: "why now: three things finally converged.",
     description:
-      "electronic music is a $12.9 billion industry but live performance royalties for dj sets are almost completely unreported. the association for electronic music estimates $120m/year in unclaimed dj royalties. setlist.fm has near-zero dj coverage. no end-to-end consumer tool exists. we extend the same engine to dj-producers via serato history import and musicbrainz work-relationship matching.",
+      "fans crowdsourced 9.9 million concert setlists on setlist.fm — the raw data to find missing performances. pros moved their submission forms online, making automation possible. and open music databases now map every remix, edit, and cover back to the original composition — so matching actually works. bmi was acquired by private equity in 2023 for $1.7 billion. the industry is digitizing fast. the pieces exist. no one has connected them.",
     stats: [
-      { value: "$120m", label: "annual unclaimed dj royalties (afem)" },
-      { value: "$12.9b", label: "global electronic music industry (ims 2025)" },
-      { value: "2.5m", label: "active serato dj users" },
+      { value: "9.9m+", label: "crowdsourced setlists" },
+      { value: "$1.7b", label: "bmi acquired by pe (2023)" },
+      { value: "0", label: "tools connecting the pieces" },
     ],
   },
   {
-    title: "the two-sided network: producers get paid even when they're not at the show",
+    title: "millions of potential users worldwide.",
     description:
-      "this is the unfair-advantage feature. when a dj uploads their serato set, we don't just match against their own catalog — we scan against every registered song on the platform. producer a writes a track. dj b plays it at a club. producer a gets notified and files for royalties. neither needed to know the other. as more djs upload sets, every registered songwriter becomes a beneficiary of the entire network.",
-    bullets: [
-      "every dj upload generates royalty notifications for the songs they played",
-      "every registered song benefits from every dj on the platform",
-      "scales nonlinearly: 100 djs × 50 sets/year × 20 tracks = 100k matching opportunities",
-      "the more users join, the more value every existing user gets — true network effect",
-    ],
-  },
-  {
-    title: "the technical moat: musicbrainz work-relationship matching",
-    description:
-      "every dj plays remixes, edits, and renamed versions. fuzzy string matching breaks on these — \"midnight bass (skrillex remix)\" doesn't look like \"midnight bass.\" we use musicbrainz work entities (the same id system that powers wikipedia and last.fm) to match recordings to their underlying composition. every version of a song — radio edit, extended mix, third-party remix, cover — links back to the same work id. the songwriter gets credited correctly every time. competitors built on string matching cannot retrofit this without rebuilding their core engine.",
-    bullets: [
-      "musicbrainz: free, open-source, ~25 years old, used by last.fm and setlist.fm",
-      "work entity = the abstract composition; recording entity = a specific version",
-      "matching by work id is structurally correct, not heuristic",
-      "songview integration auto-fills bmi and ascap work ids from iswc",
-      "no $500/month gracenote dependency — bootstrap-friendly",
-    ],
-  },
-  {
-    title: "the product pays for itself",
-    description:
-      "a single recovered live performance royalty averages $15-75 per show — one match can cover a full year of subscription. when the product literally makes users more money than it costs, churn approaches zero. at 1,000 subscribers, we hit $108k arr. at 10,000, we cross $1m. the math scales because the scanning cost per user is near zero.",
+      "every creator registered with a pro is a potential user — millions in the u.s. alone across bmi, ascap, sesac, and gmr. internationally, organizations in 100+ countries (prs, socan, gema, sacem) serve millions more. we start with indie creators who actively tour and file their own claims, then expand into dj-producers and music publishers.",
     stats: [
-      { value: "$9/mo", label: "pro subscription" },
-      { value: "$15-75", label: "avg royalty per show recovered" },
+      { value: "$54m", label: "sam — active touring creators" },
+      { value: "$5.4m", label: "som — 50k indie creators (year 1-2)" },
+      { value: "global", label: "pros in 100+ countries" },
+    ],
+  },
+  {
+    title: "the product pays for itself on the first match.",
+    description:
+      "a single recovered performance royalty can cover a full year of subscription. when the product makes users more money than it costs, the value proposition is immediate and churn is low. free tier drives adoption, pro tier ($9/mo) unlocks batch scanning and priority support. publisher tier planned after validating multi-catalog workflows.",
+    stats: [
+      { value: "free", label: "to start" },
+      { value: "$9/mo", label: "pro tier" },
       { value: "$108k", label: "arr at 1,000 subscribers" },
     ],
   },
   {
-    title: "mvp shipped. beta in progress.",
+    title: "product is live. currently in beta.",
     description:
-      "built and deployed in weeks using ai-assisted development. the speed of iteration is itself a competitive advantage — we ship features faster than incumbents ship meeting agendas.",
-    stats: [
-      { value: "96+", label: "automated tests" },
-      { value: "live", label: "production app" },
-      { value: "weeks", label: "idea to deployed mvp" },
-    ],
+      "the full product is built and deployed at setlistroyalty.com. not a prototype — a working application with real users testing the complete flow from account creation through royalty submission.",
     bullets: [
-      "full-stack web app — accounts, scanning, dashboard, export",
-      "browser extension auto-fills royalty submission forms",
-      "automated email alerts before filing deadlines expire",
-      "ai-powered song matching with comprehensive test coverage",
+      "web app — scanning, matching, performance dashboard, csv export",
+      "chrome extension — auto-fills bmi live forms in ~30 seconds",
+      "serato import — dj set matching with remix detection",
+      "deadline alerts — email warnings at 30, 14, and 7 days before expiry",
+      "161 automated tests passing, sentry monitoring, daily health checks",
     ],
   },
   {
-    title: "competitive landscape",
+    title: "the closest competitor validates our market at $8m arr.",
     description:
-      "the closest direct competitor is muzooka (founded 2011, $9m raised, ~12 employees, ~$8m arr). they ship setlist reporting to bmi only — no ascap, no sesac, no gmr after 5+ years of trying. they require manual setlist entry. they have no audio fingerprinting, no mobile app, no dj market. they're a recording academy partner for artist asset management, not royalty automation. audoo (uk) does audio fingerprinting but is europe-only. no us competitor combines automated discovery + multi-pro support + dj market.",
+      "muzooka (founded 2012, raised $9m, ~$8m arr) proves demand for live royalty tools. but their live performance product supports bmi only — no ascap after 6 years. still requires manual setlist entry. no discovery, no automation, no dj market. their recent focus has shifted to radio chart analytics. meanwhile, bmi has three separate systems (pollstar, bmi live, muzooka) that don't talk to each other. none automate the creator's actual work of finding and reporting performances.",
     bullets: [
-      "muzooka — manual entry, bmi-only, no asacp, b2b/major-label focus, stalled since 2020",
-      "audoo (uk) — audio fingerprinting, prs/ppl partnership, no us presence",
+      "muzooka — bmi only, manual entry, no ascap, shifting to radio analytics",
+      "bmi live / ascap onstage — pro-owned portals, pure manual entry, no discovery",
       "songtrust, cd baby, tunecore — streaming and mechanical royalties only, not live",
-      "bmi live, ascap onstage — pro-owned manual portals, no discovery layer",
-      "srt — automated discovery + chrome extension auto-fill + multi-pro + dj market + work-id matching",
+      "srt — automated discovery + auto-fill + bmi and ascap + dj market",
     ],
   },
   {
-    title: "seed round",
+    title: "raising $250k–$350k to reach 500 active users.",
     description:
-      "we're raising to build direct integrations with royalty organizations, acquire our first 1,000 paying users, secure a commercial data license, and make one key hire to accelerate growth.",
+      "the product is built. this capital funds the go-to-market: reaching creators, validating willingness to pay, and securing the data license needed to scale. milestone: 500 active users with validated paid conversion within 12 months, positioning for a seed round.",
     bullets: [
-      "direct api integrations with major royalty organizations",
-      "first 1,000 paying subscribers",
-      "commercial concert data license",
-      "one hire: growth or senior engineer",
+      "12–18 months runway",
+      "first hire: growth / community",
+      "creator outreach — songwriter forums, producer communities, pro events",
+      "commercial setlist.fm data license",
+      "target: 500 active users → validated paid conversion → seed round",
     ],
   },
 ]
 
 const NAV_LABELS = [
-  "intro",
+  "the opportunity",
   "the problem",
-  "why now",
   "the solution",
-  "ai architecture",
+  "dj-producers",
+  "why now",
   "market",
-  "dj market",
-  "network effect",
-  "technical moat",
   "business model",
   "traction",
   "competition",
