@@ -4,7 +4,7 @@ import { MorphingText } from '@/components/ui/morphing-text';
 
 export const metadata: Metadata = {
   title: 'what are performance royalties? — setlist royalty tracker',
-  description: 'a plain-language guide to live performance royalties: where the money comes from, how to start collecting, deadlines, and why most songwriters miss out.',
+  description: 'a plain-language guide to live performance royalties: where the money comes from, how to start collecting, deadlines, and why most creators miss out.',
 };
 
 export default function LearnPage() {
@@ -189,7 +189,7 @@ export default function LearnPage() {
               <strong className="text-text">live performance royalties are different.</strong>{' '}there&apos;s
               no microphone in every bar listening to what&apos;s being played. pros survey
               the highest-grossing concert tours each quarter using pollstar data, but
-              everyone else — the vast majority of working songwriters —
+              everyone else — the vast majority of working creators —
               must <strong className="text-text">self-report</strong> through programs like bmi live
               and ascap onstage.
             </p>
@@ -278,7 +278,7 @@ export default function LearnPage() {
             <div className="space-y-2">
               <div className="card p-3">
                 <p className="text-[12px] text-text font-medium">&quot;i didn&apos;t know self-reporting existed&quot;</p>
-                <p className="text-[11px] text-text-muted mt-1">most songwriters have never heard of bmi live or ascap onstage. pros don&apos;t heavily promote these programs.</p>
+                <p className="text-[11px] text-text-muted mt-1">most creators have never heard of bmi live or ascap onstage. pros don&apos;t heavily promote these programs.</p>
               </div>
               <div className="card p-3">
                 <p className="text-[12px] text-text font-medium">&quot;my label handles that&quot;</p>
@@ -290,7 +290,7 @@ export default function LearnPage() {
               </div>
               <div className="card p-3">
                 <p className="text-[12px] text-text font-medium">&quot;it&apos;s not worth the effort&quot;</p>
-                <p className="text-[11px] text-text-muted mt-1">every unreported show is money left on the table. over the course of a year, it adds up — especially for songwriters who perform regularly or have songs covered by other artists.</p>
+                <p className="text-[11px] text-text-muted mt-1">every unreported show is money left on the table. over the course of a year, it adds up — especially for creators who perform regularly or have songs covered by other artists.</p>
               </div>
               <div className="card p-3">
                 <p className="text-[12px] text-text font-medium">&quot;i need to be at the show&quot;</p>

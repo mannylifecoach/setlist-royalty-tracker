@@ -18,7 +18,7 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   title: 'setlist royalty tracker',
-  description: 'bmi and ascap only auto-track the the highest-grossing tours. we find unreported live performances using 9.6m+ crowdsourced setlists — so songwriters get paid.',
+  description: 'bmi and ascap only auto-track the highest-grossing tours. we find unreported live performances using 9.6m+ crowdsourced setlists — so creators get paid.',
   metadataBase: new URL('https://setlistroyalty.com'),
   openGraph: {
     title: 'stop leaving royalties on the table',

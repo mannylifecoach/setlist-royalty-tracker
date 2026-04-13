@@ -29,7 +29,7 @@ export function WhyThisMatters() {
           why this matters
         </h2>
         <p className="text-[15px] text-text-secondary leading-[1.5] max-w-[520px] mx-auto">
-          millions of songwriters are registered with us pros, but only the
+          millions of creators are registered with us pros, but only the
           highest-grossing tours get tracked automatically. everyone else must
           self-report every show to collect. add the electronic music royalty
           gap, and the scale of unclaimed money is massive. the data to fix

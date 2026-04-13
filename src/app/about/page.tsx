@@ -4,7 +4,7 @@ import { MorphingText } from '@/components/ui/morphing-text';
 
 export const metadata: Metadata = {
   title: 'how it works — setlist royalty tracker',
-  description: 'learn how setlist royalty tracker finds unreported live performances and helps songwriters collect royalties from bmi and ascap.',
+  description: 'learn how setlist royalty tracker finds unreported live performances and helps creators collect royalties from bmi and ascap.',
 };
 import { ProExplainer } from '@/components/pro-explainer';
 import { DataProvenance } from '@/components/data-provenance';

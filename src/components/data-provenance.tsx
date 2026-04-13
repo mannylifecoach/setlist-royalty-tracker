@@ -91,7 +91,7 @@ export function DataProvenance() {
       </div>
 
       {/* Mobile: vertical pipeline */}
-      <div className="md:hidden max-w-[320px] mx-auto">
+      <div className="md:hidden max-w-[320px] mx-auto text-left">
         {stages.map((stage, i) => (
           <div key={stage.label}>
             <div className="flex items-start gap-4 py-2">

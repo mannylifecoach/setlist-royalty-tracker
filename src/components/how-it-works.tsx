@@ -96,7 +96,7 @@ export function HowItWorks() {
       </div>
 
       {/* Mobile: simple list */}
-      <div className="md:hidden max-w-[320px] mx-auto space-y-6">
+      <div className="md:hidden max-w-[320px] mx-auto space-y-6 text-left">
         {steps.map((step) => (
           <div key={step.number} className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-text-muted shrink-0">
