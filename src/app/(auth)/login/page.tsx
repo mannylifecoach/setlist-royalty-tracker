@@ -30,14 +30,13 @@ function LoginForm() {
           </h1>
           <p className="text-[13px] text-text-secondary">
             this link has already been used or has expired.
-            request a new one below.
+            links are single-use and expire after 24 hours.
           </p>
           <p className="text-[11px] text-text-muted">
             tip: if you have multiple sign-in emails, always use the newest one.
-            each link can only be used once.
           </p>
           <Link href="/login" className="btn btn-primary inline-block px-8 py-2.5 text-[12px]">
-            request new link
+            go to sign in
           </Link>
         </div>
       </div>
