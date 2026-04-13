@@ -24,6 +24,10 @@ export const GET = withHandler(async () => {
       pro: users.pro,
       role: users.role,
       emailNotifications: users.emailNotifications,
+      defaultStartTimeHour: users.defaultStartTimeHour,
+      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
+      defaultEndTimeHour: users.defaultEndTimeHour,
+      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
     })
     .from(users)
     .where(eq(users.id, session.user.id));
@@ -40,6 +44,10 @@ export const GET = withHandler(async () => {
       pro: null,
       role: null,
       emailNotifications: true,
+      defaultStartTimeHour: '8:00',
+      defaultStartTimeAmPm: 'PM',
+      defaultEndTimeHour: '11:00',
+      defaultEndTimeAmPm: 'PM',
     }
   );
 });
@@ -63,6 +71,10 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     pro,
     role,
     emailNotifications,
+    defaultStartTimeHour,
+    defaultStartTimeAmPm,
+    defaultEndTimeHour,
+    defaultEndTimeAmPm,
   } = result.data;
 
   const [updated] = await db
@@ -78,6 +90,10 @@ export const PATCH = withHandler(async (request: NextRequest) => {
       pro: pro ?? undefined,
       role: role ?? undefined,
       emailNotifications: emailNotifications ?? undefined,
+      defaultStartTimeHour: defaultStartTimeHour ?? undefined,
+      defaultStartTimeAmPm: defaultStartTimeAmPm ?? undefined,
+      defaultEndTimeHour: defaultEndTimeHour ?? undefined,
+      defaultEndTimeAmPm: defaultEndTimeAmPm ?? undefined,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
@@ -94,5 +110,9 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     pro: updated.pro,
     role: updated.role,
     emailNotifications: updated.emailNotifications,
+    defaultStartTimeHour: updated.defaultStartTimeHour,
+    defaultStartTimeAmPm: updated.defaultStartTimeAmPm,
+    defaultEndTimeHour: updated.defaultEndTimeHour,
+    defaultEndTimeAmPm: updated.defaultEndTimeAmPm,
   });
 });

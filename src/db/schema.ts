@@ -31,6 +31,10 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   apiKey: text('api_key').unique(),
   emailNotifications: boolean('email_notifications').default(true).notNull(),
+  defaultStartTimeHour: text('default_start_time_hour'),
+  defaultStartTimeAmPm: text('default_start_time_am_pm'),
+  defaultEndTimeHour: text('default_end_time_hour'),
+  defaultEndTimeAmPm: text('default_end_time_am_pm'),
 });
 
 export const accounts = pgTable('accounts', {

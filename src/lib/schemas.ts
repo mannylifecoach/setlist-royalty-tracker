@@ -70,6 +70,10 @@ export const updateSettingsSchema = z
       .optional(),
     role: z.enum(['songwriter', 'performer', 'dj', 'publisher', 'manager']).nullish(),
     emailNotifications: z.boolean().optional(),
+    defaultStartTimeHour: z.string().max(10).nullish(),
+    defaultStartTimeAmPm: z.string().max(5).nullish(),
+    defaultEndTimeHour: z.string().max(10).nullish(),
+    defaultEndTimeAmPm: z.string().max(5).nullish(),
   })
   .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
 

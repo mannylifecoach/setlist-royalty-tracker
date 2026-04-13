@@ -7,6 +7,7 @@ import {
   COUNTRY_OPTIONS,
   getProsForCountry,
   CAPABILITY_OPTIONS,
+  BMI_HOURS,
   type Capability,
 } from '@/lib/constants';
 
@@ -36,6 +37,10 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [defaultStartTimeHour, setDefaultStartTimeHour] = useState('8:00');
+  const [defaultStartTimeAmPm, setDefaultStartTimeAmPm] = useState('PM');
+  const [defaultEndTimeHour, setDefaultEndTimeHour] = useState('11:00');
+  const [defaultEndTimeAmPm, setDefaultEndTimeAmPm] = useState('PM');
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKeyPreview, setApiKeyPreview] = useState<string | null>(null);
@@ -56,6 +61,10 @@ export default function SettingsPage() {
         setCapabilities(Array.isArray(data.capabilities) ? data.capabilities : []);
         setPro(data.pro || '');
         setEmailNotifications(data.emailNotifications ?? true);
+        setDefaultStartTimeHour(data.defaultStartTimeHour || '8:00');
+        setDefaultStartTimeAmPm(data.defaultStartTimeAmPm || 'PM');
+        setDefaultEndTimeHour(data.defaultEndTimeHour || '11:00');
+        setDefaultEndTimeAmPm(data.defaultEndTimeAmPm || 'PM');
       }
     }
     load();
@@ -91,6 +100,10 @@ export default function SettingsPage() {
           capabilities,
           pro: pro || null,
           emailNotifications,
+          defaultStartTimeHour,
+          defaultStartTimeAmPm,
+          defaultEndTimeHour,
+          defaultEndTimeAmPm,
         }),
       });
       if (res.ok) {
@@ -267,6 +280,63 @@ export default function SettingsPage() {
             ? 'you\'ll receive emails about new performances and expiration warnings.'
             : 'email notifications are off. you can still check your dashboard for updates.'}
         </p>
+        <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
+          {saving ? 'saving...' : saved ? 'saved' : 'save'}
+        </button>
+      </div>
+
+      <div className="card p-4 space-y-4">
+        <div className="text-[11px] text-text-muted">default performance times</div>
+        <p className="text-[11px] text-text-disabled">
+          bmi live requires start and end times for each performance. set your defaults here —
+          they&apos;ll be used for new performances. you can override them per-performance.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-[11px] text-text-muted block mb-1">start time</label>
+            <div className="flex gap-2">
+              <select
+                value={defaultStartTimeHour}
+                onChange={(e) => setDefaultStartTimeHour(e.target.value)}
+                className="input flex-1"
+              >
+                {BMI_HOURS.map((h) => (
+                  <option key={h} value={h}>{h}</option>
+                ))}
+              </select>
+              <select
+                value={defaultStartTimeAmPm}
+                onChange={(e) => setDefaultStartTimeAmPm(e.target.value)}
+                className="input w-[60px]"
+              >
+                <option value="AM">am</option>
+                <option value="PM">pm</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] text-text-muted block mb-1">end time</label>
+            <div className="flex gap-2">
+              <select
+                value={defaultEndTimeHour}
+                onChange={(e) => setDefaultEndTimeHour(e.target.value)}
+                className="input flex-1"
+              >
+                {BMI_HOURS.map((h) => (
+                  <option key={h} value={h}>{h}</option>
+                ))}
+              </select>
+              <select
+                value={defaultEndTimeAmPm}
+                onChange={(e) => setDefaultEndTimeAmPm(e.target.value)}
+                className="input w-[60px]"
+              >
+                <option value="AM">am</option>
+                <option value="PM">pm</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
           {saving ? 'saving...' : saved ? 'saved' : 'save'}
         </button>
