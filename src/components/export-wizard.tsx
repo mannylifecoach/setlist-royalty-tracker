@@ -155,13 +155,34 @@ export function ExportWizard({ data }: ExportWizardProps) {
         })}
       </div>
 
-      <button
-        onClick={handleExport}
-        disabled={selectedData.length === 0}
-        className="btn-primary btn w-full"
-      >
-        download {pro.toUpperCase()} csv ({selectedData.length} performances)
-      </button>
+      <div className="space-y-1">
+        <a
+          href={pro === 'bmi' ? 'https://ols.bmi.com' : 'https://members.ascap.com'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary btn w-full text-center block"
+        >
+          open {pro === 'bmi' ? 'bmi live' : 'ascap onstage'} →
+        </a>
+        <p className="text-[10px] text-text-muted text-center">
+          opens {pro === 'bmi' ? 'ols.bmi.com' : 'members.ascap.com'} in a new tab — install the{' '}
+          <a href="/help/chrome-extension" className="text-status-discovered hover:underline">chrome extension</a>{' '}
+          first to auto-fill your performances directly into the form
+        </p>
+      </div>
+
+      <div className="space-y-1">
+        <button
+          onClick={handleExport}
+          disabled={selectedData.length === 0}
+          className="btn w-full"
+        >
+          download {pro.toUpperCase()} csv ({selectedData.length} performances)
+        </button>
+        <p className="text-[10px] text-text-muted text-center">
+          backup option — download a csv file to reference or upload manually
+        </p>
+      </div>
 
       {incompleteCount > 0 && (
         <p className="text-[11px] text-text-muted text-center">

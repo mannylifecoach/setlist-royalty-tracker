@@ -47,24 +47,12 @@ export default function ExportPage() {
         <div className="card p-3 mt-3 space-y-3">
           <p className="text-[11px] text-text-secondary">
             <span className="text-status-confirmed">recommended:</span> use the{' '}
-            <a href="/settings" className="text-status-discovered hover:underline">
+            <a href="/help/chrome-extension" className="text-status-discovered hover:underline">
               chrome extension
             </a>{' '}
             to auto-fill bmi live forms directly — no csv needed. generate an
             api key in settings to get started. <span className="text-text-disabled">requires google chrome.</span>
           </p>
-          <div className="flex items-center gap-3 pt-1 border-t border-border-subtle">
-            <a
-              href="/bmi-mock.html"
-              target="_blank"
-              className="btn text-[11px] px-3 py-1.5"
-            >
-              try demo: bmi live auto-fill
-            </a>
-            <span className="text-[10px] text-text-muted">
-              opens a mock bmi form — use with the chrome extension to test auto-fill
-            </span>
-          </div>
         </div>
       </div>
 
