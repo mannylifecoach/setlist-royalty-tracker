@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ExportWizard } from '@/components/export-wizard';
+import { DataDisclaimer } from '@/components/data-disclaimer';
 
 export default function ExportPage() {
   const [data, setData] = useState<
@@ -55,6 +56,8 @@ export default function ExportPage() {
           </p>
         </div>
       </div>
+
+      <DataDisclaimer compact />
 
       {data.length > 0 ? (
         <ExportWizard data={data} />

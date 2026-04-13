@@ -11,6 +11,7 @@ import { DataProvenance } from '@/components/data-provenance';
 import { TrustBadges } from '@/components/trust-badges';
 import { ScreenshotWalkthrough } from '@/components/screenshot-walkthrough';
 import { FAQ } from '@/components/faq';
+import { DataDisclaimer } from '@/components/data-disclaimer';
 
 export default function AboutPage() {
   return (
@@ -49,6 +50,8 @@ export default function AboutPage() {
           <ScreenshotWalkthrough />
 
           <TrustBadges />
+
+          <DataDisclaimer />
 
           <FAQ />
 
