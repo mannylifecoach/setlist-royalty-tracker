@@ -12,6 +12,37 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const verify = searchParams.get('verify');
+  const error = searchParams.get('error');
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-[360px] w-full text-center space-y-4">
+          <Link
+            href="/"
+            className="flex flex-col items-center hover:opacity-50 transition-opacity"
+          >
+            <MorphingText className="text-[32px]" />
+            <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
+          </Link>
+          <h1 className="text-[18px] font-light tracking-[-0.3px]">
+            sign-in link expired
+          </h1>
+          <p className="text-[13px] text-text-secondary">
+            this link has already been used or has expired.
+            request a new one below.
+          </p>
+          <p className="text-[11px] text-text-muted">
+            tip: if you have multiple sign-in emails, always use the newest one.
+            each link can only be used once.
+          </p>
+          <Link href="/login" className="btn btn-primary inline-block px-8 py-2.5 text-[12px]">
+            request new link
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (verify) {
     return (
@@ -22,6 +53,10 @@ function LoginForm() {
           </h1>
           <p className="text-[13px] text-text-secondary">
             we sent you a magic link. click it to sign in.
+          </p>
+          <p className="text-[11px] text-text-muted">
+            look for the most recent email from notifications@setlistroyalty.com.
+            the link expires in 24 hours.
           </p>
           <Link href="/login" className="text-[12px] text-text-muted hover:opacity-50 transition-opacity">
             try again
