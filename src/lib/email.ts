@@ -55,12 +55,47 @@ function statusBadge(label: string, color: string): string {
   return `<span style="display:inline-block;padding:2px 8px;font-size:11px;color:${color};border:1px solid ${color};opacity:0.8;">${label}</span>`;
 }
 
+export function magicLinkEmail(url: string): { subject: string; html: string; text: string } {
+  const time = new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const content = `
+    <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;font-weight:400;letter-spacing:-0.3px;">
+      sign in to setlistroyalty.com
+    </p>
+
+    <p style="margin:0 0 24px 0;">
+      ${button('sign in', url)}
+    </p>
+
+    <p style="margin:0 0 8px 0;color:#777777;font-size:12px;">
+      if you did not request this email you can safely ignore it.
+    </p>
+    <p style="margin:0;color:#555555;font-size:11px;">
+      this link expires in 24 hours and can only be used once.
+    </p>
+  `;
+
+  return {
+    subject: `sign in to setlistroyalty.com · ${time}`,
+    html: layout(content),
+    text: `sign in to setlistroyalty.com\n\n${url}\n\nif you did not request this email you can safely ignore it.\nthis link expires in 24 hours and can only be used once.`,
+  };
+}
+
 export async function sendWelcomeEmail(to: string, artistName: string) {
   const subject = 'welcome to setlist royalty tracker';
 
   const content = `
     <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;font-weight:400;letter-spacing:-0.3px;">
       you're in. here's how to start collecting your live performance royalties.
+    </p>
+
+    <p style="margin:0 0 16px 0;color:#5281eb;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;">
+      for songwriters
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;border:1px solid #151515;margin-bottom:24px;">
@@ -94,14 +129,35 @@ export async function sendWelcomeEmail(to: string, artistName: string) {
       </tr>
     </table>
 
+    <p style="margin:0 0 16px 0;color:#5281eb;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;">
+      for dj-producers
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;border:1px solid #151515;margin-bottom:24px;">
+      <tr>
+        <td style="padding:16px;border-bottom:1px solid #151515;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">import your sets</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">upload serato dj history csv files</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">we match every track against your registered songs — including remixes and edits via musicbrainz.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px;">
+          <span style="font-size:11px;color:#777777;font-weight:500;">remix matching</span>
+          <p style="margin:4px 0 0 0;color:#d5d5d5;font-size:13px;">automatic work-level matching catches versions others miss</p>
+          <p style="margin:4px 0 0 0;color:#555555;font-size:11px;">if a dj plays your track's remix, srt connects it back to your original work using musicbrainz work relationships.</p>
+        </td>
+      </tr>
+    </table>
+
     <p style="margin:0 0 24px 0;color:#777777;font-size:12px;">
-      most songwriters have unreported performances they don't know about. let's find yours.
+      most songwriters and dj-producers have unreported performances they don't know about. let's find yours.
     </p>
 
     ${button('go to dashboard', `${APP_URL}/dashboard`)}
   `;
 
-  const text = `welcome to setlist royalty tracker!\n\nhere's how to start collecting your live performance royalties:\n\n1. add artists who perform your songs (we added ${artistName} during setup)\n2. register your songs and link them to artists\n3. scan for performances — we search 9.6m+ setlists\n4. confirm matches and submit to your pro using our chrome extension (requires google chrome) or csv export\n\nmost songwriters have unreported performances they don't know about. let's find yours.\n\nlog in: ${APP_URL}/dashboard\n\n— setlist royalty tracker`;
+  const text = `welcome to setlist royalty tracker!\n\nhere's how to start collecting your live performance royalties:\n\nfor songwriters:\n1. add artists who perform your songs (we added ${artistName} during setup)\n2. register your songs and link them to artists\n3. scan for performances — we search 9.6m+ setlists\n4. confirm matches and submit to your pro using our chrome extension (requires google chrome) or csv export\n\nfor dj-producers:\n• import your serato dj history csv files\n• we match every track — including remixes and edits — via musicbrainz work relationships\n\nmost songwriters and dj-producers have unreported performances they don't know about. let's find yours.\n\nlog in: ${APP_URL}/dashboard\n\n— setlist royalty tracker`;
 
   await getResend().emails.send({
     from: process.env.EMAIL_FROM || 'noreply@example.com',
