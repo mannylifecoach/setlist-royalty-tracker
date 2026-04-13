@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey } from '@/lib/api-key-auth';
 import { db } from '@/db';
-import { performances, songs, trackedArtists } from '@/db/schema';
+import { performances, songs, trackedArtists, users } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { mapAttendanceToBmiRange } from '@/lib/constants';
 import { getCorsHeaders } from '@/lib/cors';
@@ -21,6 +21,17 @@ export const GET = withHandler(async (request: NextRequest) => {
       { status: 401, headers: corsHeaders }
     );
   }
+
+  // Load user's default times for fallback
+  const [userDefaults] = await db
+    .select({
+      defaultStartTimeHour: users.defaultStartTimeHour,
+      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
+      defaultEndTimeHour: users.defaultEndTimeHour,
+      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
+    })
+    .from(users)
+    .where(eq(users.id, user.id));
 
   const statusFilter = request.nextUrl.searchParams.get('status') || 'confirmed';
   const validStatuses = ['confirmed', 'discovered', 'submitted'] as const;
@@ -91,10 +102,10 @@ export const GET = withHandler(async (request: NextRequest) => {
         eventDateFormatted,
         eventName: p.eventName,
         eventType: p.eventType,
-        startTimeHour: p.startTimeHour,
-        startTimeAmPm: p.startTimeAmPm,
-        endTimeHour: p.endTimeHour,
-        endTimeAmPm: p.endTimeAmPm,
+        startTimeHour: p.startTimeHour || userDefaults?.defaultStartTimeHour || null,
+        startTimeAmPm: p.startTimeAmPm || userDefaults?.defaultStartTimeAmPm || null,
+        endTimeHour: p.endTimeHour || userDefaults?.defaultEndTimeHour || null,
+        endTimeAmPm: p.endTimeAmPm || userDefaults?.defaultEndTimeAmPm || null,
         venueName: p.venueName,
         venueAddress: p.venueAddress,
         venueCity: p.venueCity,

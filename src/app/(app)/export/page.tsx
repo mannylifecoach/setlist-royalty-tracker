@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ExportWizard } from '@/components/export-wizard';
 import { DataDisclaimer } from '@/components/data-disclaimer';
 
@@ -28,13 +29,22 @@ export default function ExportPage() {
       artist: { id: string; artistName: string };
     }>
   >([]);
+  const [hasDefaultTimes, setHasDefaultTimes] = useState(true);
 
   useEffect(() => {
     async function load() {
       const res = await fetch('/api/performances?status=confirmed');
       if (res.ok) setData(await res.json());
     }
+    async function checkDefaults() {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        setHasDefaultTimes(!!settings.defaultStartTimeHour && !!settings.defaultEndTimeHour);
+      }
+    }
     load();
+    checkDefaults();
   }, []);
 
   return (
@@ -56,6 +66,19 @@ export default function ExportPage() {
           </p>
         </div>
       </div>
+
+      {!hasDefaultTimes && data.length > 0 && (
+        <div className="card p-4 space-y-2 border-status-expiring/30">
+          <p className="text-[12px] text-text-secondary">
+            <span className="text-status-expiring font-medium">missing default times:</span>{' '}
+            bmi live requires start and end times for each performance. set your defaults
+            in settings to auto-fill these across all performances.
+          </p>
+          <Link href="/settings" className="btn text-[11px] inline-block">
+            set default times in settings
+          </Link>
+        </div>
+      )}
 
       <DataDisclaimer compact />
 

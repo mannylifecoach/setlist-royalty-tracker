@@ -26,6 +26,17 @@ interface ScanResult {
 }
 
 export async function scanForUser(userId: string): Promise<ScanResult[]> {
+  // Load user's default times for new performances
+  const [userDefaults] = await db
+    .select({
+      defaultStartTimeHour: users.defaultStartTimeHour,
+      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
+      defaultEndTimeHour: users.defaultEndTimeHour,
+      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
+    })
+    .from(users)
+    .where(eq(users.id, userId));
+
   const results: ScanResult[] = [];
 
   // Get user's tracked artists with MBIDs
@@ -43,7 +54,7 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
     }
 
     console.log(`[scan] Scanning ${artist.artistName} (${artist.mbid})...`);
-    const result = await scanArtistForUser(userId, artist);
+    const result = await scanArtistForUser(userId, artist, userDefaults || null);
     console.log(`[scan] ${artist.artistName}: ${result.setlistsFound} setlists, ${result.newPerformances} new performances`);
     results.push(result);
   }
@@ -51,9 +62,17 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
   return results;
 }
 
+interface TimeDefaults {
+  defaultStartTimeHour: string | null;
+  defaultStartTimeAmPm: string | null;
+  defaultEndTimeHour: string | null;
+  defaultEndTimeAmPm: string | null;
+}
+
 async function scanArtistForUser(
   userId: string,
-  artist: typeof trackedArtists.$inferSelect
+  artist: typeof trackedArtists.$inferSelect,
+  timeDefaults: TimeDefaults | null
 ): Promise<ScanResult> {
   const result: ScanResult = {
     artistName: artist.artistName,
@@ -140,7 +159,7 @@ async function scanArtistForUser(
 
         if (existing.length > 0) continue;
 
-        // Insert new performance
+        // Insert new performance with user's default times
         await db.insert(performances).values({
           userId,
           songId: matchedSong.id,
@@ -152,6 +171,10 @@ async function scanArtistForUser(
           venueCity: setlist.venue?.city?.name || null,
           venueState: setlist.venue?.city?.stateCode || setlist.venue?.city?.state || null,
           venueCountry: setlist.venue?.city?.country?.code || null,
+          startTimeHour: timeDefaults?.defaultStartTimeHour || null,
+          startTimeAmPm: timeDefaults?.defaultStartTimeAmPm || null,
+          endTimeHour: timeDefaults?.defaultEndTimeHour || null,
+          endTimeAmPm: timeDefaults?.defaultEndTimeAmPm || null,
           status: 'discovered',
           expiresAt: calculateExpirationDate(eventDate),
           setlistFmUrl: setlist.url,

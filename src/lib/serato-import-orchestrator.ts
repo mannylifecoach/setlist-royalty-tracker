@@ -15,7 +15,7 @@
 
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { songs, songArtists, performances, importBatches } from '@/db/schema';
+import { songs, songArtists, performances, importBatches, users } from '@/db/schema';
 import { normalizeTitle, findBestMatch } from './fuzzy-match';
 import { lookupSongMetadata } from './musicbrainz';
 import { calculateExpirationDate } from './setlistfm';
@@ -51,6 +51,17 @@ export async function importSeratoTracks(
   tracks: SeratoTrack[],
   venue: SeratoImportVenue
 ): Promise<SeratoImportResult> {
+  // Load user's default times for new performances
+  const [userDefaults] = await db
+    .select({
+      defaultStartTimeHour: users.defaultStartTimeHour,
+      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
+      defaultEndTimeHour: users.defaultEndTimeHour,
+      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
+    })
+    .from(users)
+    .where(eq(users.id, userId));
+
   // Load all of the user's registered songs — we match against every song,
   // not just songs linked to specific artists, because a DJ's own productions
   // may not have setlist.fm-registered performer artists yet.
@@ -158,7 +169,7 @@ export async function importSeratoTracks(
       continue;
     }
 
-    // Create the performance record
+    // Create the performance record with user's default times
     await db.insert(performances).values({
       userId,
       songId: matchedSong.id,
@@ -174,6 +185,10 @@ export async function importSeratoTracks(
       venueCountry: venue.country,
       attendance: resolvedCapacity,
       venueCapacity: resolvedCapacity !== null ? String(resolvedCapacity) : null,
+      startTimeHour: userDefaults?.defaultStartTimeHour || null,
+      startTimeAmPm: userDefaults?.defaultStartTimeAmPm || null,
+      endTimeHour: userDefaults?.defaultEndTimeHour || null,
+      endTimeAmPm: userDefaults?.defaultEndTimeAmPm || null,
       status: 'discovered',
       expiresAt,
     });
