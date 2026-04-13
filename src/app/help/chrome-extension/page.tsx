@@ -235,6 +235,8 @@ export default function ChromeExtensionHelpPage() {
         <a href="mailto:support@setlistroyalty.com" className="hover:underline">
           support@setlistroyalty.com
         </a>
+        {' '}·{' '}
+        <a href="/privacy" className="hover:underline">privacy</a>
       </footer>
     </div>
   );

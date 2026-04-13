@@ -69,6 +69,8 @@ export default function AboutPage() {
       <footer className="px-[2vw] py-[1.5vw] border-t border-border-subtle text-center text-[11px] text-text-disabled">
         setlist royalty tracker · powered by setlist.fm api ·{' '}
         <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">support@setlistroyalty.com</a>
+        {' '}·{' '}
+        <Link href="/privacy" className="hover:text-text-muted transition-colors">privacy</Link>
       </footer>
     </div>
   );
