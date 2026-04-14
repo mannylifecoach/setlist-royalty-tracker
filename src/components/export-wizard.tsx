@@ -44,13 +44,16 @@ function getMissingFields(row: ExportRow, pro: 'bmi' | 'ascap'): string[] {
   const missing: string[] = [];
   if (!row.performance.venueName) missing.push('venue name');
   if (pro === 'bmi') {
-    // venue address and phone are typically filled by BMI's "Previously performed venues"
-    // lookup — we only flag venue name, city, and state which we should have from setlist.fm
+    // BMI Live wizard: venue address/phone are auto-filled from BMI's "Previously performed
+    // venues" lookup. Songs are added via a catalog search — users pick from their own BMI
+    // catalog, they don't type a work ID. So we only flag venue name, city, and state which
+    // we should have from setlist.fm.
     if (!row.performance.venueCity) missing.push('venue city');
     if (!row.performance.venueState) missing.push('venue state');
-    if (!row.song.bmiWorkId) missing.push('bmi work id');
   }
   if (pro === 'ascap') {
+    // ASCAP OnStage CSV requires a work ID in the export, so it's still a real requirement
+    // for the CSV path. The portal's manual flow also searches a catalog.
     if (!row.performance.venueState) missing.push('venue state');
     if (!row.song.ascapWorkId) missing.push('ascap work id');
   }

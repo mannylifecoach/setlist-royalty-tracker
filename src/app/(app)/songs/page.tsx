@@ -80,11 +80,35 @@ export default function SongsPage() {
     await loadSongs();
   }
 
+  const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
+  const [enrichResults, setEnrichResults] = useState<Record<string, 'musicbrainz' | 'partial' | 'none'>>({});
+
   async function handleEnrich(id: string) {
-    const res = await fetch(`/api/songs/${id}/enrich-metadata`, {
-      method: 'POST',
-    });
-    if (res.ok) await loadSongs();
+    setEnrichingIds((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/songs/${id}/enrich-metadata`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const data: { source: 'musicbrainz' | 'partial' | 'none' } = await res.json();
+        setEnrichResults((prev) => ({ ...prev, [id]: data.source }));
+        await loadSongs();
+        // Clear the result message after 5 seconds
+        setTimeout(() => {
+          setEnrichResults((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        }, 5000);
+      }
+    } finally {
+      setEnrichingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   }
 
   async function handleLinkArtist(songId: string, artistId: string) {
@@ -198,7 +222,8 @@ export default function SongsPage() {
       )}
 
       {!scanning && !scanResult && songs.length > 0 && (
-        <div className="card px-4 py-3 text-[12px] text-text-secondary">
+        <div className="flex flex-col md:flex-row md:items-start gap-3">
+          <div className="card px-4 py-3 text-[12px] text-text-secondary flex-1 md:w-1/2 md:min-h-[64px]">
           {songs.some((s) => s.artists.length > 0) ? (
             <>
               link songs to artists below.{' '}
@@ -215,39 +240,89 @@ export default function SongsPage() {
               needs to know which artist performs each song to find matches.
             </>
           )}
+          </div>
+
+          {/* Improve matching — collapsible, sits next to the scan banner, equal width */}
+          {songs.some((s) => !s.bmiWorkId || !s.ascapWorkId || !s.workMbid || !s.iswc) && (
+            <details className="card p-4 text-[12px] text-text-secondary flex-1 md:w-1/2 md:min-h-[64px]">
+              <summary className="cursor-pointer hover:text-text">
+                <span className="text-text-muted">improve matching</span>
+                <span className="text-text-disabled"> · optional</span>
+              </summary>
+              <div className="mt-3 space-y-3 text-[11px] text-text-muted leading-[1.6]">
+                <p>every song has several ids from different organizations:</p>
+                <ul className="space-y-1 pl-3">
+                  <li><span className="text-text-secondary">bmi work id</span> — bmi&apos;s internal id, used in bmi csv exports</li>
+                  <li><span className="text-text-secondary">ascap work id</span> — required for ascap onstage submissions</li>
+                  <li><span className="text-text-secondary">iswc</span> — international code, links your song across pros globally</li>
+                  <li><span className="text-text-secondary">musicbrainz id</span> — powers remix-matching during scans</li>
+                </ul>
+                <p>
+                  click <span className="text-text-secondary">improve matching</span> on each song to auto-fill
+                  iswc and musicbrainz ids. need bmi or ascap work ids? find them here:
+                </p>
+                <div className="flex flex-col gap-1 pl-3">
+                  {songs
+                    .filter((s) => !s.bmiWorkId || !s.ascapWorkId)
+                    .map((s) => (
+                      <a
+                        key={s.id}
+                        href={songviewSearchUrl(s.iswc, s.title)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-status-discovered hover:underline"
+                      >
+                        look up &quot;{s.title}&quot; on songview →
+                      </a>
+                    ))}
+                </div>
+                <p>
+                  the bmi live chrome extension doesn&apos;t need any of these ids — it searches your bmi
+                  catalog by song title automatically.
+                </p>
+              </div>
+            </details>
+          )}
         </div>
       )}
 
       <div>
         {songs.map((song) => (
           <div key={song.id} className="px-4 py-4 border-b border-border-subtle">
-            <div className="flex items-center justify-between mb-2">
-              <div>
+            <div className="flex items-start justify-between mb-2 gap-4">
+              <div className="flex-1 min-w-0">
                 <span className="text-[14px] font-medium">{song.title}</span>
-                {song.iswc && (
-                  <span className="text-[11px] text-text-muted ml-2">
-                    iswc: {song.iswc}
-                  </span>
+              </div>
+              {/* IDs column — shows existing IDs, or "improve matching" link when something is missing */}
+              <div className="flex flex-col items-end text-[11px] text-text-muted gap-0.5 shrink-0">
+                {song.bmiWorkId && <span>bmi: {song.bmiWorkId}</span>}
+                {song.ascapWorkId && <span>ascap: {song.ascapWorkId}</span>}
+                {song.iswc && <span>iswc: {song.iswc}</span>}
+                {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
+                  <button
+                    onClick={() => handleEnrich(song.id)}
+                    disabled={enrichingIds.has(song.id)}
+                    className="text-status-discovered hover:underline disabled:text-text-muted disabled:cursor-wait"
+                  >
+                    {enrichingIds.has(song.id) ? 'looking up...' : 'improve matching →'}
+                  </button>
                 )}
-                {song.bmiWorkId && (
-                  <span className="text-[11px] text-text-muted ml-2">
-                    bmi: {song.bmiWorkId}
-                  </span>
+                {enrichResults[song.id] === 'musicbrainz' && (
+                  <span className="text-status-confirmed">✓ ids added</span>
                 )}
-                {song.ascapWorkId && (
-                  <span className="text-[11px] text-text-muted ml-2">
-                    ascap: {song.ascapWorkId}
-                  </span>
+                {enrichResults[song.id] === 'partial' && (
+                  <span className="text-status-expiring">partial match — some ids added</span>
+                )}
+                {enrichResults[song.id] === 'none' && (
+                  <span className="text-text-disabled">no match found on musicbrainz</span>
                 )}
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleDelete(song.id)}
-                  className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
-                >
-                  delete
-                </button>
-              </div>
+              <button
+                onClick={() => handleDelete(song.id)}
+                className="text-[11px] text-text-disabled hover:text-status-expired transition-colors shrink-0"
+              >
+                delete
+              </button>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -293,41 +368,6 @@ export default function SongsPage() {
               )}
             </div>
 
-            {/* Missing IDs help — shown when any work-identifying field is missing */}
-            {(!song.bmiWorkId || !song.ascapWorkId || !song.workMbid || !song.iswc) && (
-              <div className="mt-3 p-3 bg-bg-hover border border-border-subtle space-y-2">
-                <p className="text-[11px] text-text-secondary">
-                  <span className="text-status-expiring font-medium">missing work ids.</span>{' '}
-                  bmi and ascap need a work id for every performance you claim. here&apos;s how to fill them in:
-                </p>
-                <div className="flex flex-wrap gap-3 text-[11px]">
-                  {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
-                    <button
-                      onClick={() => handleEnrich(song.id)}
-                      className="text-status-discovered hover:underline text-left"
-                    >
-                      auto-fill from musicbrainz →
-                      <span className="block text-[10px] text-text-muted">
-                        looks up the iswc and musicbrainz ids automatically using the linked artist
-                      </span>
-                    </button>
-                  )}
-                  {(!song.bmiWorkId || !song.ascapWorkId) && (
-                    <a
-                      href={songviewSearchUrl(song.iswc, song.title)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-status-discovered hover:underline text-left"
-                    >
-                      look up on songview →
-                      <span className="block text-[10px] text-text-muted">
-                        opens bmi&apos;s repertoire search — find your bmi and ascap work ids, then paste them back
-                      </span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         ))}
 
@@ -345,6 +385,7 @@ export default function SongsPage() {
           </div>
         )}
       </div>
+
     </div>
   );
 }
