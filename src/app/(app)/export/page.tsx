@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ExportWizard } from '@/components/export-wizard';
 import { DataDisclaimer } from '@/components/data-disclaimer';
+import { ProSubmissionWalkthrough, useProWalkthrough } from '@/components/pro-submission-walkthrough';
 
 export default function ExportPage() {
   const [data, setData] = useState<
@@ -30,27 +31,44 @@ export default function ExportPage() {
     }>
   >([]);
   const [hasDefaultTimes, setHasDefaultTimes] = useState(true);
+  const [userPro, setUserPro] = useState<'bmi' | 'ascap'>('bmi');
+  const { shouldShow, dismiss, showAgain } = useProWalkthrough();
 
   useEffect(() => {
     async function load() {
       const res = await fetch('/api/performances?status=confirmed');
       if (res.ok) setData(await res.json());
     }
-    async function checkDefaults() {
+    async function loadSettings() {
       const res = await fetch('/api/settings');
       if (res.ok) {
         const settings = await res.json();
         setHasDefaultTimes(!!settings.defaultStartTimeHour && !!settings.defaultEndTimeHour);
+        if (settings.pro === 'bmi' || settings.pro === 'ascap') {
+          setUserPro(settings.pro);
+        }
       }
     }
     load();
-    checkDefaults();
+    loadSettings();
   }, []);
 
   return (
     <div className="space-y-6 max-w-[700px] mx-auto">
+      {shouldShow && data.length > 0 && (
+        <ProSubmissionWalkthrough pro={userPro} onClose={dismiss} />
+      )}
+
       <div>
-        <h1 className="text-[22px] font-light tracking-[-0.5px]">submit</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-[22px] font-light tracking-[-0.5px]">submit</h1>
+          <button
+            onClick={showAgain}
+            className="text-[11px] text-status-discovered hover:underline mt-2 shrink-0"
+          >
+            how it works →
+          </button>
+        </div>
         <p className="text-[13px] text-text-muted mt-2 leading-[1.5]">
           use the chrome extension to auto-fill bmi live forms directly (requires google chrome), or
           download a csv as a backup. only confirmed performances are shown.
