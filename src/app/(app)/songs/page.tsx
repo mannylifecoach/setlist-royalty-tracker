@@ -241,26 +241,6 @@ export default function SongsPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {(!song.bmiWorkId || !song.ascapWorkId) && (
-                  <a
-                    href={songviewSearchUrl(song.iswc, song.title)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] text-status-discovered hover:underline"
-                    title="search bmi repertoire (songview) for work ids"
-                  >
-                    look up on songview →
-                  </a>
-                )}
-                {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
-                  <button
-                    onClick={() => handleEnrich(song.id)}
-                    className="text-[11px] text-status-discovered hover:underline"
-                    title="look up Work MBID and ISWC via MusicBrainz"
-                  >
-                    auto-fill ids
-                  </button>
-                )}
                 <button
                   onClick={() => handleDelete(song.id)}
                   className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
@@ -312,6 +292,42 @@ export default function SongsPage() {
                 </select>
               )}
             </div>
+
+            {/* Missing IDs help — shown when any work-identifying field is missing */}
+            {(!song.bmiWorkId || !song.ascapWorkId || !song.workMbid || !song.iswc) && (
+              <div className="mt-3 p-3 bg-bg-hover border border-border-subtle space-y-2">
+                <p className="text-[11px] text-text-secondary">
+                  <span className="text-status-expiring font-medium">missing work ids.</span>{' '}
+                  bmi and ascap need a work id for every performance you claim. here&apos;s how to fill them in:
+                </p>
+                <div className="flex flex-wrap gap-3 text-[11px]">
+                  {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
+                    <button
+                      onClick={() => handleEnrich(song.id)}
+                      className="text-status-discovered hover:underline text-left"
+                    >
+                      auto-fill from musicbrainz →
+                      <span className="block text-[10px] text-text-muted">
+                        looks up the iswc and musicbrainz ids automatically using the linked artist
+                      </span>
+                    </button>
+                  )}
+                  {(!song.bmiWorkId || !song.ascapWorkId) && (
+                    <a
+                      href={songviewSearchUrl(song.iswc, song.title)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-status-discovered hover:underline text-left"
+                    >
+                      look up on songview →
+                      <span className="block text-[10px] text-text-muted">
+                        opens bmi&apos;s repertoire search — find your bmi and ascap work ids, then paste them back
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
 

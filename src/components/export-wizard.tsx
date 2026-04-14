@@ -150,8 +150,9 @@ export function ExportWizard({ data }: ExportWizardProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-status-discovered hover:underline"
+                      title="search bmi repertoire for this song's work id, then add it to the song in srt"
                     >
-                      look up →
+                      find work id →
                     </a>
                   )}
                 </span>
