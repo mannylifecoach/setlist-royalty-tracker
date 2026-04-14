@@ -39,6 +39,8 @@ interface PerformanceDetail {
   venueType: string | null;
   venueCapacity: string | null;
   ticketCharge: string | null;
+  source: 'setlist_fm' | 'serato_import' | 'manual';
+  matchMethod: 'fuzzy' | 'work_mbid' | 'exact' | 'manual' | null;
 }
 
 export default function PerformanceDetailPage({
@@ -159,6 +161,31 @@ export default function PerformanceDetailPage({
         >
           view on setlist.fm →
         </a>
+      )}
+
+      {perf.matchMethod && (
+        <div className="card p-3 text-[11px] text-text-muted leading-[1.6]">
+          <span className="text-text-secondary font-medium">match source: </span>
+          {perf.matchMethod === 'work_mbid' ? (
+            <>
+              matched via <span className="text-text">musicbrainz work relationship</span> —
+              this catches remixes, edits, and renamed versions of your composition.
+            </>
+          ) : perf.matchMethod === 'fuzzy' ? (
+            <>
+              matched via <span className="text-text">fuzzy title match</span> —
+              handles minor spelling variations and parentheticals.
+            </>
+          ) : perf.matchMethod === 'exact' ? (
+            <>
+              matched via <span className="text-text">exact title match</span>.
+            </>
+          ) : (
+            <>
+              <span className="text-text">manually added</span>.
+            </>
+          )}
+        </div>
       )}
 
       <div className="card p-4 space-y-4">

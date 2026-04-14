@@ -169,12 +169,17 @@ export async function importSeratoTracks(
       continue;
     }
 
+    // Normalize match method to the canonical enum values
+    const canonicalMethod: 'fuzzy' | 'work_mbid' | 'exact' =
+      method === 'work_mbid' ? 'work_mbid' : method === 'exact' ? 'exact' : 'fuzzy';
+
     // Create the performance record with user's default times
     await db.insert(performances).values({
       userId,
       songId: matchedSong.id,
       artistId,
       source: 'serato_import',
+      matchMethod: canonicalMethod,
       importBatchId: batch.id,
       setlistFmId: null,
       setlistFmUrl: null,

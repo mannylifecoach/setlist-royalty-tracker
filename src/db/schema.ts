@@ -140,6 +140,7 @@ export const performances = pgTable('performances', {
     .$type<'setlist_fm' | 'serato_import' | 'manual'>()
     .default('setlist_fm')
     .notNull(),
+  matchMethod: text('match_method').$type<'fuzzy' | 'work_mbid' | 'exact' | 'manual'>(),
   importBatchId: uuid('import_batch_id'),
   eventDate: date('event_date', { mode: 'string' }).notNull(),
   tourName: text('tour_name'),

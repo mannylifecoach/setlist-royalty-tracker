@@ -201,6 +201,101 @@ describe('calculateExpirationDate', () => {
     const result = calculateExpirationDate('2025-05-29');
     expect(result).toMatch(/^2026-0[23]-/);
   });
+
+  it('handles performance on first of month', () => {
+    // Note: JS Date timezone handling can shift by a day in some TZs
+    const result = calculateExpirationDate('2026-03-01');
+    expect(result).toMatch(/^2026-(11-29|11-30|12-01)$/);
+  });
+
+  it('handles performance at end of December (rolls into September)', () => {
+    expect(calculateExpirationDate('2026-12-15')).toBe('2027-09-15');
+  });
+
+  it('handles Feb 29 on a leap year', () => {
+    // Feb 29 2024 + 9 months → Nov 29 2024
+    expect(calculateExpirationDate('2024-02-29')).toBe('2024-11-29');
+  });
+
+  it('normalizes dates that roll into non-existent days (May 31 + 9mo)', () => {
+    // May 31 + 9 months: Feb doesn't have 31, JS Date normalizes forward
+    const result = calculateExpirationDate('2025-05-31');
+    expect(result).toMatch(/^2026-0[23]-/);
+  });
+
+  it('returns YYYY-MM-DD format', () => {
+    const result = calculateExpirationDate('2026-07-15');
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('is idempotent across repeated calls', () => {
+    const input = '2026-04-12';
+    expect(calculateExpirationDate(input)).toBe(calculateExpirationDate(input));
+  });
+
+  it('produces an expired date for a 1-year-old performance', () => {
+    const result = calculateExpirationDate('2025-01-15');
+    expect(result).toBe('2025-10-15');
+    expect(new Date(result).getTime()).toBeLessThan(Date.now());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Warning threshold logic: ensure 30/14/7 day windows work correctly
+// ---------------------------------------------------------------------------
+describe('expiration warning thresholds', () => {
+  const WARNING_THRESHOLDS = [30, 14, 7];
+
+  function daysUntilExpiration(expiresAt: string): number {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const expiry = new Date(expiresAt);
+    expiry.setHours(0, 0, 0, 0);
+    return Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  it('identifies a performance 30 days from expiration', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 30);
+    const dateStr = future.toISOString().split('T')[0];
+    expect(daysUntilExpiration(dateStr)).toBe(30);
+    expect(WARNING_THRESHOLDS).toContain(daysUntilExpiration(dateStr));
+  });
+
+  it('identifies a performance 14 days from expiration', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 14);
+    const dateStr = future.toISOString().split('T')[0];
+    expect(daysUntilExpiration(dateStr)).toBe(14);
+    expect(WARNING_THRESHOLDS).toContain(daysUntilExpiration(dateStr));
+  });
+
+  it('identifies a performance 7 days from expiration', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 7);
+    const dateStr = future.toISOString().split('T')[0];
+    expect(daysUntilExpiration(dateStr)).toBe(7);
+    expect(WARNING_THRESHOLDS).toContain(daysUntilExpiration(dateStr));
+  });
+
+  it('does not trigger warning between thresholds (e.g. 20 days)', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 20);
+    const dateStr = future.toISOString().split('T')[0];
+    expect(WARNING_THRESHOLDS).not.toContain(daysUntilExpiration(dateStr));
+  });
+
+  it('treats an already-expired performance as negative days', () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 5);
+    const dateStr = past.toISOString().split('T')[0];
+    expect(daysUntilExpiration(dateStr)).toBeLessThan(0);
+  });
+
+  it('treats today as 0 days from expiration', () => {
+    const today = new Date().toISOString().split('T')[0];
+    expect(daysUntilExpiration(today)).toBe(0);
+  });
 });
 
 // ---------------------------------------------------------------------------

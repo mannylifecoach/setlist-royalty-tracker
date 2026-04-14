@@ -126,10 +126,12 @@ async function scanArtistForUser(
       for (const songName of setlistSongs) {
         // Tier 1: Try fuzzy title matching first (fast, no external API)
         let matchedSong: typeof songs.$inferSelect | null = null;
+        let matchMethod: 'fuzzy' | 'work_mbid' | 'exact' | null = null;
 
         const fuzzyResult = findBestMatch(songName, songTitleMap);
         if (fuzzyResult) {
           matchedSong = fuzzyResult.match;
+          matchMethod = fuzzyResult.method === 'exact' ? 'exact' : 'fuzzy';
           if (fuzzyResult.method === 'fuzzy') {
             console.log(`[scan] Fuzzy match: "${songName}" → "${matchedSong.title}" (score: ${fuzzyResult.score.toFixed(2)})`);
           }
@@ -139,6 +141,7 @@ async function scanArtistForUser(
           const mbResult = await lookupSongMetadata(songName, artist.artistName);
           if (mbResult?.workMbid && workMbidMap.has(mbResult.workMbid)) {
             matchedSong = workMbidMap.get(mbResult.workMbid)!;
+            matchMethod = 'work_mbid';
             console.log(`[scan] Work MBID match: "${songName}" → "${matchedSong.title}" (work: ${mbResult.workMbid})`);
           }
         }
@@ -165,6 +168,7 @@ async function scanArtistForUser(
           songId: matchedSong.id,
           artistId: artist.id,
           setlistFmId: setlist.id,
+          matchMethod,
           eventDate,
           tourName: setlist.tour?.name || null,
           venueName: setlist.venue?.name || null,
