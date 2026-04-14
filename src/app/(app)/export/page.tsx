@@ -50,8 +50,8 @@ export default function ExportPage() {
   return (
     <div className="space-y-6 max-w-[700px] mx-auto">
       <div>
-        <h1 className="text-[18px] font-light tracking-[-0.3px]">submit</h1>
-        <p className="text-[12px] text-text-muted mt-1">
+        <h1 className="text-[22px] font-light tracking-[-0.5px]">submit</h1>
+        <p className="text-[13px] text-text-muted mt-2 leading-[1.5]">
           use the chrome extension to auto-fill bmi live forms directly (requires google chrome), or
           download a csv as a backup. only confirmed performances are shown.
         </p>

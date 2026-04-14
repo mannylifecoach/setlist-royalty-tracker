@@ -82,6 +82,9 @@ export default function SongsPage() {
 
   const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
   const [enrichResults, setEnrichResults] = useState<Record<string, 'musicbrainz' | 'partial' | 'none'>>({});
+  // Tracks songs where MusicBrainz returned no match in this session — button stays hidden
+  // until page refresh. Prevents users from repeatedly clicking a dead-end API call.
+  const [noMatchIds, setNoMatchIds] = useState<Set<string>>(new Set());
 
   async function handleEnrich(id: string) {
     setEnrichingIds((prev) => new Set(prev).add(id));
@@ -93,14 +96,19 @@ export default function SongsPage() {
         const data: { source: 'musicbrainz' | 'partial' | 'none' } = await res.json();
         setEnrichResults((prev) => ({ ...prev, [id]: data.source }));
         await loadSongs();
-        // Clear the result message after 5 seconds
+        // Partial and success messages clear after 5s; "no match" stays visible for 15s
+        // and the button stays hidden for the rest of the session.
+        if (data.source === 'none') {
+          setNoMatchIds((prev) => new Set(prev).add(id));
+        }
+        const duration = data.source === 'none' ? 15000 : 5000;
         setTimeout(() => {
           setEnrichResults((prev) => {
             const next = { ...prev };
             delete next[id];
             return next;
           });
-        }, 5000);
+        }, duration);
       }
     } finally {
       setEnrichingIds((prev) => {
@@ -259,8 +267,24 @@ export default function SongsPage() {
                 </ul>
                 <p>
                   click <span className="text-text-secondary">improve matching</span> on each song to auto-fill
-                  iswc and musicbrainz ids. need bmi or ascap work ids? find them here:
+                  iswc and musicbrainz ids from the open musicbrainz database.
                 </p>
+                <p>
+                  if you see <span className="text-text-secondary">&quot;no match found on musicbrainz&quot;</span>,
+                  it means your song isn&apos;t in their database yet — the button will hide so you don&apos;t keep
+                  clicking a dead end. musicbrainz is community-maintained and grows over time, so check back
+                  later or{' '}
+                  <a
+                    href="https://musicbrainz.org/doc/How_to_Add_a_Work"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-status-discovered hover:underline"
+                  >
+                    add your song to musicbrainz
+                  </a>
+                  {' '}yourself (it&apos;s free).
+                </p>
+                <p>need bmi or ascap work ids? find them here:</p>
                 <div className="flex flex-col gap-1 pl-3">
                   {songs
                     .filter((s) => !s.bmiWorkId || !s.ascapWorkId)
@@ -298,7 +322,7 @@ export default function SongsPage() {
                 {song.bmiWorkId && <span>bmi: {song.bmiWorkId}</span>}
                 {song.ascapWorkId && <span>ascap: {song.ascapWorkId}</span>}
                 {song.iswc && <span>iswc: {song.iswc}</span>}
-                {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
+                {song.artists.length > 0 && (!song.workMbid || !song.iswc) && !noMatchIds.has(song.id) && (
                   <button
                     onClick={() => handleEnrich(song.id)}
                     disabled={enrichingIds.has(song.id)}
