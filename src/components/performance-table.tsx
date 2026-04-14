@@ -167,13 +167,18 @@ export function PerformanceTable({
                   <td className="py-2.5 pr-3">
                     <StatusBadge status={displayStatus} />
                   </td>
-                  <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">
-                    {days !== null ? (
-                      <span className={expiring ? 'text-status-expiring font-medium' : ''}>
-                        {days > 0 ? `${days}d` : 'expired'}
-                      </span>
+                  <td className="py-2.5 pr-3 whitespace-nowrap">
+                    {days !== null && performance.expiresAt ? (
+                      <div className="flex flex-col">
+                        <span className={`text-text-secondary ${expiring ? 'text-status-expiring font-medium' : ''}`}>
+                          {performance.expiresAt}
+                        </span>
+                        <span className={`text-[10px] ${expiring ? 'text-status-expiring' : 'text-text-muted'}`}>
+                          {days > 0 ? `${days}d left` : 'expired'}
+                        </span>
+                      </div>
                     ) : (
-                      '—'
+                      <span className="text-text-muted">—</span>
                     )}
                   </td>
                 </tr>
