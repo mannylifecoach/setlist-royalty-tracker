@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { analytics } from '@/lib/analytics';
+import { songviewSearchUrl } from '@/lib/songview';
 
 interface Artist {
   id: string;
@@ -240,6 +241,17 @@ export default function SongsPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
+                {(!song.bmiWorkId || !song.ascapWorkId) && (
+                  <a
+                    href={songviewSearchUrl(song.iswc, song.title)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-status-discovered hover:underline"
+                    title="search bmi repertoire (songview) for work ids"
+                  >
+                    look up on songview →
+                  </a>
+                )}
                 {song.artists.length > 0 && (!song.workMbid || !song.iswc) && (
                   <button
                     onClick={() => handleEnrich(song.id)}

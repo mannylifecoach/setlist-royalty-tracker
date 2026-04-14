@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { PerformanceStatus } from '@/lib/constants';
 import { analytics } from '@/lib/analytics';
+import { songviewSearchUrl } from '@/lib/songview';
 
 interface Performance {
   id: string;
@@ -141,8 +142,18 @@ export function ExportWizard({ data }: ExportWizardProps) {
                 </span>
               </span>
               {missing.length > 0 && (
-                <span className="text-[10px] text-status-expiring">
+                <span className="text-[10px] text-status-expiring flex items-center gap-2">
                   missing: {missing.join(', ')}
+                  {missing.includes('bmi work id') && (
+                    <a
+                      href={songviewSearchUrl(null, song.title)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-status-discovered hover:underline"
+                    >
+                      look up →
+                    </a>
+                  )}
                 </span>
               )}
               {missing.length === 0 && (
