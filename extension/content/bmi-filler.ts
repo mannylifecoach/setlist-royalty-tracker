@@ -376,7 +376,9 @@ function escapeText(t: string): string {
   return d.innerHTML;
 }
 
-// Run Step 1 → Next → Step 2 → Next → pause on Step 3 for user to submit.
+// Fill the CURRENT step only — pause so the user can review attendance,
+// dates, song matches, etc. before clicking BMI's Next themselves. After
+// they advance, they click "Auto-Fill Performance" again on the next step.
 async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
   srtAbortFlag = false;
   const startStep = detectWizardStep();
@@ -396,33 +398,23 @@ async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
         'Step 1/3 · Fill remaining venue fields, click Save to continue',
         'Extension auto-filled what SRT had. Fill Address/Zip/Phone/Type manually if blank, then click Save on the modal.'
       );
-      // 5-minute wait — real users need time to type the blanks
-      const closed = await waitForModalClose(300_000);
+      const closed = await waitForModalClose(300_000); // 5 min for manual typing
       if (!closed || srtAbortFlag) {
         return render(
           'Stopped',
-          'Timed out waiting for venue modal to close. After you click Save on the modal, click Auto-Fill Performance again to resume.',
+          'Timed out waiting for venue modal to close. After you click Save on the modal, click Auto-Fill Performance again.',
           true
         );
       }
     }
 
-    if (hasValidationErrors()) {
-      return render(
-        'Step 1/3 · Validation errors',
-        'Fix red-flagged fields on the page, then click Next manually.',
-        true
-      );
-    }
-
-    render('Step 1/3 · Advancing to Setlist…');
-    const reached = await clickNextAndWaitFor('#tbSongSearch', 5000);
-    if (!reached || srtAbortFlag) {
-      return render('Stopped', 'Could not reach Step 2 — click Next manually.', true);
-    }
+    return render(
+      'Step 1/3 done · Review then click Next',
+      'Double-check attendance, date, venue. When ready, click BMI’s Next button. Then click Auto-Fill Performance again on Step 2.'
+    );
   }
 
-  if (startStep === 1 || startStep === 2) {
+  if (startStep === 2) {
     render('Step 2/3 · Filling setlist…');
     setlistResult = await fillSetlist(event.songs);
     if (srtAbortFlag) return render('Stopped');
@@ -430,18 +422,18 @@ async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
     if (setlistResult.notFound.length > 0) {
       return render(
         'Step 2/3 · Some songs not matched',
-        `${setlistResult.notFound.length} not found: ${setlistResult.notFound.join(', ')}. Add manually, then click Next.`,
+        `${setlistResult.notFound.length} not found: ${setlistResult.notFound.join(', ')}. Add manually, then click BMI’s Next.`,
         true
       );
     }
 
-    render('Step 2/3 · Advancing to Summary…');
-    const reached = await clickNextAndWaitForStep3(5000);
-    if (!reached || srtAbortFlag) {
-      return render('Stopped', 'Could not reach Step 3 — click Next manually.', true);
-    }
+    return render(
+      'Step 2/3 done · Review then click Next',
+      'Verify the setlist looks right. When ready, click BMI’s Next button. Then check warranty + Submit on Step 3 yourself.'
+    );
   }
 
+  // startStep === 3
   showSummaryOverlay(event, overlay);
 }
 
