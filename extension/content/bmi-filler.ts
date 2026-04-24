@@ -100,43 +100,201 @@ function fillField(fieldName: string, value: string | null): FillResult {
 }
 
 // Fill Step 1 — Details + Venue
-function fillDetails(event: EventData): FillResult[] {
+// BMI's date inputs are `<input type="date">` which require YYYY-MM-DD. The
+// API's eventDateFormatted is MM/DD/YYYY (for display) so we use the raw
+// eventDate field for filling.
+async function fillDetails(event: EventData): Promise<FillResult[]> {
   const results: FillResult[] = [];
 
-  // Details fields
+  // Details fields (sync)
   results.push(fillField('bandPerformer', event.artistName));
   results.push(fillField('eventName', event.eventName));
   results.push(fillField('eventType', event.eventType));
-  results.push(fillField('startDate', event.eventDateFormatted));
+  results.push(fillField('startDate', event.eventDate));
   results.push(fillField('startTime', event.startTimeHour));
   results.push(fillField('startAmPm', event.startTimeAmPm));
-  results.push(fillField('endDate', event.eventDateFormatted));
+  results.push(fillField('endDate', event.eventDate));
   results.push(fillField('endTime', event.endTimeHour));
   results.push(fillField('endAmPm', event.endTimeAmPm));
   results.push(fillField('attendance', event.attendanceRange));
   results.push(fillField('ticketCharge', event.ticketCharge));
 
-  // Venue — try previously performed venues dropdown first
-  if (event.venueName) {
-    const prevEl = findField(FIELD_MAP.previousVenues);
-    if (prevEl instanceof HTMLSelectElement) {
-      const matched = Array.from(prevEl.options).find((o) =>
-        o.textContent?.toLowerCase().includes(event.venueName!.toLowerCase())
-      );
-      if (matched) {
-        prevEl.value = matched.value;
-        prevEl.dispatchEvent(new Event('change', { bubbles: true }));
-        results.push({ field: 'venue', status: 'filled' });
+  // Venue — async flow: try previously-performed → search → create new
+  results.push(...(await fillVenue(event)));
+
+  return results;
+}
+
+// Fill the venue section. Strategy:
+// 1. If venue appears in "Previously performed venues" dropdown, pick it.
+// 2. Otherwise fill State+City+VenueName, click Search, wait for results.
+// 3. If search finds a match in the inline results list, click its Select button.
+// 4. If "no match," click "Create a new venue" and fill the modal (user saves).
+async function fillVenue(event: EventData): Promise<FillResult[]> {
+  const results: FillResult[] = [];
+  if (!event.venueName) return results;
+
+  // 1. Previously performed venues dropdown
+  const prevEl = findField(FIELD_MAP.previousVenues);
+  if (prevEl instanceof HTMLSelectElement) {
+    const matched = Array.from(prevEl.options).find((o) =>
+      o.textContent?.toLowerCase().includes(event.venueName!.toLowerCase())
+    );
+    if (matched) {
+      prevEl.value = matched.value;
+      prevEl.dispatchEvent(new Event('change', { bubbles: true }));
+      results.push({ field: 'venue', status: 'filled' });
+      return results;
+    }
+  }
+
+  // 2. Fill search criteria (State → wait for City options to populate → City → VenueName)
+  results.push(fillField('venueState', event.venueState));
+  await sleep(700); // allow Syncfusion City cascade to populate options
+  results.push(fillField('venueCity', event.venueCity));
+  results.push(fillField('venueName', event.venueName));
+
+  // 3. Click the Search button inside the venue panel
+  const searchBtn = findVenueSearchButton();
+  if (!searchBtn) {
+    results.push({ field: 'venue.search_button', status: 'not_found' });
+    return results;
+  }
+  searchBtn.click();
+  await sleep(1500); // wait for search results / no-match message
+
+  // 4. Check inline results (.venue-results .list--item) for a matching venue
+  const items = document.querySelectorAll<HTMLElement>('.venue-results .list--item');
+  const nameLower = event.venueName.toLowerCase();
+  for (const item of items) {
+    const label = item.querySelector('.list--item--title h6')?.textContent?.trim().toLowerCase() || '';
+    if (label && label === nameLower) {
+      const selectBtn = item.querySelector<HTMLElement>('button.selectVenue');
+      if (selectBtn) {
+        selectBtn.click();
+        results.push({ field: 'venue.search_match', status: 'filled' });
         return results;
       }
     }
-    // Fall back to manual venue fields
-    results.push(fillField('venueState', event.venueState));
-    results.push(fillField('venueCity', event.venueCity));
-    results.push(fillField('venueName', event.venueName));
+  }
+
+  // 5. No match — open Create a new venue modal
+  const createBtn = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
+    (b) => b.textContent?.trim() === 'Create a new venue'
+  );
+  if (!createBtn) {
+    results.push({ field: 'venue.create_button', status: 'not_found' });
+    return results;
+  }
+  createBtn.click();
+  await sleep(800); // modal opens
+
+  results.push(...fillCreateNewVenueModal(event));
+  return results;
+}
+
+function findVenueSearchButton(): HTMLButtonElement | null {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('button.e-primary');
+  for (const b of buttons) {
+    if (b.textContent?.trim() === 'Search') return b;
+  }
+  return null;
+}
+
+// Fill the "Create a new venue" modal. DOM mapped 2026-04-24: labels
+// preceding-sibling their input groups; State/City/Type/Capacity are selects
+// with id prefixes StateCode_/City_/TypeId_/CapacityId_; Zip has placeholder,
+// Phone has name="phone". Does NOT click Save — user reviews & submits.
+function fillCreateNewVenueModal(event: EventData): FillResult[] {
+  const results: FillResult[] = [];
+  const dialog = [...document.querySelectorAll<HTMLElement>('.e-dialog')].find(
+    (d) => window.getComputedStyle(d).display !== 'none'
+  );
+  if (!dialog) {
+    results.push({ field: 'venue.modal', status: 'not_found' });
+    return results;
+  }
+
+  const inputByLabel = (text: string): HTMLInputElement | null => {
+    const label = [...dialog.querySelectorAll('label')].find(
+      (l) => l.textContent?.trim() === text
+    );
+    return (label?.parentElement?.querySelector<HTMLInputElement>(
+      'input.e-textbox, input[type="text"]'
+    )) || null;
+  };
+
+  if (event.venueName) {
+    const el = inputByLabel('Venue Name');
+    if (el) { setInputValue(el, event.venueName); results.push({ field: 'modal.venueName', status: 'filled' }); }
+  }
+  if (event.venueAddress) {
+    const el = inputByLabel('Address');
+    if (el) { setInputValue(el, event.venueAddress); results.push({ field: 'modal.address', status: 'filled' }); }
+  }
+  if (event.venueState) {
+    const el = dialog.querySelector<HTMLSelectElement>('select[id^="StateCode_"]');
+    if (el) { setInputValue(el, event.venueState); results.push({ field: 'modal.state', status: 'filled' }); }
+  }
+  if (event.venueZip) {
+    const el = dialog.querySelector<HTMLInputElement>('input[placeholder="Zip"]');
+    if (el) { setInputValue(el, event.venueZip); results.push({ field: 'modal.zip', status: 'filled' }); }
+  }
+  if (event.venuePhone) {
+    const el = dialog.querySelector<HTMLInputElement>('input[name="phone"]');
+    if (el) { setInputValue(el, event.venuePhone); results.push({ field: 'modal.phone', status: 'filled' }); }
+  }
+
+  // Venue Type — best-effort fuzzy match against SRT-provided venueType
+  if (event.venueType) {
+    const typeEl = dialog.querySelector<HTMLSelectElement>('select[id^="TypeId_"]');
+    if (typeEl) {
+      const opt = Array.from(typeEl.options).find((o) =>
+        o.textContent?.toLowerCase().includes(event.venueType!.toLowerCase())
+      );
+      if (opt) {
+        typeEl.value = opt.value;
+        typeEl.dispatchEvent(new Event('change', { bubbles: true }));
+        results.push({ field: 'modal.venueType', status: 'filled' });
+      }
+    }
+  }
+
+  // Venue Capacity — map from attendance range
+  if (event.attendanceRange) {
+    const capEl = dialog.querySelector<HTMLSelectElement>('select[id^="CapacityId_"]');
+    if (capEl) {
+      const opt = Array.from(capEl.options).find((o) =>
+        o.textContent?.includes(event.attendanceRange)
+      );
+      if (opt) {
+        capEl.value = opt.value;
+        capEl.dispatchEvent(new Event('change', { bubbles: true }));
+        results.push({ field: 'modal.venueCapacity', status: 'filled' });
+      }
+    }
+  }
+
+  // City — fire after State cascade populates options
+  if (event.venueCity) {
+    setTimeout(() => {
+      const cityEl = dialog.querySelector<HTMLSelectElement>('select[id^="City_"]');
+      if (!cityEl) return;
+      const opt = Array.from(cityEl.options).find(
+        (o) => o.textContent?.trim().toLowerCase() === event.venueCity!.toLowerCase()
+      );
+      if (opt) {
+        cityEl.value = opt.value;
+        cityEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }, 1200);
   }
 
   return results;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 // Fill Step 2 — Setlist
@@ -315,10 +473,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === 'FILL_DETAILS') {
     const overlay = createOverlay();
-    const results = fillDetails(message.event as EventData);
-    showFillResults(results, overlay);
-    sendResponse({ success: true, results });
-    return;
+    (async () => {
+      const results = await fillDetails(message.event as EventData);
+      showFillResults(results, overlay);
+      sendResponse({ success: true, results });
+    })();
+    return true; // keep port open for async sendResponse
   }
 
   if (message.type === 'FILL_SETLIST') {
