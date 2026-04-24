@@ -106,15 +106,13 @@ async function init() {
 }
 
 function getStepLabel(step: number): string {
-  if (step === 1) return 'Auto-Fill Details';
-  if (step === 2) return 'Auto-Fill Setlist';
-  return 'Mark as Submitted';
+  if (step === 3) return 'Mark as Submitted';
+  return 'Auto-Fill Performance';
 }
 
 function getStepHint(step: number): string {
-  if (step === 1) return 'Pick a performance below — it will fill in the event info, date, time, and venue.';
-  if (step === 2) return 'Pick a performance — it will add your songs to the setlist.';
-  return 'Review the summary above, then mark as submitted.';
+  if (step === 3) return 'Review the summary above, then mark as submitted.';
+  return 'Pick a performance — SRT fills all 3 steps and pauses on the Summary for you to check warranty + click Submit.';
 }
 
 function renderEvents(events: EventData[], tabId: number, currentStep: number) {
@@ -178,10 +176,13 @@ function renderEvents(events: EventData[], tabId: number, currentStep: number) {
     content.querySelectorAll('.event-card').forEach((card) => card.classList.remove('selected'));
     btn.closest('.event-card')?.classList.add('selected');
 
-    if (currentStep === 1) {
-      chrome.tabs.sendMessage(tabId, { type: 'FILL_DETAILS', event });
-    } else if (currentStep === 2) {
-      chrome.tabs.sendMessage(tabId, { type: 'FILL_SETLIST', event });
+    if (currentStep === 1 || currentStep === 2) {
+      // Fire and forget — the content script shows a progress overlay on the BMI page.
+      // Do NOT window.close() here: it can kill the message dispatch before Chrome's
+      // runtime actually delivers it. The user closes the popup by clicking elsewhere.
+      chrome.tabs.sendMessage(tabId, { type: 'FILL_ALL', event });
+      btn.textContent = 'Filling… see BMI page';
+      btn.setAttribute('disabled', 'true');
     } else {
       // Step 3: Mark as submitted directly from popup
       btn.textContent = 'Submitting...';

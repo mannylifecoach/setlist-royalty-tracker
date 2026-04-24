@@ -493,28 +493,60 @@ function renderProgressOverlay(
 async function fillSetlist(
   songs: EventData['songs']
 ): Promise<{ matched: string[]; notFound: string[] }> {
+  // Debug trace — inspect via window.__srt_setlist_dbg after a run
+  const dbg: Record<string, unknown>[] = [];
+  (window as unknown as { __srt_setlist_dbg: unknown[] }).__srt_setlist_dbg = dbg;
+  const log = (step: string, extra: Record<string, unknown> = {}) =>
+    dbg.push({ step, ts: Date.now(), ...extra });
+
   const matched: string[] = [];
   const notFound: string[] = [];
-  const searchEl = findField(FIELD_MAP.songSearch);
-  const normalize = (s: string) => s.trim().toUpperCase();
+  // Normalize: collapse any whitespace (incl. non-breaking  ) + trim + uppercase
+  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().toUpperCase();
+
+  log('entry', {
+    catalogCount: document.querySelectorAll('button.btn-link').length,
+    songs: songs.map((s) => s.title),
+  });
+
+  // Wait for the song catalog to finish rendering (can lag after step advance)
+  for (let i = 0; i < 20; i++) {
+    if (document.querySelectorAll('button.btn-link').length > 0) break;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  log('catalog-ready', { count: document.querySelectorAll('button.btn-link').length });
 
   for (const song of songs) {
-    if (searchEl) {
-      setInputValue(searchEl, song.title);
-      await new Promise((r) => setTimeout(r, 250));
-    }
+    // Re-resolve each iteration: BMI may replace the DOM node
+    const searchEl = findField(FIELD_MAP.songSearch) as HTMLInputElement | null;
+    log('song-start', { title: song.title, searchEl: !!searchEl, connected: searchEl?.isConnected });
+    if (searchEl) setInputValue(searchEl, song.title);
+    log('song-typed', { title: song.title, searchValue: searchEl?.value, catalogNow: document.querySelectorAll('button.btn-link').length });
 
     const target = normalize(song.title);
-    const titleBtn = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('button.btn-link')
-    ).find((b) => normalize(b.textContent || '') === target);
+    let titleBtn: HTMLButtonElement | null = null;
+    const pollStart = Date.now();
+    let pollCount = 0;
+    while (Date.now() - pollStart < 2500) {
+      pollCount++;
+      const candidates = [...document.querySelectorAll<HTMLButtonElement>('button.btn-link')];
+      titleBtn =
+        (candidates.find((b) => normalize(b.textContent || '') === target) as HTMLButtonElement | undefined) ||
+        (candidates.find((b) => {
+          const t = normalize(b.textContent || '');
+          return t.startsWith(target) || target.startsWith(t);
+        }) as HTMLButtonElement | undefined) ||
+        null;
+      if (titleBtn) break;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    log('song-poll-done', { title: song.title, pollCount, matched: !!titleBtn, catalog: document.querySelectorAll('button.btn-link').length, firstTitles: [...document.querySelectorAll<HTMLButtonElement>('button.btn-link')].slice(0, 5).map((b) => b.textContent?.trim() || '') });
 
     if (!titleBtn) {
       notFound.push(song.title);
       continue;
     }
 
-    // Add button is a sibling in the same row container
     const addBtn =
       titleBtn.parentElement?.querySelector<HTMLElement>('button.ols-btn-outline-blue') ??
       titleBtn
@@ -525,12 +557,12 @@ async function fillSetlist(
     if (addBtn) {
       addBtn.click();
       matched.push(song.title);
+      await new Promise((r) => setTimeout(r, 250)); // settle for next iteration
     } else {
       notFound.push(song.title);
     }
   }
 
-  // Clear the search so the user sees the full catalog again
   if (searchEl) setInputValue(searchEl, '');
   return { matched, notFound };
 }

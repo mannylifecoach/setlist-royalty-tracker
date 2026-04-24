@@ -123,3 +123,36 @@
 .srt-badge:hover {
   opacity: 1;
 }
+
+.srt-note {
+  margin: 0;
+  color: #c0c0d0;
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(250, 191, 36, 0.4);
+  border-radius: 4px;
+}
+
+.srt-btn-stop {
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+
+.srt-btn-stop:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
