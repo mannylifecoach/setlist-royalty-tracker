@@ -178,9 +178,16 @@ export function ExportWizard({ data }: ExportWizardProps) {
           open {pro === 'bmi' ? 'bmi live' : 'ascap onstage'} →
         </a>
         <p className="text-[10px] text-text-muted text-center">
-          opens {pro === 'bmi' ? 'ols.bmi.com' : 'members.ascap.com'} in a new tab — install the{' '}
-          <a href="/help/chrome-extension" className="text-status-discovered hover:underline">chrome extension</a>{' '}
-          first to auto-fill your performances directly into the form
+          opens {pro === 'bmi' ? 'ols.bmi.com' : 'members.ascap.com'} in a new tab —{' '}
+          {pro === 'bmi' ? (
+            <>
+              install the{' '}
+              <a href="/help/chrome-extension" className="text-status-discovered hover:underline">chrome extension</a>{' '}
+              first to auto-fill your performances directly into the form
+            </>
+          ) : (
+            <>chrome extension auto-fill is coming for ascap onstage; for now use the csv below as a reference while you fill the form manually</>
+          )}
         </p>
       </div>
 

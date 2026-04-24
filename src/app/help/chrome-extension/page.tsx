@@ -4,7 +4,7 @@ import { MorphingText } from '@/components/ui/morphing-text';
 
 export const metadata: Metadata = {
   title: 'chrome extension — setlist royalty tracker',
-  description: 'install and use the srt chrome extension to auto-fill bmi live and ascap onstage forms directly from your confirmed performances.',
+  description: 'install and use the srt chrome extension to auto-fill bmi live forms directly from your confirmed performances. ascap onstage auto-fill support is coming soon.',
 };
 
 export default function ChromeExtensionHelpPage() {
@@ -32,8 +32,8 @@ export default function ChromeExtensionHelpPage() {
               chrome extension
             </h1>
             <p className="text-text-muted text-[13px] leading-[1.6] max-w-[460px] mx-auto">
-              auto-fill your bmi live or ascap onstage forms directly from srt —
-              no csv needed, no copy-pasting.
+              auto-fill your bmi live forms directly from srt — no csv needed, no copy-pasting.{' '}
+              <span className="text-text-disabled">ascap onstage auto-fill is coming soon.</span>
             </p>
           </div>
 

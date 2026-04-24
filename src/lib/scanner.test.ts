@@ -247,11 +247,11 @@ describe('expiration warning thresholds', () => {
   const WARNING_THRESHOLDS = [30, 14, 7];
 
   function daysUntilExpiration(expiresAt: string): number {
+    const [y, m, d] = expiresAt.split('-').map(Number);
+    const expiryUTC = Date.UTC(y, m - 1, d);
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const expiry = new Date(expiresAt);
-    expiry.setHours(0, 0, 0, 0);
-    return Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    return Math.floor((expiryUTC - todayUTC) / (1000 * 60 * 60 * 24));
   }
 
   it('identifies a performance 30 days from expiration', () => {

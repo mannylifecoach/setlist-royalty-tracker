@@ -16,7 +16,7 @@ const faqs = [
   {
     question: 'do you submit performances on my behalf?',
     answer:
-      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then use the chrome extension to submit directly to your pro (requires google chrome), or export a csv as a backup. nothing is sent without your explicit action.',
+      'never. you maintain full control. when we discover a matching performance, it enters a "discovered" status. you review and confirm it, fill in any missing venue details, then use the chrome extension to auto-fill bmi live directly (requires google chrome; ascap onstage auto-fill coming soon), or export a csv as a backup. nothing is sent without your explicit action.',
   },
   {
     question: 'how accurate is the song matching?',
@@ -26,7 +26,7 @@ const faqs = [
   {
     question: 'i\'m a dj-producer. does this work for my live sets?',
     answer:
-      'electronic music has a significant royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to pros. our dj-producer support is live today: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi/ascap forms. important: performance royalties go to the songwriter — if you produce original tracks, you earn royalties when other djs play them. if you only dj other artists\' music, the royalties belong to those songwriters.',
+      'electronic music has a significant royalty gap (afem estimate) because dj sets at clubs and festivals almost never get reported to pros. our dj-producer support is live today: upload your serato dj history, we match the tracks to your registered songs (including remixes via musicbrainz work relationships), and the chrome extension fills the bmi form (ascap auto-fill coming soon). important: performance royalties go to the songwriter — if you produce original tracks, you earn royalties when other djs play them. if you only dj other artists\' music, the royalties belong to those songwriters.',
   },
   {
     question: 'do dj-producers get performance royalties even when they\'re paid to perform?',
@@ -51,7 +51,7 @@ const faqs = [
   {
     question: 'do i need google chrome to use this?',
     answer:
-      'the auto-fill chrome extension only works in google chrome and other chromium-based browsers (microsoft edge, brave, arc, opera, vivaldi). if you use safari or firefox, you can still use the web app and submit performances via the csv export — the extension just makes it faster.',
+      'the auto-fill chrome extension works in google chrome and other chromium-based browsers (microsoft edge, brave, arc, opera, vivaldi), and currently auto-fills bmi live only — ascap onstage support is coming soon. if you use safari or firefox, you can still use the web app and submit performances via the csv export.',
   },
 ];
 

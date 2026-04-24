@@ -107,7 +107,8 @@ export function parseSetlistFmDate(dateStr: string): string {
 }
 
 export function calculateExpirationDate(eventDate: string): string {
-  const d = new Date(eventDate);
-  d.setMonth(d.getMonth() + 9);
+  const [year, month, day] = eventDate.split('-').map(Number);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  d.setUTCMonth(d.getUTCMonth() + 9);
   return d.toISOString().split('T')[0];
 }

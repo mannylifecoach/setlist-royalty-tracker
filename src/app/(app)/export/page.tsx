@@ -55,7 +55,7 @@ export default function ExportPage() {
 
   return (
     <div className="space-y-6 max-w-[700px] mx-auto">
-      {shouldShow && data.length > 0 && (
+      {shouldShow && data.length > 0 && userPro === 'bmi' && (
         <ProSubmissionWalkthrough pro={userPro} onClose={dismiss} />
       )}
 
@@ -70,19 +70,22 @@ export default function ExportPage() {
           </button>
         </div>
         <p className="text-[13px] text-text-muted mt-2 leading-[1.5]">
-          use the chrome extension to auto-fill bmi live forms directly (requires google chrome), or
-          download a csv as a backup. only confirmed performances are shown.
+          {userPro === 'bmi'
+            ? 'use the chrome extension to auto-fill bmi live forms directly (requires google chrome), or download a csv as a backup. only confirmed performances are shown.'
+            : 'download a csv or copy the fields into ascap onstage manually — chrome extension auto-fill for ascap is coming soon. only confirmed performances are shown.'}
         </p>
-        <div className="card p-3 mt-3 space-y-3">
-          <p className="text-[11px] text-text-secondary">
-            <span className="text-status-confirmed">recommended:</span> use the{' '}
-            <a href="/help/chrome-extension" className="text-status-discovered hover:underline">
-              chrome extension
-            </a>{' '}
-            to auto-fill bmi live forms directly — no csv needed. generate an
-            api key in settings to get started. <span className="text-text-disabled">requires google chrome.</span>
-          </p>
-        </div>
+        {userPro === 'bmi' && (
+          <div className="card p-3 mt-3 space-y-3">
+            <p className="text-[11px] text-text-secondary">
+              <span className="text-status-confirmed">recommended:</span> use the{' '}
+              <a href="/help/chrome-extension" className="text-status-discovered hover:underline">
+                chrome extension
+              </a>{' '}
+              to auto-fill bmi live forms directly — no csv needed. generate an
+              api key in settings to get started. <span className="text-text-disabled">requires google chrome.</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {!hasDefaultTimes && data.length > 0 && (
