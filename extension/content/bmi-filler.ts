@@ -392,10 +392,18 @@ async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
     if (srtAbortFlag) return render('Stopped by user');
 
     if (isModalOpen()) {
-      render('Step 1/3 · Review "Create a new venue" modal, click Save to continue');
-      const closed = await waitForModalClose(60_000);
+      render(
+        'Step 1/3 · Fill remaining venue fields, click Save to continue',
+        'Extension auto-filled what SRT had. Fill Address/Zip/Phone/Type manually if blank, then click Save on the modal.'
+      );
+      // 5-minute wait — real users need time to type the blanks
+      const closed = await waitForModalClose(300_000);
       if (!closed || srtAbortFlag) {
-        return render('Stopped', 'Timed out waiting for venue modal to close.', true);
+        return render(
+          'Stopped',
+          'Timed out waiting for venue modal to close. After you click Save on the modal, click Auto-Fill Performance again to resume.',
+          true
+        );
       }
     }
 
