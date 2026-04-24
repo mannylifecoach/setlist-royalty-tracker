@@ -140,55 +140,51 @@ function fillDetails(event: EventData): FillResult[] {
 }
 
 // Fill Step 2 — Setlist
-function fillSetlist(
+// BMI renders the catalog as rows: <button.btn-link> (title) + <button.ols-btn-outline-blue> (add) + <input.e-checkbox>.
+// Type title into #tbSongSearch, wait for the client-side filter to apply, then click the matching row's add button.
+// Titles render in uppercase (CSS text-transform appears to be reflected in textContent) — compare case-insensitive.
+async function fillSetlist(
   songs: EventData['songs']
-): { matched: string[]; notFound: string[] } {
+): Promise<{ matched: string[]; notFound: string[] }> {
   const matched: string[] = [];
   const notFound: string[] = [];
-
-  // Type each song into the search box and look for matches
   const searchEl = findField(FIELD_MAP.songSearch);
+  const normalize = (s: string) => s.trim().toUpperCase();
 
   for (const song of songs) {
-    let found = false;
-
-    // Try searching by BMI work ID first, then title
-    const searchTerm = song.bmiWorkId || song.title;
     if (searchEl) {
-      setInputValue(searchEl, searchTerm);
-      // Wait briefly for Syncfusion to filter — we use a synchronous check
-      // since the filter should be near-instant on the client side
+      setInputValue(searchEl, song.title);
+      await new Promise((r) => setTimeout(r, 250));
     }
 
-    // Look for song rows in the catalog — Syncfusion grid uses e-row class
-    const rows = document.querySelectorAll<HTMLElement>(
-      'tr.e-row, .e-gridcontent tr, [class*="song-row"], .song-list-item'
-    );
+    const target = normalize(song.title);
+    const titleBtn = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('button.btn-link')
+    ).find((b) => normalize(b.textContent || '') === target);
 
-    for (const row of rows) {
-      const titleText = row.textContent?.trim().toLowerCase() || '';
-      if (
-        titleText.includes(song.title.toLowerCase()) ||
-        (song.bmiWorkId && titleText.includes(song.bmiWorkId.toLowerCase()))
-      ) {
-        // Find the add/+ button in this row
-        const addBtn = row.querySelector<HTMLElement>(
-          'button.e-btn, button[class*="add"], button'
-        );
-        if (addBtn) {
-          addBtn.click();
-          matched.push(song.title);
-          found = true;
-          break;
-        }
-      }
+    if (!titleBtn) {
+      notFound.push(song.title);
+      continue;
     }
 
-    if (!found) {
+    // Add button is a sibling in the same row container
+    const addBtn =
+      titleBtn.parentElement?.querySelector<HTMLElement>('button.ols-btn-outline-blue') ??
+      titleBtn
+        .closest('[class*="row"], .d-flex, div')
+        ?.querySelector<HTMLElement>('button.ols-btn-outline-blue') ??
+      null;
+
+    if (addBtn) {
+      addBtn.click();
+      matched.push(song.title);
+    } else {
       notFound.push(song.title);
     }
   }
 
+  // Clear the search so the user sees the full catalog again
+  if (searchEl) setInputValue(searchEl, '');
   return { matched, notFound };
 }
 
@@ -328,10 +324,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'FILL_SETLIST') {
     const overlay = createOverlay();
     const event = message.event as EventData;
-    const { matched, notFound } = fillSetlist(event.songs);
-    showSetlistResults(matched, notFound, overlay);
-    sendResponse({ success: true, matched, notFound });
-    return;
+    (async () => {
+      const { matched, notFound } = await fillSetlist(event.songs);
+      showSetlistResults(matched, notFound, overlay);
+      sendResponse({ success: true, matched, notFound });
+    })();
+    return true; // keep port open for async sendResponse
   }
 
   if (message.type === 'SHOW_SUMMARY') {
