@@ -116,7 +116,10 @@ export const GET = withHandler(async (request: NextRequest) => {
         venueType: p.venueType,
         venueCapacity: p.venueCapacity,
         attendance: p.attendance,
-        attendanceRange: mapAttendanceToBmiRange(p.attendance),
+        attendanceRange: mapAttendanceToBmiRange(
+          p.attendance,
+          p.venueCapacity ? parseInt(p.venueCapacity, 10) || null : null
+        ),
         ticketCharge: p.ticketCharge,
         songs: [],
       });

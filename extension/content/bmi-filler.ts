@@ -297,6 +297,195 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+// ----- Auto-advance (FILL_ALL) orchestration -----
+
+let srtAbortFlag = false;
+
+function isModalOpen(): boolean {
+  return [...document.querySelectorAll<HTMLElement>('.e-dialog')].some(
+    (d) => window.getComputedStyle(d).display !== 'none'
+  );
+}
+
+async function waitForModalClose(timeoutMs: number): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (srtAbortFlag) return false;
+    if (!isModalOpen()) return true;
+    await sleep(400);
+  }
+  return false;
+}
+
+function hasValidationErrors(): boolean {
+  // Narrow: only count Bootstrap's .invalid-feedback (shown when a field actually
+  // failed validation) that is visibly rendered and has real error text.
+  // Skip .text-danger because BMI uses it for required-field asterisks even when
+  // the form is valid, which caused false-positive halts.
+  const errorEls = document.querySelectorAll<HTMLElement>('.invalid-feedback');
+  for (const e of errorEls) {
+    const style = window.getComputedStyle(e);
+    if (style.display === 'none' || style.visibility === 'hidden') continue;
+    const txt = (e.textContent || '').trim();
+    if (txt.length > 0) return true;
+  }
+  return false;
+}
+
+function findNextButton(): HTMLButtonElement | null {
+  const primary = [...document.querySelectorAll<HTMLButtonElement>('button.e-primary')];
+  return primary.find((b) => b.textContent?.trim() === 'Next') ?? null;
+}
+
+async function clickNextAndWaitFor(selector: string, timeoutMs: number): Promise<boolean> {
+  const btn = findNextButton();
+  if (!btn) return false;
+  btn.click();
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (srtAbortFlag) return false;
+    if (document.querySelector(selector)) return true;
+    await sleep(150);
+  }
+  return false;
+}
+
+function hasWarrantyCheckbox(): boolean {
+  return [...document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')].some((cb) => {
+    const lbl = cb.closest('label');
+    return !!lbl && /warranting|representing/i.test(lbl.textContent || '');
+  });
+}
+
+async function clickNextAndWaitForStep3(timeoutMs: number): Promise<boolean> {
+  const btn = findNextButton();
+  if (!btn) return false;
+  btn.click();
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (srtAbortFlag) return false;
+    if (hasWarrantyCheckbox()) return true;
+    await sleep(150);
+  }
+  return false;
+}
+
+function escapeText(t: string): string {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+// Run Step 1 → Next → Step 2 → Next → pause on Step 3 for user to submit.
+async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
+  srtAbortFlag = false;
+  const startStep = detectWizardStep();
+  let step1Results: FillResult[] = [];
+  let setlistResult: { matched: string[]; notFound: string[] } = { matched: [], notFound: [] };
+
+  const render = (status: string, note = '', isError = false) =>
+    renderProgressOverlay(overlay, status, note, step1Results, setlistResult, isError);
+
+  if (startStep === 1) {
+    render('Step 1/3 · Filling details + venue');
+    step1Results = await fillDetails(event);
+    if (srtAbortFlag) return render('Stopped by user');
+
+    if (isModalOpen()) {
+      render('Step 1/3 · Review "Create a new venue" modal, click Save to continue');
+      const closed = await waitForModalClose(60_000);
+      if (!closed || srtAbortFlag) {
+        return render('Stopped', 'Timed out waiting for venue modal to close.', true);
+      }
+    }
+
+    if (hasValidationErrors()) {
+      return render(
+        'Step 1/3 · Validation errors',
+        'Fix red-flagged fields on the page, then click Next manually.',
+        true
+      );
+    }
+
+    render('Step 1/3 · Advancing to Setlist…');
+    const reached = await clickNextAndWaitFor('#tbSongSearch', 5000);
+    if (!reached || srtAbortFlag) {
+      return render('Stopped', 'Could not reach Step 2 — click Next manually.', true);
+    }
+  }
+
+  if (startStep === 1 || startStep === 2) {
+    render('Step 2/3 · Filling setlist…');
+    setlistResult = await fillSetlist(event.songs);
+    if (srtAbortFlag) return render('Stopped');
+
+    if (setlistResult.notFound.length > 0) {
+      return render(
+        'Step 2/3 · Some songs not matched',
+        `${setlistResult.notFound.length} not found: ${setlistResult.notFound.join(', ')}. Add manually, then click Next.`,
+        true
+      );
+    }
+
+    render('Step 2/3 · Advancing to Summary…');
+    const reached = await clickNextAndWaitForStep3(5000);
+    if (!reached || srtAbortFlag) {
+      return render('Stopped', 'Could not reach Step 3 — click Next manually.', true);
+    }
+  }
+
+  showSummaryOverlay(event, overlay);
+}
+
+function renderProgressOverlay(
+  overlay: HTMLElement,
+  status: string,
+  note: string,
+  step1Results: FillResult[],
+  setlistResult: { matched: string[]; notFound: string[] },
+  isError: boolean
+): void {
+  const filled = step1Results.filter((r) => r.status === 'filled').length;
+  const skipped = step1Results.filter((r) => r.status === 'skipped').length;
+  const notFoundCount = step1Results.filter((r) => r.status === 'not_found').length;
+  const matchedSongs = setlistResult.matched.length;
+  const unmatchedSongs = setlistResult.notFound.length;
+
+  const statusClass = isError ? 'srt-warning' : 'srt-info';
+  const icon = isError ? '&#9888;' : '&#8594;';
+
+  overlay.innerHTML = `
+    <div class="srt-overlay-header">
+      <span class="srt-overlay-title">Auto-Fill Performance</span>
+      <button class="srt-overlay-close" id="srt-close">&times;</button>
+    </div>
+    <div class="srt-overlay-body">
+      <div class="srt-status-group ${statusClass}">
+        <span class="srt-icon">${icon}</span>
+        <span>${escapeText(status)}</span>
+      </div>
+      ${note ? `<p class="srt-note">${escapeText(note)}</p>` : ''}
+      ${step1Results.length > 0 ? `<div class="srt-status-group srt-success">
+        <span class="srt-icon">&#10003;</span>
+        <span>Step 1: ${filled} filled${skipped ? `, ${skipped} skipped` : ''}${notFoundCount ? `, ${notFoundCount} not found` : ''}</span>
+      </div>` : ''}
+      ${(matchedSongs + unmatchedSongs) > 0 ? `<div class="srt-status-group srt-success">
+        <span class="srt-icon">&#10003;</span>
+        <span>Step 2: ${matchedSongs} songs added${unmatchedSongs ? `, ${unmatchedSongs} not matched` : ''}</span>
+      </div>` : ''}
+      <button class="srt-btn-stop" id="srt-stop">Stop</button>
+    </div>
+  `;
+
+  overlay.querySelector('#srt-close')?.addEventListener('click', () => {
+    srtAbortFlag = true;
+    overlay.remove();
+  });
+  overlay.querySelector('#srt-stop')?.addEventListener('click', () => {
+    srtAbortFlag = true;
+  });
+}
+
 // Fill Step 2 — Setlist
 // BMI renders the catalog as rows: <button.btn-link> (title) + <button.ols-btn-outline-blue> (add) + <input.e-checkbox>.
 // Type title into #tbSongSearch, wait for the client-side filter to apply, then click the matching row's add button.
@@ -469,6 +658,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_CURRENT_STEP') {
     sendResponse({ step: detectWizardStep() });
     return;
+  }
+
+  if (message.type === 'FILL_ALL') {
+    const overlay = createOverlay();
+    (async () => {
+      await fillAll(message.event as EventData, overlay);
+      sendResponse({ success: true });
+    })();
+    return true; // keep port open for async sendResponse
   }
 
   if (message.type === 'FILL_DETAILS') {

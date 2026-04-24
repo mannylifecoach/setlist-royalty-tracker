@@ -89,4 +89,21 @@ describe('mapAttendanceToBmiRange (regression)', () => {
   it('has 4 BMI attendance ranges', () => {
     expect(BMI_ATTENDANCE_RANGES).toHaveLength(4);
   });
+
+  it('defaults to "1001 - 5000" when attendance and capacity are both null', () => {
+    expect(mapAttendanceToBmiRange(null)).toBe('1001 - 5000');
+    expect(mapAttendanceToBmiRange(null, null)).toBe('1001 - 5000');
+    expect(mapAttendanceToBmiRange(undefined)).toBe('1001 - 5000');
+  });
+
+  it('falls back to venue capacity when attendance is null', () => {
+    expect(mapAttendanceToBmiRange(null, 2600)).toBe('1001 - 5000');
+    expect(mapAttendanceToBmiRange(null, 300)).toBe('251 - 1000');
+    expect(mapAttendanceToBmiRange(null, 100)).toBe('0 - 250');
+    expect(mapAttendanceToBmiRange(null, 10000)).toBe('5001+');
+  });
+
+  it('prefers attendance over capacity when both are present', () => {
+    expect(mapAttendanceToBmiRange(100, 2600)).toBe('0 - 250');
+  });
 });

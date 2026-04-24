@@ -149,12 +149,19 @@ export const BMI_ATTENDANCE_RANGES = [
   { min: 5001, max: Infinity, label: '5001+' },
 ] as const;
 
-export function mapAttendanceToBmiRange(attendance: number | null): string {
-  if (attendance === null || attendance === undefined) return '0 - 250';
-  const range = BMI_ATTENDANCE_RANGES.find(
-    (r) => attendance >= r.min && attendance <= r.max
-  );
-  return range?.label ?? '5001+';
+export function mapAttendanceToBmiRange(
+  attendance: number | null | undefined,
+  venueCapacity?: number | null
+): string {
+  const inRange = (n: number) =>
+    BMI_ATTENDANCE_RANGES.find((r) => n >= r.min && n <= r.max)?.label ?? '5001+';
+  if (attendance !== null && attendance !== undefined) return inRange(attendance);
+  if (venueCapacity !== null && venueCapacity !== undefined && venueCapacity > 0) {
+    return inRange(venueCapacity);
+  }
+  // No data — default to the middle range so the user doesn't silently under-claim.
+  // Working songwriters more often play theaters/clubs (1001-5000) than small rooms.
+  return '1001 - 5000';
 }
 
 // BMI Live event types
