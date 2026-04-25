@@ -189,7 +189,7 @@ async function fillVenue(event: EventData): Promise<FillResult[]> {
   createBtn.click();
   await sleep(800); // modal opens
 
-  results.push(...fillCreateNewVenueModal(event));
+  results.push(...(await fillCreateNewVenueModal(event)));
   return results;
 }
 
@@ -205,7 +205,10 @@ function findVenueSearchButton(): HTMLButtonElement | null {
 // preceding-sibling their input groups; State/City/Type/Capacity are selects
 // with id prefixes StateCode_/City_/TypeId_/CapacityId_; Zip has placeholder,
 // Phone has name="phone". Does NOT click Save — user reviews & submits.
-function fillCreateNewVenueModal(event: EventData): FillResult[] {
+//
+// Fills SRT data first, then queries Google Places via the SRT backend to
+// fill any blanks (Address/Zip/Phone/Venue Type).
+async function fillCreateNewVenueModal(event: EventData): Promise<FillResult[]> {
   const results: FillResult[] = [];
   const dialog = [...document.querySelectorAll<HTMLElement>('.e-dialog')].find(
     (d) => window.getComputedStyle(d).display !== 'none'
@@ -224,28 +227,30 @@ function fillCreateNewVenueModal(event: EventData): FillResult[] {
     )) || null;
   };
 
+  const filled = new Set<string>();
+
   if (event.venueName) {
     const el = inputByLabel('Venue Name');
-    if (el) { setInputValue(el, event.venueName); results.push({ field: 'modal.venueName', status: 'filled' }); }
+    if (el) { setInputValue(el, event.venueName); results.push({ field: 'modal.venueName', status: 'filled' }); filled.add('venueName'); }
   }
   if (event.venueAddress) {
     const el = inputByLabel('Address');
-    if (el) { setInputValue(el, event.venueAddress); results.push({ field: 'modal.address', status: 'filled' }); }
+    if (el) { setInputValue(el, event.venueAddress); results.push({ field: 'modal.address', status: 'filled' }); filled.add('address'); }
   }
   if (event.venueState) {
     const el = dialog.querySelector<HTMLSelectElement>('select[id^="StateCode_"]');
-    if (el) { setInputValue(el, event.venueState); results.push({ field: 'modal.state', status: 'filled' }); }
+    if (el) { setInputValue(el, event.venueState); results.push({ field: 'modal.state', status: 'filled' }); filled.add('state'); }
   }
   if (event.venueZip) {
     const el = dialog.querySelector<HTMLInputElement>('input[placeholder="Zip"]');
-    if (el) { setInputValue(el, event.venueZip); results.push({ field: 'modal.zip', status: 'filled' }); }
+    if (el) { setInputValue(el, event.venueZip); results.push({ field: 'modal.zip', status: 'filled' }); filled.add('zip'); }
   }
   if (event.venuePhone) {
     const el = dialog.querySelector<HTMLInputElement>('input[name="phone"]');
-    if (el) { setInputValue(el, event.venuePhone); results.push({ field: 'modal.phone', status: 'filled' }); }
+    if (el) { setInputValue(el, event.venuePhone); results.push({ field: 'modal.phone', status: 'filled' }); filled.add('phone'); }
   }
 
-  // Venue Type — best-effort fuzzy match against SRT-provided venueType
+  // Venue Type — fuzzy match against SRT-provided venueType (rarely useful)
   if (event.venueType) {
     const typeEl = dialog.querySelector<HTMLSelectElement>('select[id^="TypeId_"]');
     if (typeEl) {
@@ -256,6 +261,7 @@ function fillCreateNewVenueModal(event: EventData): FillResult[] {
         typeEl.value = opt.value;
         typeEl.dispatchEvent(new Event('change', { bubbles: true }));
         results.push({ field: 'modal.venueType', status: 'filled' });
+        filled.add('venueType');
       }
     }
   }
@@ -271,6 +277,7 @@ function fillCreateNewVenueModal(event: EventData): FillResult[] {
         capEl.value = opt.value;
         capEl.dispatchEvent(new Event('change', { bubbles: true }));
         results.push({ field: 'modal.venueCapacity', status: 'filled' });
+        filled.add('venueCapacity');
       }
     }
   }
@@ -288,6 +295,52 @@ function fillCreateNewVenueModal(event: EventData): FillResult[] {
         cityEl.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }, 1200);
+    filled.add('city');
+  }
+
+  // Google Places enrichment — fill blanks (Address/Zip/Phone/Venue Type) the
+  // backend can derive from a Google Places lookup of (name + state + city).
+  if (event.venueName) {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'FETCH_VENUE_ENRICHMENT',
+        name: event.venueName,
+        state: event.venueState,
+        city: event.venueCity,
+      });
+
+      if (response?.success && response.data?.found) {
+        const e = response.data as {
+          address?: string;
+          zip?: string;
+          phone?: string;
+          venueTypeCode?: string;
+        };
+
+        if (!filled.has('address') && e.address) {
+          const el = inputByLabel('Address');
+          if (el) { setInputValue(el, e.address); results.push({ field: 'modal.address.gplaces', status: 'filled' }); }
+        }
+        if (!filled.has('zip') && e.zip) {
+          const el = dialog.querySelector<HTMLInputElement>('input[placeholder="Zip"]');
+          if (el) { setInputValue(el, e.zip); results.push({ field: 'modal.zip.gplaces', status: 'filled' }); }
+        }
+        if (!filled.has('phone') && e.phone) {
+          const el = dialog.querySelector<HTMLInputElement>('input[name="phone"]');
+          if (el) { setInputValue(el, e.phone); results.push({ field: 'modal.phone.gplaces', status: 'filled' }); }
+        }
+        if (!filled.has('venueType') && e.venueTypeCode) {
+          const typeEl = dialog.querySelector<HTMLSelectElement>('select[id^="TypeId_"]');
+          if (typeEl) {
+            typeEl.value = e.venueTypeCode;
+            typeEl.dispatchEvent(new Event('change', { bubbles: true }));
+            results.push({ field: 'modal.venueType.gplaces', status: 'filled' });
+          }
+        }
+      }
+    } catch {
+      // Silent degrade — extension still works without enrichment, user fills manually
+    }
   }
 
   return results;

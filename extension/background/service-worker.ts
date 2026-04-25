@@ -51,6 +51,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'FETCH_VENUE_ENRICHMENT') {
+    const { name, state, city } = message;
+    const params = new URLSearchParams();
+    if (name) params.set('name', name);
+    if (state) params.set('state', state);
+    if (city) params.set('city', city);
+    apiFetch(`/api/extension/venue-enrichment?${params.toString()}`)
+      .then((data) => sendResponse({ success: true, data }))
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
   if (message.type === 'TEST_CONNECTION') {
     apiFetch('/api/extension/performances?status=confirmed')
       .then(() => sendResponse({ success: true }))
