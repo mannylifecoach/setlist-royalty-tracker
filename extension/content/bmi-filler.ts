@@ -350,7 +350,14 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ----- Auto-advance (FILL_ALL) orchestration -----
+// ----- FILL_ALL orchestration -----
+
+// __SRT_AUTO_ADVANCE__ is replaced by esbuild's `define` at build time.
+// Default build: false (per-step, user clicks BMI's Next themselves).
+// Auto-advance build: true (extension auto-clicks Next + advances to Summary).
+declare const __SRT_AUTO_ADVANCE__: boolean;
+const AUTO_ADVANCE: boolean =
+  typeof __SRT_AUTO_ADVANCE__ !== 'undefined' ? __SRT_AUTO_ADVANCE__ : false;
 
 let srtAbortFlag = false;
 
@@ -461,13 +468,22 @@ async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
       }
     }
 
-    return render(
-      'Step 1/3 done · Review then click Next',
-      'Double-check attendance, date, venue. When ready, click BMI’s Next button. Then click Auto-Fill Performance again on Step 2.'
-    );
+    if (AUTO_ADVANCE) {
+      render('Step 1/3 · Advancing to Setlist…');
+      const reached = await clickNextAndWaitFor('#tbSongSearch', 5000);
+      if (!reached || srtAbortFlag) {
+        return render('Stopped', 'Could not reach Step 2 — click Next manually.', true);
+      }
+      // Fall through to Step 2 block
+    } else {
+      return render(
+        'Step 1/3 done · Review then click Next',
+        'Double-check attendance, date, venue. When ready, click BMI’s Next button. Then click Auto-Fill Performance again on Step 2.'
+      );
+    }
   }
 
-  if (startStep === 2) {
+  if (startStep === 1 || startStep === 2) {
     render('Step 2/3 · Filling setlist…');
     setlistResult = await fillSetlist(event.songs);
     if (srtAbortFlag) return render('Stopped');
@@ -480,13 +496,22 @@ async function fillAll(event: EventData, overlay: HTMLElement): Promise<void> {
       );
     }
 
-    return render(
-      'Step 2/3 done · Review then click Next',
-      'Verify the setlist looks right. When ready, click BMI’s Next button. Then check warranty + Submit on Step 3 yourself.'
-    );
+    if (AUTO_ADVANCE) {
+      render('Step 2/3 · Advancing to Summary…');
+      const reached = await clickNextAndWaitForStep3(5000);
+      if (!reached || srtAbortFlag) {
+        return render('Stopped', 'Could not reach Step 3 — click Next manually.', true);
+      }
+      // Fall through to Step 3
+    } else {
+      return render(
+        'Step 2/3 done · Review then click Next',
+        'Verify the setlist looks right. When ready, click BMI’s Next button. Then check warranty + Submit on Step 3 yourself.'
+      );
+    }
   }
 
-  // startStep === 3
+  // startStep === 3 (or auto-advanced to it)
   showSummaryOverlay(event, overlay);
 }
 

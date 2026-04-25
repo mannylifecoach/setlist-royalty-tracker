@@ -1,6 +1,9 @@
 import * as esbuild from 'esbuild';
 
 const watch = process.argv.includes('--watch');
+// `--auto-advance` produces a variant that auto-clicks BMI's Next between
+// steps and lands the user on the Summary page without manual review.
+const autoAdvance = process.argv.includes('--auto-advance');
 
 const buildOptions = {
   bundle: true,
@@ -8,6 +11,9 @@ const buildOptions = {
   sourcemap: watch ? 'inline' : false,
   target: ['chrome120'],
   outdir: 'dist',
+  define: {
+    __SRT_AUTO_ADVANCE__: JSON.stringify(autoAdvance),
+  },
   entryPoints: [
     { in: 'popup/popup.ts', out: 'popup/popup' },
     { in: 'content/bmi-filler.ts', out: 'content/bmi-filler' },
@@ -53,5 +59,19 @@ if (watch) {
     }
   }
 
-  console.log('Build complete → dist/');
+  // If building the auto-advance variant, patch manifest.json in dist so the
+  // extension shows up under a different name in chrome://extensions and
+  // doesn't collide with the per-step build if both are installed.
+  if (autoAdvance) {
+    const mPath = path.resolve('dist', 'manifest.json');
+    const m = JSON.parse(fs.readFileSync(mPath, 'utf8'));
+    m.name = 'BMI Live Auto-Fill (Auto-Advance)';
+    m.description =
+      'Auto-fill BMI Live performance forms from Setlist Royalty Tracker data. Auto-advance variant: clicks Next between wizard steps automatically.';
+    fs.writeFileSync(mPath, JSON.stringify(m, null, 2));
+  }
+
+  console.log(
+    'Build complete → dist/' + (autoAdvance ? ' (auto-advance variant)' : ' (per-step variant)')
+  );
 }
