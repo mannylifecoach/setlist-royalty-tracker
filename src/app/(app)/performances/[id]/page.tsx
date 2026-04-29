@@ -59,6 +59,7 @@ export default function PerformanceDetailPage({
   const [artistName, setArtistName] = useState('');
   const [userPro, setUserPro] = useState<'bmi' | 'ascap'>('bmi');
   const [saving, setSaving] = useState(false);
+  const [reverseTarget, setReverseTarget] = useState<PerformanceStatus | null>(null);
   const router = useRouter();
 
   const loadPerformance = useCallback(async function loadPerformance() {
@@ -350,6 +351,115 @@ export default function PerformanceDetailPage({
             mark ineligible
           </button>
         )}
+      </div>
+
+      {/* Reverse-status actions — recover from mis-clicks, BMI rejections, beta-test bad state. */}
+      {(perf.status === 'submitted' ||
+        perf.status === 'confirmed' ||
+        perf.status === 'ineligible') && (
+        <div className="flex flex-wrap gap-3 pt-2 border-t border-border-subtle">
+          <span className="text-[11px] text-text-disabled self-center">undo:</span>
+          {perf.status === 'submitted' && (
+            <>
+              <button
+                onClick={() => setReverseTarget('confirmed')}
+                disabled={saving}
+                className="text-[11px] text-text-disabled hover:text-text-secondary transition-colors"
+              >
+                ← back to confirmed
+              </button>
+              <button
+                onClick={() => setReverseTarget('discovered')}
+                disabled={saving}
+                className="text-[11px] text-text-disabled hover:text-text-secondary transition-colors"
+              >
+                ← back to discovered
+              </button>
+            </>
+          )}
+          {perf.status === 'confirmed' && (
+            <button
+              onClick={() => setReverseTarget('discovered')}
+              disabled={saving}
+              className="text-[11px] text-text-disabled hover:text-text-secondary transition-colors"
+            >
+              ← back to discovered
+            </button>
+          )}
+          {perf.status === 'ineligible' && (
+            <button
+              onClick={() => setReverseTarget('discovered')}
+              disabled={saving}
+              className="text-[11px] text-text-disabled hover:text-text-secondary transition-colors"
+            >
+              ← back to discovered
+            </button>
+          )}
+        </div>
+      )}
+
+      {reverseTarget && (
+        <ReverseConfirmDialog
+          fromStatus={perf.status}
+          toStatus={reverseTarget}
+          onCancel={() => setReverseTarget(null)}
+          onConfirm={async () => {
+            const target = reverseTarget;
+            setReverseTarget(null);
+            await handleStatusChange(target);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ReverseConfirmDialog({
+  fromStatus,
+  toStatus,
+  onCancel,
+  onConfirm,
+}: {
+  fromStatus: PerformanceStatus;
+  toStatus: PerformanceStatus;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  // Warning copy depends on what they're reverting from. Reverting a "submitted"
+  // row is the one that can cause double-filing — the others are lower-stakes.
+  const warning =
+    fromStatus === 'submitted'
+      ? 'This re-adds the performance to your filing list. Only do this if you have NOT yet submitted to BMI/ASCAP — otherwise you risk filing a duplicate claim.'
+      : fromStatus === 'ineligible'
+        ? 'This re-adds the performance to your filing list. Confirm or mark ineligible again afterward.'
+        : 'This moves the performance back to discovered so you can re-review before confirming.';
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="card p-5 max-w-[420px] space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-[13px] text-text font-medium">
+          move back to {toStatus}?
+        </div>
+        <div className="text-[11px] text-text-secondary leading-[1.5]">
+          {warning}
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button onClick={onConfirm} className="btn">
+            yes, move back
+          </button>
+          <button
+            onClick={onCancel}
+            className="text-[11px] text-text-muted hover:text-text transition-colors px-3"
+          >
+            cancel
+          </button>
+        </div>
       </div>
     </div>
   );

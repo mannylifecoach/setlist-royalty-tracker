@@ -171,6 +171,26 @@ export const performances = pgTable('performances', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 });
 
+export const performanceStatusHistory = pgTable('performance_status_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  performanceId: uuid('performance_id')
+    .references(() => performances.id, { onDelete: 'cascade' })
+    .notNull(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  fromStatus: text('from_status').$type<
+    'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'
+  >(),
+  toStatus: text('to_status')
+    .$type<'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'>()
+    .notNull(),
+  source: text('source')
+    .$type<'user' | 'extension' | 'cron' | 'bulk'>()
+    .notNull(),
+  changedAt: timestamp('changed_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
 export const venueCapacityCache = pgTable(
   'venue_capacity_cache',
   {

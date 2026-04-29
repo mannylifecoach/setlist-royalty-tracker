@@ -5,6 +5,7 @@ import { performances } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { bulkConfirmSchema } from '@/lib/schemas';
+import { recordStatusChanges } from '@/lib/status-history';
 
 export const POST = withHandler(async (request: NextRequest) => {
   const session = await auth();
@@ -16,7 +17,7 @@ export const POST = withHandler(async (request: NextRequest) => {
   if ('error' in result) return result.error;
   const { ids } = result.data;
 
-  await db
+  const updated = await db
     .update(performances)
     .set({ status: 'confirmed', updatedAt: new Date() })
     .where(
@@ -25,7 +26,22 @@ export const POST = withHandler(async (request: NextRequest) => {
         inArray(performances.id, ids),
         eq(performances.status, 'discovered')
       )
-    );
+    )
+    .returning({ id: performances.id });
 
-  return NextResponse.json({ ok: true, confirmed: ids.length });
+  try {
+    await recordStatusChanges(
+      updated.map((row) => ({
+        performanceId: row.id,
+        userId: session.user!.id!,
+        fromStatus: 'discovered' as const,
+        toStatus: 'confirmed' as const,
+        source: 'bulk' as const,
+      }))
+    );
+  } catch (err) {
+    console.error('status_history bulk insert failed', err);
+  }
+
+  return NextResponse.json({ ok: true, confirmed: updated.length });
 });
