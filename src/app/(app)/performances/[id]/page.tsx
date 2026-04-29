@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/status-badge';
 import type { PerformanceStatus } from '@/lib/constants';
 import { BMI_EVENT_TYPES, BMI_VENUE_TYPES, BMI_HOURS } from '@/lib/constants';
+import { getMissingFields } from '@/lib/export';
 
 interface CapacityEnrichmentResult {
   resolvedCapacity: number | null;
@@ -51,7 +52,12 @@ export default function PerformanceDetailPage({
   const { id } = use(params);
   const [perf, setPerf] = useState<PerformanceDetail | null>(null);
   const [songTitle, setSongTitle] = useState('');
+  const [song, setSong] = useState<{ bmiWorkId: string | null; ascapWorkId: string | null }>({
+    bmiWorkId: null,
+    ascapWorkId: null,
+  });
   const [artistName, setArtistName] = useState('');
+  const [userPro, setUserPro] = useState<'bmi' | 'ascap'>('bmi');
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
@@ -65,6 +71,10 @@ export default function PerformanceDetailPage({
     if (match) {
       setPerf(match.performance);
       setSongTitle(match.song.title);
+      setSong({
+        bmiWorkId: match.song.bmiWorkId ?? null,
+        ascapWorkId: match.song.ascapWorkId ?? null,
+      });
       setArtistName(match.artist.artistName);
     }
   }, [id]);
@@ -72,6 +82,16 @@ export default function PerformanceDetailPage({
   useEffect(() => {
     loadPerformance();
   }, [loadPerformance]);
+
+  useEffect(() => {
+    fetch('/api/settings').then(async (res) => {
+      if (!res.ok) return;
+      const settings = await res.json();
+      if (settings.pro === 'bmi' || settings.pro === 'ascap') {
+        setUserPro(settings.pro);
+      }
+    });
+  }, []);
 
   async function handleSave(field: string, value: string | number | null) {
     setSaving(true);
@@ -300,7 +320,7 @@ export default function PerformanceDetailPage({
         />
       </div>
 
-      <BmiReadiness perf={perf} />
+      <ProReadiness perf={perf} song={song} pro={userPro} />
 
       <div className="flex gap-2">
         {perf.status === 'discovered' && (
@@ -558,39 +578,47 @@ function CapacityField({
   );
 }
 
-function BmiReadiness({ perf }: { perf: PerformanceDetail }) {
-  const requiredFields: { label: string; filled: boolean }[] = [
-    { label: 'venue name', filled: !!perf.venueName },
-    { label: 'venue city', filled: !!perf.venueCity },
-    { label: 'venue state', filled: !!perf.venueState },
-    { label: 'venue address', filled: !!perf.venueAddress },
-    { label: 'start time', filled: !!perf.startTimeHour && !!perf.startTimeAmPm },
-    { label: 'end time', filled: !!perf.endTimeHour && !!perf.endTimeAmPm },
-    { label: 'ticket charge', filled: !!perf.ticketCharge },
-  ];
+function ProReadiness({
+  perf,
+  song,
+  pro,
+}: {
+  perf: PerformanceDetail;
+  song: { bmiWorkId: string | null; ascapWorkId: string | null };
+  pro: 'bmi' | 'ascap';
+}) {
+  // Required-field check is shared with the export wizard via @/lib/export so the two
+  // pages can never disagree on what counts as "ready to file."
+  const requiredMissing = getMissingFields({ performance: perf, song }, pro);
+  const ready = requiredMissing.length === 0;
 
-  const filledCount = requiredFields.filter((f) => f.filled).length;
-  const allFilled = filledCount === requiredFields.length;
+  // Optional gaps surface as informational — present in the BMI/ASCAP form, but the form
+  // accepts the submission without them (BMI auto-fills address from "previously performed
+  // venues"; ticket charge is optional in both portals).
+  const optionalGaps: string[] = [];
+  if (pro === 'bmi') {
+    if (!perf.venueAddress) optionalGaps.push('venue address');
+    if (!perf.ticketCharge) optionalGaps.push('ticket charge');
+  }
+  if (pro === 'ascap') {
+    if (!perf.ticketCharge) optionalGaps.push('ticket charge');
+  }
 
   return (
     <div className="card p-4 space-y-2">
       <div className="flex items-center gap-2">
         <div
           className={`w-2 h-2 rounded-full ${
-            allFilled ? 'bg-status-confirmed' : 'bg-status-expiring'
+            ready ? 'bg-status-confirmed' : 'bg-status-expiring'
           }`}
         />
         <div className="text-[11px] text-text-muted">
-          bmi ready: {filledCount}/{requiredFields.length} fields
+          {pro} ready{ready ? '' : `: missing ${requiredMissing.join(', ')}`}
         </div>
       </div>
-      {!allFilled && (
+      {optionalGaps.length > 0 && (
         <div className="text-[11px] text-text-disabled">
-          missing:{' '}
-          {requiredFields
-            .filter((f) => !f.filled)
-            .map((f) => f.label)
-            .join(', ')}
+          optional: {optionalGaps.join(', ')}
         </div>
       )}
     </div>

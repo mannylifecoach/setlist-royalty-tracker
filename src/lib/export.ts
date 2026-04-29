@@ -72,28 +72,35 @@ export function generateAscapOnStageCsv(rows: ExportRow[]): string {
   return [headers.join(','), ...csvRows].join('\n');
 }
 
+// Single source of truth for "what's required to file this performance with the PRO?"
+// Both the export wizard and the performance detail readiness indicator call this.
+//
+// BMI Live: the wizard searches BMI's "previously performed venues" by name+city+state and
+// either picks a hit (which auto-fills address/phone/capacity) or opens the create-new-venue
+// modal which auto-fills via Google Places. So name+city+state is the minimum we must have;
+// address/phone are not required. Songs are added by catalog search by title — no work id
+// field exists on the wizard. Attendance is optional in the wizard (extension defaults to a
+// reasonable range when missing).
+//
+// ASCAP OnStage: CSV export needs an ASCAP work id; the portal otherwise needs venue + state.
+type RequiredFieldsRow = {
+  performance: { venueName: string | null; venueCity?: string | null; venueState: string | null };
+  song: { bmiWorkId?: string | null; ascapWorkId: string | null };
+};
+
 export function getMissingFields(
-  row: ExportRow,
+  row: RequiredFieldsRow,
   pro: 'bmi' | 'ascap'
 ): string[] {
   const missing: string[] = [];
-
   if (!row.performance.venueName) missing.push('venue name');
-
   if (pro === 'bmi') {
-    if (!row.performance.venueAddress) missing.push('venue address');
     if (!row.performance.venueCity) missing.push('venue city');
     if (!row.performance.venueState) missing.push('venue state');
-    if (!row.performance.venueCountry) missing.push('venue country');
-    if (!row.performance.venuePhone) missing.push('venue phone');
-    if (!row.performance.attendance) missing.push('attendance');
-    if (!row.song.bmiWorkId) missing.push('bmi work id');
   }
-
   if (pro === 'ascap') {
     if (!row.performance.venueState) missing.push('venue state');
     if (!row.song.ascapWorkId) missing.push('ascap work id');
   }
-
   return missing;
 }
