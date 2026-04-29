@@ -8,6 +8,8 @@ export interface MusicBrainzSongResult {
   recordingMbid: string;
   workMbid: string | null;
   iswc: string | null;
+  isrc: string | null;
+  durationSeconds: number | null;
   title: string;
   artistName: string;
 }
@@ -38,12 +40,17 @@ function escapeLuceneQuery(str: string): string {
 
 /**
  * Search MusicBrainz for a recording matching title + artist.
- * Returns the top match with its Recording MBID.
+ * Returns the top match with its Recording MBID + length (ms).
  */
 export async function searchRecording(
   title: string,
   artistName: string
-): Promise<{ recordingMbid: string; title: string; artistName: string } | null> {
+): Promise<{
+  recordingMbid: string;
+  title: string;
+  artistName: string;
+  durationSeconds: number | null;
+} | null> {
   const titleQ = escapeLuceneQuery(title);
   const artistQ = escapeLuceneQuery(artistName);
   const query = `recording:"${titleQ}" AND artist:"${artistQ}"`;
@@ -60,11 +67,35 @@ export async function searchRecording(
     if (!recordings || recordings.length === 0) return null;
 
     const top = recordings[0];
+    // MusicBrainz returns recording length in milliseconds; convert to seconds.
+    const durationSeconds =
+      typeof top.length === 'number' && top.length > 0
+        ? Math.round(top.length / 1000)
+        : null;
     return {
       recordingMbid: top.id,
       title: top.title,
       artistName: top['artist-credit']?.[0]?.name || artistName,
+      durationSeconds,
     };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Look up ISRCs registered against a Recording MBID. Returns the first ISRC
+ * if any are present (recordings can have multiple ISRCs across regional releases).
+ */
+export async function getRecordingIsrc(
+  recordingMbid: string
+): Promise<string | null> {
+  const url = `${MUSICBRAINZ_BASE_URL}/recording/${recordingMbid}?inc=isrcs&fmt=json`;
+  try {
+    const res = await rateLimitedFetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.isrcs?.[0] || null;
   } catch {
     return null;
   }
@@ -135,12 +166,17 @@ export async function lookupSongMetadata(
   const recording = await searchRecording(title, artistName);
   if (!recording) return null;
 
-  const work = await getRecordingWork(recording.recordingMbid);
+  const [work, isrc] = await Promise.all([
+    getRecordingWork(recording.recordingMbid),
+    getRecordingIsrc(recording.recordingMbid),
+  ]);
 
   return {
     recordingMbid: recording.recordingMbid,
     workMbid: work?.workMbid || null,
     iswc: work?.iswc || null,
+    isrc,
+    durationSeconds: recording.durationSeconds,
     title: recording.title,
     artistName: recording.artistName,
   };

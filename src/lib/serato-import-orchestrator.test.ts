@@ -161,6 +161,8 @@ describe('importSeratoTracks', () => {
       recordingMbid: 'rec-remix',
       workMbid: 'work-abc',
       iswc: 'T-123',
+      isrc: null,
+      durationSeconds: null,
       title: 'Bassline Lover (Skrillex VIP Edit)',
       artistName: 'Skrillex',
     });

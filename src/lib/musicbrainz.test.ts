@@ -38,6 +38,7 @@ describe('musicbrainz.searchRecording', () => {
       recordingMbid: 'rec-abc-123',
       title: 'Midnight Bass',
       artistName: 'Producer A',
+      durationSeconds: null,
     });
   });
 
@@ -147,60 +148,75 @@ describe('musicbrainz.lookupSongMetadata (full pipeline)', () => {
     vi.clearAllMocks();
   });
 
+  // The work + isrc lookups inside lookupSongMetadata fire in parallel via
+  // Promise.all, so mockResolvedValueOnce can't reliably target them in order.
+  // Dispatch on URL instead — also makes the tests easier to read.
+  function mockByUrl(routes: Record<string, unknown>) {
+    mockFetch.mockImplementation((url: string) => {
+      for (const key of Object.keys(routes)) {
+        if (url.includes(key)) return Promise.resolve(jsonResponse(routes[key]));
+      }
+      throw new Error(`unmatched URL: ${url}`);
+    });
+  }
+
   it('returns full result when recording and work both found', async () => {
-    mockFetch
-      .mockResolvedValueOnce(
-        jsonResponse({
-          recordings: [
-            {
-              id: 'rec-1',
-              title: 'Midnight Bass',
-              'artist-credit': [{ name: 'Producer A' }],
-            },
-          ],
-        })
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          relations: [
-            {
-              type: 'performance',
-              work: { id: 'work-1', iswcs: ['T-999.888.777-1'] },
-            },
-          ],
-        })
-      );
+    mockByUrl({
+      'recording?query=': {
+        recordings: [
+          {
+            id: 'rec-1',
+            title: 'Midnight Bass',
+            length: 213000,
+            'artist-credit': [{ name: 'Producer A' }],
+          },
+        ],
+      },
+      'inc=work-rels': {
+        relations: [
+          {
+            type: 'performance',
+            work: { id: 'work-1', iswcs: ['T-999.888.777-1'] },
+          },
+        ],
+      },
+      'inc=isrcs': { isrcs: ['USRC11234567'] },
+    });
 
     const result = await lookupSongMetadata('Midnight Bass', 'Producer A');
     expect(result).toEqual({
       recordingMbid: 'rec-1',
       workMbid: 'work-1',
       iswc: 'T-999.888.777-1',
+      isrc: 'USRC11234567',
+      durationSeconds: 213,
       title: 'Midnight Bass',
       artistName: 'Producer A',
     });
   });
 
   it('returns recording-only when work lookup returns null', async () => {
-    mockFetch
-      .mockResolvedValueOnce(
-        jsonResponse({
-          recordings: [
-            {
-              id: 'rec-2',
-              title: 'Track',
-              'artist-credit': [{ name: 'Artist' }],
-            },
-          ],
-        })
-      )
-      .mockResolvedValueOnce(jsonResponse({ relations: [] }));
+    mockByUrl({
+      'recording?query=': {
+        recordings: [
+          {
+            id: 'rec-2',
+            title: 'Track',
+            'artist-credit': [{ name: 'Artist' }],
+          },
+        ],
+      },
+      'inc=work-rels': { relations: [] },
+      'inc=isrcs': {},
+    });
 
     const result = await lookupSongMetadata('Track', 'Artist');
     expect(result).toEqual({
       recordingMbid: 'rec-2',
       workMbid: null,
       iswc: null,
+      isrc: null,
+      durationSeconds: null,
       title: 'Track',
       artistName: 'Artist',
     });

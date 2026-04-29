@@ -85,6 +85,8 @@ describe('enrichSongMetadata', () => {
       recordingMbid: 'rec-1',
       workMbid: 'work-1',
       iswc: 'T-123',
+      isrc: null,
+      durationSeconds: null,
       title: 'Midnight Bass',
       artistName: 'Producer A',
     });
@@ -115,6 +117,8 @@ describe('enrichSongMetadata', () => {
       recordingMbid: 'rec',
       workMbid: 'work',
       iswc: 'MB-ISWC',
+      isrc: null,
+      durationSeconds: null,
       title: 'Track',
       artistName: 'Artist',
     });
@@ -147,6 +151,8 @@ describe('enrichSongMetadata', () => {
       recordingMbid: 'rec-only',
       workMbid: null,
       iswc: null,
+      isrc: null,
+      durationSeconds: null,
       title: 'Track',
       artistName: 'Artist',
     });

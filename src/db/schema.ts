@@ -6,6 +6,8 @@ import {
   date,
   integer,
   boolean,
+  numeric,
+  jsonb,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
@@ -35,6 +37,13 @@ export const users = pgTable('users', {
   defaultStartTimeAmPm: text('default_start_time_am_pm'),
   defaultEndTimeHour: text('default_end_time_hour'),
   defaultEndTimeAmPm: text('default_end_time_am_pm'),
+  // ASCAP-specific user fields. ASCAP requires writer IPI + role on every Work Registration
+  // and OnStage filing. Publisher fields are optional for self-published writers.
+  ipi: text('ipi'),
+  defaultRole: text('default_role').default('CA'),
+  publisherName: text('publisher_name'),
+  publisherIpi: text('publisher_ipi'),
+  noPublisher: boolean('no_publisher').default(false).notNull(),
 });
 
 export const accounts = pgTable('accounts', {
@@ -86,11 +95,35 @@ export const songs = pgTable(
     ascapWorkId: text('ascap_work_id'),
     workMbid: text('work_mbid'),
     recordingMbid: text('recording_mbid'),
+    // ASCAP-specific song fields. duration + isrc auto-populated from MusicBrainz
+    // when available; alternateTitles is user-managed (radio edit, VIP mix, etc.)
+    // for the ASCAP Work Registration "alternate titles" section.
+    durationSeconds: integer('duration_seconds'),
+    isrc: text('isrc'),
+    alternateTitles: jsonb('alternate_titles').$type<string[]>(),
+    ascapRegisteredAt: timestamp('ascap_registered_at', { mode: 'date' }),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },
   (table) => [uniqueIndex('songs_user_title_idx').on(table.userId, table.title)]
 );
+
+// Co-writer splits for ASCAP Work Registration. ASCAP enforces a hard 50/50
+// split: writers collectively get 50%, publishers collectively get 50%.
+// Every song needs at least one writer row before it can be filed with ASCAP.
+export const songWriters = pgTable('song_writers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  songId: uuid('song_id')
+    .references(() => songs.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name').notNull(),
+  ipi: text('ipi'),
+  role: text('role').default('CA').notNull(),
+  // Numeric stored as string by Drizzle for precision; values are 0-50 representing
+  // the writer's share of the writer-side 50%. All writer rows for a song must sum to 50.
+  sharePercent: numeric('share_percent', { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
 
 export const trackedArtists = pgTable(
   'tracked_artists',

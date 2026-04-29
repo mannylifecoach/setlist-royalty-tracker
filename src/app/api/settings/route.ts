@@ -28,6 +28,11 @@ export const GET = withHandler(async () => {
       defaultStartTimeAmPm: users.defaultStartTimeAmPm,
       defaultEndTimeHour: users.defaultEndTimeHour,
       defaultEndTimeAmPm: users.defaultEndTimeAmPm,
+      ipi: users.ipi,
+      defaultRole: users.defaultRole,
+      publisherName: users.publisherName,
+      publisherIpi: users.publisherIpi,
+      noPublisher: users.noPublisher,
     })
     .from(users)
     .where(eq(users.id, session.user.id));
@@ -48,6 +53,11 @@ export const GET = withHandler(async () => {
       defaultStartTimeAmPm: 'PM',
       defaultEndTimeHour: '11:00',
       defaultEndTimeAmPm: 'PM',
+      ipi: null,
+      defaultRole: 'CA',
+      publisherName: null,
+      publisherIpi: null,
+      noPublisher: false,
     }
   );
 });
@@ -60,40 +70,30 @@ export const PATCH = withHandler(async (request: NextRequest) => {
 
   const result = await parseBody(request, updateSettingsSchema);
   if ('error' in result) return result.error;
-  const {
-    name,
-    firstName,
-    lastName,
-    country,
-    city,
-    stageName,
-    capabilities,
-    pro,
-    role,
-    emailNotifications,
-    defaultStartTimeHour,
-    defaultStartTimeAmPm,
-    defaultEndTimeHour,
-    defaultEndTimeAmPm,
-  } = result.data;
+  const data = result.data;
 
   const [updated] = await db
     .update(users)
     .set({
-      name: name ?? undefined,
-      firstName: firstName ?? undefined,
-      lastName: lastName ?? undefined,
-      country: country ?? undefined,
-      city: city ?? undefined,
-      stageName: stageName ?? undefined,
-      capabilities: capabilities ?? undefined,
-      pro: pro ?? undefined,
-      role: role ?? undefined,
-      emailNotifications: emailNotifications ?? undefined,
-      defaultStartTimeHour: defaultStartTimeHour ?? undefined,
-      defaultStartTimeAmPm: defaultStartTimeAmPm ?? undefined,
-      defaultEndTimeHour: defaultEndTimeHour ?? undefined,
-      defaultEndTimeAmPm: defaultEndTimeAmPm ?? undefined,
+      name: data.name ?? undefined,
+      firstName: data.firstName ?? undefined,
+      lastName: data.lastName ?? undefined,
+      country: data.country ?? undefined,
+      city: data.city ?? undefined,
+      stageName: data.stageName ?? undefined,
+      capabilities: data.capabilities ?? undefined,
+      pro: data.pro ?? undefined,
+      role: data.role ?? undefined,
+      emailNotifications: data.emailNotifications ?? undefined,
+      defaultStartTimeHour: data.defaultStartTimeHour ?? undefined,
+      defaultStartTimeAmPm: data.defaultStartTimeAmPm ?? undefined,
+      defaultEndTimeHour: data.defaultEndTimeHour ?? undefined,
+      defaultEndTimeAmPm: data.defaultEndTimeAmPm ?? undefined,
+      ipi: data.ipi ?? undefined,
+      defaultRole: data.defaultRole ?? undefined,
+      publisherName: data.publisherName ?? undefined,
+      publisherIpi: data.publisherIpi ?? undefined,
+      noPublisher: data.noPublisher ?? undefined,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
@@ -114,5 +114,10 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     defaultStartTimeAmPm: updated.defaultStartTimeAmPm,
     defaultEndTimeHour: updated.defaultEndTimeHour,
     defaultEndTimeAmPm: updated.defaultEndTimeAmPm,
+    ipi: updated.ipi,
+    defaultRole: updated.defaultRole,
+    publisherName: updated.publisherName,
+    publisherIpi: updated.publisherIpi,
+    noPublisher: updated.noPublisher,
   });
 });

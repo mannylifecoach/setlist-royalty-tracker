@@ -141,6 +141,23 @@ export const MUSICBRAINZ_RATE_LIMIT_MS = 1100; // 1 req/sec + buffer
 export const MUSICBRAINZ_USER_AGENT =
   'SetlistRoyaltyTracker/1.0 (https://setlistroyalty.com)';
 
+// CISAC writer/composer role codes used by ASCAP Work Registration.
+// CA (Composer/Author) is the most common — covers writers who do both music + lyrics.
+export const CISAC_ROLES = [
+  { code: 'CA', label: 'composer / author' },
+  { code: 'C', label: 'composer (music only)' },
+  { code: 'A', label: 'author (lyrics only)' },
+  { code: 'AR', label: 'arranger' },
+  { code: 'AD', label: 'adapter' },
+  { code: 'TR', label: 'translator' },
+  { code: 'SR', label: 'sub-author' },
+] as const;
+export type CisacRole = (typeof CISAC_ROLES)[number]['code'];
+
+// ASCAP enforces a hard 50/50 split between writers and publishers. All writer
+// rows for a single song must sum to exactly this value (publishers get the other 50%).
+export const WRITER_SHARE_TOTAL = 50;
+
 // BMI Live attendance ranges
 export const BMI_ATTENDANCE_RANGES = [
   { min: 0, max: 250, label: '0 - 250' },

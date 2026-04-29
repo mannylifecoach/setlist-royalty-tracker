@@ -55,6 +55,14 @@ export const markSubmittedSchema = z.object({
   performanceIds: z.array(uuidParam).min(1, 'performanceIds array must not be empty'),
 });
 
+// IPI numbers are 9-11 digit identifiers assigned by CISAC societies. Stored as
+// text (leading zeros matter) but constrained to digits-only.
+const ipiSchema = z
+  .string()
+  .max(20)
+  .regex(/^\d{9,11}$/, 'IPI must be 9-11 digits')
+  .nullish();
+
 // PATCH /api/settings
 export const updateSettingsSchema = z
   .object({
@@ -74,8 +82,44 @@ export const updateSettingsSchema = z
     defaultStartTimeAmPm: z.string().max(5).nullish(),
     defaultEndTimeHour: z.string().max(10).nullish(),
     defaultEndTimeAmPm: z.string().max(5).nullish(),
+    // ASCAP-specific user fields
+    ipi: ipiSchema,
+    defaultRole: z.string().max(10).nullish(),
+    publisherName: z.string().max(200).nullish(),
+    publisherIpi: ipiSchema,
+    noPublisher: z.boolean().optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
+
+// PATCH /api/songs/[id] — edit metadata on existing songs (added for ASCAP fields,
+// also lets users fix typos in existing IDs).
+export const updateSongSchema = z
+  .object({
+    title: z.string().min(1).max(500).optional(),
+    iswc: z.string().max(20).nullish(),
+    bmiWorkId: z.string().max(50).nullish(),
+    ascapWorkId: z.string().max(50).nullish(),
+    durationSeconds: z.number().int().min(0).max(36000).nullish(),
+    isrc: z.string().max(20).nullish(),
+    alternateTitles: z.array(z.string().max(500)).max(20).nullish(),
+  })
+  .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
+
+// PUT /api/songs/[id]/writers — replace the full writer set for a song atomically.
+// Atomic replace is simpler than per-row CRUD and prevents transient
+// "writers don't sum to 50" states. UI sends the entire array.
+export const songWritersSchema = z.object({
+  writers: z
+    .array(
+      z.object({
+        name: z.string().min(1, 'writer name is required').max(200),
+        ipi: ipiSchema,
+        role: z.string().min(1).max(10),
+        sharePercent: z.number().min(0).max(50),
+      })
+    )
+    .min(1, 'at least one writer is required'),
+});
 
 // POST /api/onboarding
 export const onboardingSchema = z.object({

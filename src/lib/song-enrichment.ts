@@ -7,6 +7,8 @@ export interface SongEnrichmentResult {
   workMbid: string | null;
   recordingMbid: string | null;
   iswc: string | null;
+  isrc: string | null;
+  durationSeconds: number | null;
   source: 'musicbrainz' | 'partial' | 'none';
 }
 
@@ -50,6 +52,8 @@ export async function enrichSongMetadata(
       workMbid: null,
       recordingMbid: null,
       iswc: null,
+      isrc: null,
+      durationSeconds: null,
       source: 'none',
     };
   }
@@ -64,6 +68,8 @@ export async function enrichSongMetadata(
       workMbid: null,
       recordingMbid: null,
       iswc: null,
+      isrc: null,
+      durationSeconds: null,
       source: 'none',
     };
   }
@@ -80,6 +86,12 @@ export async function enrichSongMetadata(
   if (!song.iswc && mbResult.iswc) {
     updates.iswc = mbResult.iswc;
   }
+  if (!song.isrc && mbResult.isrc) {
+    updates.isrc = mbResult.isrc;
+  }
+  if (!song.durationSeconds && mbResult.durationSeconds) {
+    updates.durationSeconds = mbResult.durationSeconds;
+  }
 
   if (Object.keys(updates).length > 1) {
     // More than just updatedAt
@@ -91,13 +103,17 @@ export async function enrichSongMetadata(
   const hasAnyData = !!(
     mbResult.recordingMbid ||
     mbResult.workMbid ||
-    mbResult.iswc
+    mbResult.iswc ||
+    mbResult.isrc ||
+    mbResult.durationSeconds
   );
 
   return {
     workMbid: mbResult.workMbid,
     recordingMbid: mbResult.recordingMbid,
     iswc: mbResult.iswc,
+    isrc: mbResult.isrc,
+    durationSeconds: mbResult.durationSeconds,
     source: hasFullMb ? 'musicbrainz' : hasAnyData ? 'partial' : 'none',
   };
 }
