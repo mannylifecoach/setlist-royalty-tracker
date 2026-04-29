@@ -76,6 +76,7 @@ describe('GET /api/extension/works-registration — happy path', () => {
   beforeEach(() => {
     mockUser.value = { id: USER_ID, email: 'manny@example.com' };
     mockProfile.value = {
+      pro: 'ascap',
       ipi: '123456789',
       defaultRole: 'CA',
       publisherName: 'Manny Music',
@@ -116,6 +117,7 @@ describe('GET /api/extension/works-registration — happy path', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.user).toEqual({
+      pro: 'ascap',
       ipi: '123456789',
       defaultRole: 'CA',
       publisherName: 'Manny Music',
@@ -166,7 +168,7 @@ describe('GET /api/extension/works-registration — empty', () => {
     // db mock simply returns nothing and we trust the SQL — assert the empty
     // payload shape.
     mockUser.value = { id: USER_ID, email: 'manny@example.com' };
-    mockProfile.value = { ipi: '1', defaultRole: 'CA', publisherName: null, publisherIpi: null, noPublisher: true };
+    mockProfile.value = { pro: 'ascap', ipi: '1', defaultRole: 'CA', publisherName: null, publisherIpi: null, noPublisher: true };
     mockSongs.value = [];
     mockWriters.value = [];
     const res = await GET(makeRequest() as never);

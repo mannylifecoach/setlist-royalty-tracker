@@ -52,6 +52,7 @@ export const GET = withHandler(async (request: NextRequest) => {
 
   const [userProfile] = await db
     .select({
+      pro: users.pro,
       ipi: users.ipi,
       defaultRole: users.defaultRole,
       publisherName: users.publisherName,
@@ -109,6 +110,7 @@ export const GET = withHandler(async (request: NextRequest) => {
     {
       songs: songsResp,
       user: {
+        pro: userProfile?.pro ?? null,
         ipi: userProfile?.ipi ?? null,
         defaultRole: userProfile?.defaultRole ?? null,
         publisherName: userProfile?.publisherName ?? null,

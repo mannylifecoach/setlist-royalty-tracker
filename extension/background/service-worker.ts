@@ -63,6 +63,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'FETCH_WORKS_REGISTRATION') {
+    apiFetch('/api/extension/works-registration')
+      .then((data) => sendResponse({ success: true, data }))
+      .catch((err) => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
   if (message.type === 'TEST_CONNECTION') {
     apiFetch('/api/extension/performances?status=confirmed')
       .then(() => sendResponse({ success: true }))

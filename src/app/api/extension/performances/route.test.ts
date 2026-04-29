@@ -93,6 +93,7 @@ describe('GET /api/extension/performances — ASCAP fields', () => {
       defaultStartTimeAmPm: 'PM',
       defaultEndTimeHour: '11:00',
       defaultEndTimeAmPm: 'PM',
+      pro: 'ascap',
       ipi: '123456789',
       defaultRole: 'CA',
       publisherName: 'Manny Music',
@@ -152,6 +153,7 @@ describe('GET /api/extension/performances — ASCAP fields', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.user).toEqual({
+      pro: 'ascap',
       ipi: '123456789',
       defaultRole: 'CA',
       publisherName: 'Manny Music',
@@ -211,6 +213,7 @@ describe('GET /api/extension/performances — empty/edge cases', () => {
     const body = await res.json();
     expect(body.events).toEqual([]);
     expect(body.user).toEqual({
+      pro: null,
       ipi: null,
       defaultRole: null,
       publisherName: null,

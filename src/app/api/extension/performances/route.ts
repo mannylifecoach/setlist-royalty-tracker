@@ -76,12 +76,15 @@ export const GET = withHandler(async (request: NextRequest) => {
 
   // Load user's full profile: time defaults (BMI fallback) + ASCAP fields
   // (ipi, default role, publisher) used by both performance + work-registration auto-fill.
+  // `pro` drives the popup's neutral-state CTA — so it can offer "Open BMI Live"
+  // vs "Open ASCAP OnStage" without a separate /api/settings round-trip.
   const [userProfile] = await db
     .select({
       defaultStartTimeHour: users.defaultStartTimeHour,
       defaultStartTimeAmPm: users.defaultStartTimeAmPm,
       defaultEndTimeHour: users.defaultEndTimeHour,
       defaultEndTimeAmPm: users.defaultEndTimeAmPm,
+      pro: users.pro,
       ipi: users.ipi,
       defaultRole: users.defaultRole,
       publisherName: users.publisherName,
@@ -221,6 +224,7 @@ export const GET = withHandler(async (request: NextRequest) => {
       // ASCAP identity once instead of duplicating per-event. Existing BMI
       // clients can ignore this key safely.
       user: {
+        pro: userProfile?.pro ?? null,
         ipi: userProfile?.ipi ?? null,
         defaultRole: userProfile?.defaultRole ?? null,
         publisherName: userProfile?.publisherName ?? null,
