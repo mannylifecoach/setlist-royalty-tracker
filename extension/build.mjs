@@ -16,7 +16,7 @@ const buildOptions = {
   },
   entryPoints: [
     { in: 'popup/popup.ts', out: 'popup/popup' },
-    { in: 'content/bmi-filler.ts', out: 'content/bmi-filler' },
+    { in: 'content/pro-filler.ts', out: 'content/pro-filler' },
     { in: 'background/service-worker.ts', out: 'background/service-worker' },
     { in: 'options/options.ts', out: 'options/options' },
   ],
@@ -37,7 +37,7 @@ if (watch) {
     'manifest.json',
     'popup/popup.html',
     'popup/popup.css',
-    'content/bmi-filler.css',
+    'content/pro-filler.css',
     'options/options.html',
     'options/options.css',
   ];

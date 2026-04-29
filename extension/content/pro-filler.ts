@@ -1,4 +1,13 @@
-import { FIELD_MAP, findField } from './selectors';
+import { FIELD_MAP, findField } from './bmi-selectors';
+
+// Hostname routing — manifest matches both ols.bmi.com and www.ascap.com.
+// Each PRO has its own form structure, so we branch early. ASCAP fillers
+// land in subsequent cards; for now they no-op so the existing BMI flow
+// is never disturbed when a user happens to load ascap.com with this
+// extension installed.
+const HOSTNAME = window.location.hostname;
+const ON_BMI = HOSTNAME === 'ols.bmi.com';
+const ON_ASCAP = HOSTNAME === 'www.ascap.com';
 
 interface EventData {
   eventKey: string;
@@ -765,6 +774,28 @@ function showSummaryOverlay(event: EventData, overlay: HTMLElement) {
 
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  // ASCAP scaffold — fillers ship in subsequent cards. No-op cleanly so the
+  // popup gets a deterministic "not implemented" response instead of hanging
+  // or firing BMI logic against the wrong DOM.
+  if (ON_ASCAP) {
+    if (message.type === 'GET_CURRENT_STEP') {
+      sendResponse({ step: detectAscapRoute() });
+      return;
+    }
+    sendResponse({
+      success: false,
+      error: 'ASCAP auto-fill not yet implemented',
+    });
+    return;
+  }
+
+  // Other hosts (setlistroyalty.com, vercel preview) — no-op, no BMI/ASCAP
+  // forms to fill. The content script is matched there so we can communicate
+  // with the SRT page when needed, not for form-filling.
+  if (!ON_BMI) {
+    return;
+  }
+
   if (message.type === 'GET_CURRENT_STEP') {
     sendResponse({ step: detectWizardStep() });
     return;
@@ -807,6 +838,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return;
   }
 });
+
+// ASCAP is a hash-routed SPA on www.ascap.com/member-access. Each route is
+// its own form (work registration, onstage performance add, onstage setlist
+// add, etc.). Returns a numeric placeholder for the popup's GET_CURRENT_STEP
+// contract — real route names land when ASCAP fillers ship.
+function detectAscapRoute(): number {
+  const hash = window.location.hash;
+  if (hash.includes('works/online-work-registration')) return 10; // Work Registration
+  if (hash.includes('onstage/setlist/add')) return 20; // OnStage Setlist Add
+  if (hash.includes('onstage/performance/add')) return 21; // OnStage Performance Add
+  return 0; // unknown / not on a fillable route
+}
 
 // Auto-detect which wizard step we're on
 // BMI uses Syncfusion tab components — look for active tab/step indicators
