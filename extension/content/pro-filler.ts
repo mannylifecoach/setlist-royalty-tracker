@@ -1,4 +1,9 @@
 import { FIELD_MAP, findField } from './bmi-selectors';
+import {
+  fillAscapPerformance,
+  fillAscapSetlist,
+  type AscapEventInput,
+} from './ascap-filler';
 
 // Hostname routing — manifest matches both ols.bmi.com and www.ascap.com.
 // Each PRO has its own form structure, so we branch early. ASCAP fillers
@@ -666,6 +671,46 @@ function createOverlay(): HTMLElement {
   return overlay;
 }
 
+// ASCAP overlay renderer. Different from BMI's because ASCAP results carry
+// step + ok + detail (BMI uses field + status). Mirrors the same visual style.
+function showAscapResults(
+  title: string,
+  results: { step: string; ok: boolean; detail?: string }[],
+  overlay: HTMLElement
+) {
+  const ok = results.filter((r) => r.ok);
+  const failed = results.filter((r) => !r.ok);
+
+  overlay.innerHTML = `
+    <div class="srt-overlay-header">
+      <span class="srt-overlay-title">${title}</span>
+      <button class="srt-overlay-close" id="srt-close">&times;</button>
+    </div>
+    <div class="srt-overlay-body">
+      ${ok.length > 0
+        ? `<div class="srt-status-group srt-success">
+            <span class="srt-icon">&#10003;</span> ${ok.length} step${ok.length !== 1 ? 's' : ''} filled
+          </div>`
+        : ''}
+      ${failed.length > 0
+        ? `<div class="srt-status-group srt-warning">
+            <span class="srt-icon">&#9888;</span> Needs attention:
+            <ul style="margin: 4px 0 0 18px; padding: 0;">
+              ${failed.map((r) => `<li>${r.step}${r.detail ? ` — ${r.detail}` : ''}</li>`).join('')}
+            </ul>
+          </div>`
+        : ''}
+      <div class="srt-status-group srt-info" style="margin-top:8px">
+        <span class="srt-icon">&#8505;</span> Review the form, complete reCAPTCHA, then click Submit.
+      </div>
+    </div>
+  `;
+
+  overlay.querySelector('#srt-close')?.addEventListener('click', () => {
+    overlay.remove();
+  });
+}
+
 function showFillResults(results: FillResult[], overlay: HTMLElement) {
   const filled = results.filter((r) => r.status === 'filled');
   const notFound = results.filter((r) => r.status === 'not_found');
@@ -774,17 +819,40 @@ function showSummaryOverlay(event: EventData, overlay: HTMLElement) {
 
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  // ASCAP scaffold — fillers ship in subsequent cards. No-op cleanly so the
-  // popup gets a deterministic "not implemented" response instead of hanging
-  // or firing BMI logic against the wrong DOM.
+  // ASCAP routes — OnStage Performance + Setlist Add are wired here. Work
+  // Registration auto-fill (FILL_ASCAP_WORK_REG) lands in card #18 and still
+  // returns "not implemented" so the popup gets a deterministic response.
   if (ON_ASCAP) {
     if (message.type === 'GET_CURRENT_STEP') {
       sendResponse({ step: detectAscapRoute() });
       return;
     }
+
+    if (message.type === 'FILL_ASCAP_PERFORMANCE') {
+      const overlay = createOverlay();
+      const event = message.event as AscapEventInput;
+      (async () => {
+        const results = await fillAscapPerformance(event);
+        showAscapResults('OnStage Performance Auto-Fill', results, overlay);
+        sendResponse({ success: true, results });
+      })();
+      return true;
+    }
+
+    if (message.type === 'FILL_ASCAP_SETLIST') {
+      const overlay = createOverlay();
+      const event = message.event as AscapEventInput;
+      (async () => {
+        const results = await fillAscapSetlist(event);
+        showAscapResults('OnStage Setlist Auto-Fill', results, overlay);
+        sendResponse({ success: true, results });
+      })();
+      return true;
+    }
+
     sendResponse({
       success: false,
-      error: 'ASCAP auto-fill not yet implemented',
+      error: 'ASCAP auto-fill not yet implemented for this route',
     });
     return;
   }
