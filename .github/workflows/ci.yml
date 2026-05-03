@@ -36,10 +36,6 @@ jobs:
     name: npm audit (high)
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # NOTE: report-only until existing high/critical vulns are cleaned up.
-    # Flip `continue-on-error` to false to make this a gating check.
-    # Tracking card: "[Infra] Tighten npm audit CI gate to fail on high".
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
