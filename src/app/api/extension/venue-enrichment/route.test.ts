@@ -90,6 +90,25 @@ describe('GET /api/extension/venue-enrichment — rate limiting', () => {
   });
 });
 
+describe('GET /api/extension/venue-enrichment — upstream failures', () => {
+  it('returns 200 with { found: false } when lookupVenue throws (catch path)', async () => {
+    mockLookup.mockRejectedValueOnce(new Error('upstream 500'));
+    const res = await GET(makeRequest() as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.found).toBe(false);
+    expect(body.error).toBe('lookup failed');
+  });
+
+  it('returns the lookup payload as-is when lookupVenue resolves with { found: false }', async () => {
+    mockLookup.mockResolvedValueOnce({ found: false });
+    const res = await GET(makeRequest() as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ found: false });
+  });
+});
+
 describe('GET /api/extension/venue-enrichment — input validation', () => {
   it('returns 400 when name is missing', async () => {
     const req = {

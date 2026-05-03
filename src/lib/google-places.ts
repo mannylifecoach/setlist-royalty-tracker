@@ -112,7 +112,7 @@ const GOOGLE_TO_BMI: Record<string, string> = {
   synagogue: '15',
 };
 
-function mapGoogleTypeToBmi(types: string[] | undefined): { code: string; label: string } {
+export function mapGoogleTypeToBmi(types: string[] | undefined): { code: string; label: string } {
   if (!types) return { code: '1', label: BMI_VENUE_TYPES['1'] };
   for (const t of types) {
     const code = GOOGLE_TO_BMI[t];
