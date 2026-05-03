@@ -64,3 +64,31 @@ export const PATCH = withHandler(async (
 
   return NextResponse.json(updated);
 });
+
+export const DELETE = withHandler(async (
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const idCheck = validateUuid(id);
+  if ('error' in idCheck) return idCheck.error;
+
+  // Ownership scoped in the WHERE + .returning() — wrong-user calls delete
+  // nothing and return 404. performance_status_history rows cascade via the
+  // existing onDelete: 'cascade' FK in schema.ts.
+  const deleted = await db
+    .delete(performances)
+    .where(and(eq(performances.id, id), eq(performances.userId, session.user.id)))
+    .returning({ id: performances.id });
+
+  if (deleted.length === 0) {
+    return NextResponse.json({ error: 'performance not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ deleted: true, id });
+});

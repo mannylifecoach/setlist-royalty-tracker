@@ -16,7 +16,7 @@
 //      of the mutation itself, so wrong-user calls become idempotent no-ops
 //      (acceptable; the resource is unchanged because nothing matched).
 //
-// Routes covered (10 method-route pairs):
+// Routes covered (12 method-route pairs):
 //   GET    /api/songs/[id]/writers
 //   PUT    /api/songs/[id]/writers
 //   PATCH  /api/songs/[id]
@@ -25,6 +25,7 @@
 //   DELETE /api/songs/[id]/artists
 //   POST   /api/songs/[id]/enrich-metadata
 //   PATCH  /api/performances/[id]
+//   DELETE /api/performances/[id]
 //   POST   /api/performances/[id]/enrich-capacity
 //   POST   /api/artists/[id]/resolve
 //   DELETE /api/artists/[id]
@@ -195,6 +196,18 @@ describe('IDOR: returns 404 when wrong-user accesses a resource', () => {
     expect(res.status).toBe(404);
   });
 
+  it('DELETE /api/performances/[id]', async () => {
+    const { DELETE } = await import('@/app/api/performances/[id]/route');
+    const res = await DELETE(
+      mkRequest() as never,
+      paramsFor(VICTIM_RESOURCE_ID) as never
+    );
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    // Negative leak check: 404 must not echo the requested id.
+    expect(JSON.stringify(body)).not.toContain(VICTIM_RESOURCE_ID);
+  });
+
   it('POST /api/performances/[id]/enrich-capacity', async () => {
     const { POST } = await import('@/app/api/performances/[id]/enrich-capacity/route');
     const res = await POST(
@@ -267,6 +280,7 @@ describe('Unauthenticated baseline (sanity check that auth gate runs first)', ()
     auth.auth.mockResolvedValueOnce(null);
     auth.auth.mockResolvedValueOnce(null);
     auth.auth.mockResolvedValueOnce(null);
+    auth.auth.mockResolvedValueOnce(null);
 
     const cases = [
       [(await import('@/app/api/songs/[id]/writers/route')).GET, 'GET writers'],
@@ -277,6 +291,7 @@ describe('Unauthenticated baseline (sanity check that auth gate runs first)', ()
       [(await import('@/app/api/songs/[id]/artists/route')).DELETE, 'DELETE song-artist'],
       [(await import('@/app/api/songs/[id]/enrich-metadata/route')).POST, 'POST enrich-metadata'],
       [(await import('@/app/api/performances/[id]/route')).PATCH, 'PATCH performance'],
+      [(await import('@/app/api/performances/[id]/route')).DELETE, 'DELETE performance'],
       [(await import('@/app/api/performances/[id]/enrich-capacity/route')).POST, 'POST enrich-capacity'],
       [(await import('@/app/api/artists/[id]/route')).DELETE, 'DELETE artist'],
       [(await import('@/app/api/artists/[id]/resolve/route')).POST, 'POST resolve-artist'],

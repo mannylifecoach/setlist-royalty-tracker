@@ -60,7 +60,22 @@ export default function PerformanceDetailPage({
   const [userPro, setUserPro] = useState<'bmi' | 'ascap'>('bmi');
   const [saving, setSaving] = useState(false);
   const [reverseTarget, setReverseTarget] = useState<PerformanceStatus | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const router = useRouter();
+
+  async function handleDelete() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/performances/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push('/performances');
+      } else {
+        setSaving(false);
+      }
+    } catch {
+      setSaving(false);
+    }
+  }
 
   const loadPerformance = useCallback(async function loadPerformance() {
     const res = await fetch('/api/performances');
@@ -410,6 +425,70 @@ export default function PerformanceDetailPage({
           }}
         />
       )}
+
+      {/* Hard delete — separated visually from the undo row because it's irreversible. */}
+      <div className="pt-2 border-t border-border-subtle">
+        <button
+          onClick={() => setDeleteOpen(true)}
+          disabled={saving}
+          className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
+        >
+          delete permanently
+        </button>
+      </div>
+
+      {deleteOpen && (
+        <DeleteConfirmDialog
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={async () => {
+            setDeleteOpen(false);
+            await handleDelete();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function DeleteConfirmDialog({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="card p-5 max-w-[420px] space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-[13px] text-text font-medium">
+          delete this performance?
+        </div>
+        <div className="text-[11px] text-text-secondary leading-[1.5]">
+          This permanently removes the performance row and its full status
+          history. It cannot be undone. If you might want it back later, mark
+          it ineligible instead.
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onConfirm}
+            className="text-[12px] px-3 py-1.5 rounded-[2px] border border-status-expired/60 text-status-expired hover:bg-status-expired/10 transition-colors"
+          >
+            yes, delete
+          </button>
+          <button
+            onClick={onCancel}
+            className="text-[11px] text-text-muted hover:text-text transition-colors px-3"
+          >
+            cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
