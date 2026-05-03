@@ -1,0 +1,75 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Pacific/Honolulu
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+      prefix-development: deps-dev
+      include: scope
+    groups:
+      production-patches:
+        dependency-type: production
+        update-types:
+          - patch
+      development-patches:
+        dependency-type: development
+        update-types:
+          - patch
+          - minor
+    labels:
+      - dependencies
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next-auth"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: /extension
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Pacific/Honolulu
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: deps(extension)
+      include: scope
+    groups:
+      extension-patches:
+        update-types:
+          - patch
+          - minor
+    labels:
+      - dependencies
+      - extension
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Pacific/Honolulu
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-patches:
+        update-types:
+          - patch
+          - minor
+    labels:
+      - dependencies
+      - ci

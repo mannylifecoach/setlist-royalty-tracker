@@ -1,0 +1,37 @@
+name: Dependabot auto-merge
+
+on: pull_request_target
+
+permissions:
+  pull-requests: write
+  contents: write
+
+# Auto-merge Dependabot PRs that are patch-only AND pass CI.
+# - Major + minor stay manual (review + merge by hand).
+# - For this to fire, the repo needs:
+#   1. Settings → General → "Allow auto-merge" enabled.
+#   2. Branch protection on main with "Require status checks to pass"
+#      including the `Lint + test` job from ci.yml.
+#   gh pr merge --auto then waits for those checks before merging.
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve + auto-merge patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review --approve "$PR_URL" \
+            --body "Auto-approved: patch-level dependency update."
+          gh pr merge --auto --squash "$PR_URL"
