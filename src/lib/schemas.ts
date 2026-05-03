@@ -160,6 +160,21 @@ export const setlistfmSearchSchema = z.object({
   q: z.string().min(1, 'q parameter is required').max(200),
 });
 
+// POST /api/performances — manual entry of a show that setlist.fm missed.
+// Creates one performance row per song in songIds (mirroring how the scanner
+// and Serato import create one row per matched song).
+export const createManualPerformanceSchema = z.object({
+  eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDate must be YYYY-MM-DD'),
+  artistId: uuidParam,
+  songIds: z.array(uuidParam).min(1, 'select at least one song').max(50),
+  venueName: z.string().min(1, 'venueName is required').max(500),
+  venueCity: z.string().min(1, 'venueCity is required').max(200),
+  venueState: z.string().max(100).nullish(),
+  venueCountry: z.string().max(100).nullish(),
+  eventName: z.string().max(500).nullish(),
+  tourName: z.string().max(500).nullish(),
+});
+
 // POST /api/import/serato — form fields (file is handled separately)
 export const seratoImportSchema = z.object({
   venueName: z.string().min(1, 'venueName is required').max(500),

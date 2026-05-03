@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
 import { analytics } from '@/lib/analytics';
@@ -96,6 +97,9 @@ export default function PerformancesPage() {
         <button onClick={handleScan} disabled={scanning} className="btn">
           {scanning ? 'scanning...' : 'scan now'}
         </button>
+        <Link href="/performances/new" className="text-[12px] text-text-muted hover:text-text-secondary">
+          + add manually
+        </Link>
         {scanResult && (
           <span className="text-[12px] text-text-secondary">
             scanned {scanResult.scanned} setlists —{' '}
