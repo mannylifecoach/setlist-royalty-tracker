@@ -108,11 +108,14 @@ function selectorMatchesAny(selector: string, fixture: FixtureEl[]): boolean {
 }
 
 function loadFixture(name: string): FixtureEl[] {
-  // Sidecars live next to the inspection doc in the user's vault.
+  // Fixtures live in extension/__fixtures__/ inside the SRT repo so CI can
+  // find them. Originals are captured into the user's Obsidian vault during
+  // beta-test inspection sessions; the runbook (Projects/SRT - DOM Snapshot
+  // Refresh Runbook.md) walks through copying them in here.
   const path = join(
     process.cwd(),
-    '..',
-    'Projects',
+    'extension',
+    '__fixtures__',
     `.ascap_${name}_dom.json`
   );
   return JSON.parse(readFileSync(path, 'utf8')) as FixtureEl[];
