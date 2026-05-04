@@ -177,6 +177,70 @@ export async function sendWelcomeEmail(to: string, artistName: string) {
   });
 }
 
+export async function sendBmiSelectorHealthAlert(args: {
+  failures: Array<{ key: string; step: string; selector: unknown }>;
+  totalFields: number;
+  resolvedFields: number;
+  fixtureCapturedDate: string;
+  checkedAt: string;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'manny.alboroto@gmail.com';
+  const subject = `🚨 SRT BMI selector health: ${args.failures.length} failure${args.failures.length === 1 ? '' : 's'}`;
+
+  const failureRows = args.failures
+    .map(
+      (f) =>
+        `<tr><td style="padding:8px 12px;border-bottom:1px solid #444;color:#fca5a5;font-family:monospace;font-size:12px;">${f.key}</td><td style="padding:8px 12px;border-bottom:1px solid #444;color:#aaa;font-size:11px;">${f.step}</td><td style="padding:8px 12px;border-bottom:1px solid #444;color:#aaa;font-family:monospace;font-size:11px;">${escapeHtml(JSON.stringify(f.selector))}</td></tr>`
+    )
+    .join('');
+
+  const content = `
+    <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;">
+      ${args.failures.length} of ${args.totalFields} BMI selector${args.totalFields === 1 ? '' : 's'} failed to resolve against the captured fixture.
+    </p>
+    <p style="margin:0 0 16px 0;color:#aaaaaa;font-size:12px;">
+      possible causes: (1) we broke our own selectors via a refactor, (2) the cached fixture is stale and BMI changed their wizard. fixture last captured ${args.fixtureCapturedDate}; if fix isn't obvious, run the snapshot refresh runbook.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#252525;border:1px solid #444;margin-bottom:24px;">
+      <tr><td style="padding:8px 12px;background:#333;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:1px;">key</td><td style="padding:8px 12px;background:#333;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:1px;">step</td><td style="padding:8px 12px;background:#333;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:1px;">selector</td></tr>
+      ${failureRows}
+    </table>
+    <p style="margin:0;color:#999;font-size:11px;">checked at ${args.checkedAt} · ${args.resolvedFields}/${args.totalFields} resolved</p>
+  `;
+
+  const text = `SRT BMI selector health: ${args.failures.length} failure(s)
+
+${args.failures.length} of ${args.totalFields} selectors failed to resolve.
+Fixture last captured: ${args.fixtureCapturedDate}
+
+Possible causes:
+  1. We broke our own selectors via a refactor
+  2. The cached fixture is stale and BMI changed their wizard
+
+Failures:
+${args.failures.map((f) => `  - ${f.key} (${f.step}): ${JSON.stringify(f.selector)}`).join('\n')}
+
+Checked at ${args.checkedAt} · ${args.resolvedFields}/${args.totalFields} resolved
+`;
+
+  await getResend().emails.send({
+    from: process.env.EMAIL_FROM || 'noreply@example.com',
+    to: adminEmail,
+    subject,
+    html: layout(content),
+    text,
+  });
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function sendNewPerformancesEmail(
   to: string,
   artistName: string,

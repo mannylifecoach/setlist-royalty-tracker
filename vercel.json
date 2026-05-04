@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/expiration-check",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/bmi-health-check",
+      "schedule": "0 18 * * *"
     }
   ]
 }
