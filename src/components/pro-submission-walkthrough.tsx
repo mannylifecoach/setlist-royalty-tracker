@@ -223,6 +223,9 @@ export function useProWalkthrough() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const dismissed = localStorage.getItem(STORAGE_KEY);
+    // setState-in-effect is correct here — localStorage is browser-only,
+    // so the initial render can't know whether to show the walkthrough.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!dismissed) setShouldShow(true);
   }, []);
 

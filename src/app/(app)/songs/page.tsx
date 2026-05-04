@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { analytics } from '@/lib/analytics';
 import { songviewSearchUrl } from '@/lib/songview';
 
@@ -212,16 +213,16 @@ export default function SongsPage() {
                 {scanResult.newPerformances} new performance{scanResult.newPerformances !== 1 ? 's' : ''} found
               </span>
               {' — '}
-              <a href="/performances" className="text-status-discovered hover:underline">
+              <Link href="/performances" className="text-status-discovered hover:underline">
                 view performances
-              </a>
+              </Link>
             </>
           ) : (
             <>
               no new performances found.{' '}
               <span className="text-text-muted">
                 setlist.fm may not have song data for recent shows yet — try{' '}
-                <a href="/performances" className="text-status-discovered hover:underline">scanning again</a>
+                <Link href="/performances" className="text-status-discovered hover:underline">scanning again</Link>
                 {' '}later.
               </span>
             </>
@@ -236,9 +237,9 @@ export default function SongsPage() {
             <>
               link songs to artists below.{' '}
               <span className="text-status-confirmed">ready to scan!</span>{' '}
-              <a href="/performances" className="text-status-discovered hover:underline">
+              <Link href="/performances" className="text-status-discovered hover:underline">
                 go to performances and hit &quot;scan now&quot;
-              </a>
+              </Link>
               {' '}to find matches on setlist.fm.
             </>
           ) : (

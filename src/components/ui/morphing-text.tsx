@@ -14,8 +14,11 @@ export function MorphingText({ className = "" }: { className?: string }) {
   const prevTimeRef = useRef(0)
   const [filterId, setFilterId] = useState("")
 
-  // generate filter ID on client only to avoid hydration mismatch
+  // generate filter ID on client only to avoid hydration mismatch.
+  // setState-in-effect is the correct pattern here — we explicitly need
+  // a different ID value than what was rendered on the server.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilterId(`liquid-${Math.random().toString(36).slice(2, 8)}`)
   }, [])
 

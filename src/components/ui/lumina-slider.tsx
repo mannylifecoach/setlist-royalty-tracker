@@ -1,12 +1,18 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import Link from "next/link"
 import { MorphingText } from "./morphing-text"
 
 declare global {
   interface Window {
+    // Three.js + GSAP are loaded as global script tags at runtime; their
+    // own type packages are heavy and not worth the build cost for this
+    // single component. Casting to `any` is the pragmatic call.
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     THREE: any
     gsap: any
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 }
 
@@ -324,14 +330,19 @@ export function LuminaSlider() {
   const isTransitioning = useRef(false)
   const currentSlideRef = useRef(0)
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const progressStartRef = useRef(Date.now())
+  // initialized to 0; the real start time is set in resetAutoTimer when
+  // the auto-timer first fires. Avoids calling Date.now() during render.
+  const progressStartRef = useRef(0)
   const [progressPct, setProgressPct] = useState(0)
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   const pausedAtRef = useRef(0) // elapsed ms when paused
-  const sceneRef = useRef<{
-    renderer: any; scene: any; camera: any; uniforms: any; animationId: number | null
-  }>({ renderer: null, scene: null, camera: null, uniforms: null, animationId: null })
+  // Three.js objects — proper types would require the @types/three package
+  // which is heavy. Pragmatic cast for this single visual component.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sceneRef = useRef<{ renderer: any; scene: any; camera: any; uniforms: any; animationId: number | null }>(
+    { renderer: null, scene: null, camera: null, uniforms: null, animationId: null }
+  )
 
   // load scripts
   useEffect(() => {
@@ -525,6 +536,9 @@ export function LuminaSlider() {
       if (pct >= 1) {
         const next = currentSlideRef.current + 1
         if (next < SLIDES.length) {
+          // navigateToSlide is declared below; intentional circular reference
+          // resolved at runtime — see the long-standing pattern note above.
+          // eslint-disable-next-line react-hooks/immutability
           navigateToSlide(next)
         } else {
           if (autoTimerRef.current) clearInterval(autoTimerRef.current)
@@ -800,10 +814,10 @@ export function LuminaSlider() {
 
       {/* branding — top left */}
       <div className="absolute top-4 left-6 md:top-8 md:left-8 lg:top-12 lg:left-14 z-20">
-        <a href="/" className="flex flex-col items-start hover:opacity-70 transition-opacity">
+        <Link href="/" className="flex flex-col items-start hover:opacity-70 transition-opacity">
           <MorphingText className="text-[24px] md:text-[28px]" />
           <span className="text-[12px] md:text-[13px] tracking-[-0.3px] text-white" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.9)" }}>setlist royalty tracker</span>
-        </a>
+        </Link>
         <div className="text-[9px] md:text-[10px] tracking-[0.5px] mt-[2px]" style={{ color: "#aaa", textShadow: "0 1px 6px rgba(0,0,0,0.9)" }}>investor preview</div>
       </div>
 
