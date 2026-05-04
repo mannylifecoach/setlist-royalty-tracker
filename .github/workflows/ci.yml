@@ -32,6 +32,12 @@ jobs:
 
       - run: npm test
 
+      - name: Extension typecheck
+        working-directory: extension
+        run: |
+          npm ci
+          npx tsc --noEmit
+
   audit:
     name: npm audit (high)
     runs-on: ubuntu-latest

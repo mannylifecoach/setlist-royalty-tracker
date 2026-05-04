@@ -136,9 +136,14 @@ export const ALL_FIELD_MAPS = {
 
 // jQuery is loaded by ASCAP's own page. Access it via window so we can integrate
 // with bootstrap-select's `selectpicker` plugin without bundling our own jQuery.
-type JQueryLike = {
-  (el: Element): { selectpicker: (cmd: string, val?: unknown) => JQueryLike; trigger: (evt: string) => JQueryLike };
+// JQueryChain is the object returned by `$(el)` — both `selectpicker` and
+// `trigger` return another JQueryChain so calls can be chained as
+// `$(el).selectpicker('val', x).trigger('change')`.
+type JQueryChain = {
+  selectpicker: (cmd: string, val?: unknown) => JQueryChain;
+  trigger: (evt: string) => JQueryChain;
 };
+type JQueryLike = (el: Element) => JQueryChain;
 
 function getJQuery(): JQueryLike | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

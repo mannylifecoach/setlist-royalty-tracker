@@ -655,7 +655,11 @@ async function fillSetlist(
     }
   }
 
-  if (searchEl) setInputValue(searchEl, '');
+  // Re-resolve outside the loop — the per-iteration `const searchEl` was
+  // block-scoped to the for body. BMI may also have replaced the DOM node
+  // between iterations, so a fresh lookup is the right call regardless.
+  const finalSearchEl = findField(FIELD_MAP.songSearch) as HTMLInputElement | null;
+  if (finalSearchEl) setInputValue(finalSearchEl, '');
   return { matched, notFound };
 }
 
