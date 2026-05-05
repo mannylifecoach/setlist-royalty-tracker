@@ -187,10 +187,14 @@ describe('POST /api/performances — happy path', () => {
     expect(rows[0].tourName).toBe('Spring 26');
   });
 
-  it('calculates expiresAt 9 months out from eventDate (BMI deadline)', async () => {
+  it('calculates expiresAt per BMI quarterly window (eventDate Apr 15 → Sep 30 same year)', async () => {
+    // validBody.eventDate is '2026-04-15' — Q2 perf → Sep 30 same year per
+    // calculateExpirationDate's quarterly mapping (verified 2026-05-04 against
+    // BMI Live deadline pages). The prior implementation incorrectly returned
+    // 2027-01-15 (+9 months); the new mapping is window-aware and conservative.
     await POST(makeRequest(validBody) as never);
     const rows = mockInsertedRows.value as Array<Record<string, unknown>>;
-    expect(rows[0].expiresAt).toBe('2027-01-15');
+    expect(rows[0].expiresAt).toBe('2026-09-30');
   });
 
   it('handles missing user defaults without crashing', async () => {

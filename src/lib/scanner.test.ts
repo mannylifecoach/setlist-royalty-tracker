@@ -181,62 +181,99 @@ describe('parseSetlistFmDate', () => {
 // ---------------------------------------------------------------------------
 // Pure functions: calculateExpirationDate
 // ---------------------------------------------------------------------------
-describe('calculateExpirationDate', () => {
-  it('adds 9 months to a date', () => {
-    expect(calculateExpirationDate('2026-01-15')).toBe('2026-10-15');
+describe('calculateExpirationDate (BMI quarterly tracking-window deadlines)', () => {
+  // BMI Live's actual rule (verified 2026-05-04 against bmi.com deadline pages):
+  // performances fall into overlapping 6-month tracking windows; the filing
+  // deadline is 3 months after the window closes. SRT shows the EARLIER of the
+  // two valid deadlines for each performance — most conservative warning.
+  //
+  // Per-quarter mapping:
+  //   Q1 (Jan-Mar) → Jun 30 same year
+  //   Q2 (Apr-Jun) → Sep 30 same year
+  //   Q3 (Jul-Sep) → Dec 31 same year
+  //   Q4 (Oct-Dec) → Mar 31 NEXT year
+
+  describe('Q1 performances (Jan-Mar) → Jun 30 same year', () => {
+    it('Jan 1 → Jun 30 same year (max ~6 months filing window)', () => {
+      expect(calculateExpirationDate('2026-01-01')).toBe('2026-06-30');
+    });
+    it('Jan 15 → Jun 30 same year', () => {
+      expect(calculateExpirationDate('2026-01-15')).toBe('2026-06-30');
+    });
+    it('Feb 29 (leap year) → Jun 30 same year', () => {
+      expect(calculateExpirationDate('2024-02-29')).toBe('2024-06-30');
+    });
+    it('Mar 31 → Jun 30 same year (min ~3 months filing window)', () => {
+      expect(calculateExpirationDate('2026-03-31')).toBe('2026-06-30');
+    });
   });
 
-  it('rolls over to next year', () => {
-    // JS Date: June 1 + 9 months — verify it lands in March 2027
-    const result = calculateExpirationDate('2026-06-01');
-    expect(result).toMatch(/^2027-03-/);
+  describe('Q2 performances (Apr-Jun) → Sep 30 same year', () => {
+    it('Apr 1 → Sep 30 same year', () => {
+      expect(calculateExpirationDate('2026-04-01')).toBe('2026-09-30');
+    });
+    it('May 15 → Sep 30 same year', () => {
+      expect(calculateExpirationDate('2025-05-15')).toBe('2025-09-30');
+    });
+    it('Jun 30 → Sep 30 same year', () => {
+      expect(calculateExpirationDate('2026-06-30')).toBe('2026-09-30');
+    });
   });
 
-  it('handles month-end edge case (Jan 31 + 9 months)', () => {
-    expect(calculateExpirationDate('2026-01-31')).toBe('2026-10-31');
+  describe('Q3 performances (Jul-Sep) → Dec 31 same year', () => {
+    it('Jul 1 → Dec 31 same year', () => {
+      expect(calculateExpirationDate('2026-07-01')).toBe('2026-12-31');
+    });
+    it('Aug 15 → Dec 31 same year', () => {
+      expect(calculateExpirationDate('2025-08-15')).toBe('2025-12-31');
+    });
+    it('Sep 30 → Dec 31 same year', () => {
+      expect(calculateExpirationDate('2026-09-30')).toBe('2026-12-31');
+    });
   });
 
-  it('handles leap year edge case', () => {
-    // May 29 + 9 months → Feb 2026 (not a leap year)
-    const result = calculateExpirationDate('2025-05-29');
-    expect(result).toMatch(/^2026-0[23]-/);
+  describe('Q4 performances (Oct-Dec) → Mar 31 NEXT year', () => {
+    it('Oct 1 → Mar 31 next year', () => {
+      expect(calculateExpirationDate('2025-10-01')).toBe('2026-03-31');
+    });
+    it('Nov 15 → Mar 31 next year', () => {
+      expect(calculateExpirationDate('2025-11-15')).toBe('2026-03-31');
+    });
+    it('Dec 15 → Mar 31 next year (matches the verified BMI Jul-Dec→Mar 31 deadline)', () => {
+      expect(calculateExpirationDate('2025-12-15')).toBe('2026-03-31');
+    });
+    it('Dec 31 → Mar 31 next year', () => {
+      expect(calculateExpirationDate('2026-12-31')).toBe('2027-03-31');
+    });
   });
 
-  it('handles performance on first of month', () => {
-    // Note: JS Date timezone handling can shift by a day in some TZs
-    const result = calculateExpirationDate('2026-03-01');
-    expect(result).toMatch(/^2026-(11-29|11-30|12-01)$/);
+  describe('format and idempotency', () => {
+    it('returns YYYY-MM-DD format', () => {
+      const result = calculateExpirationDate('2026-07-15');
+      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('is idempotent across repeated calls', () => {
+      const input = '2026-04-12';
+      expect(calculateExpirationDate(input)).toBe(calculateExpirationDate(input));
+    });
+
+    it('produces an expired date for a 1-year-old performance', () => {
+      const result = calculateExpirationDate('2025-01-15');
+      // Q1 2025 perf → Jun 30 2025, which is in the past
+      expect(result).toBe('2025-06-30');
+      expect(new Date(result).getTime()).toBeLessThan(Date.now());
+    });
   });
 
-  it('handles performance at end of December (rolls into September)', () => {
-    expect(calculateExpirationDate('2026-12-15')).toBe('2027-09-15');
-  });
-
-  it('handles Feb 29 on a leap year', () => {
-    // Feb 29 2024 + 9 months → Nov 29 2024
-    expect(calculateExpirationDate('2024-02-29')).toBe('2024-11-29');
-  });
-
-  it('normalizes dates that roll into non-existent days (May 31 + 9mo)', () => {
-    // May 31 + 9 months: Feb doesn't have 31, JS Date normalizes forward
-    const result = calculateExpirationDate('2025-05-31');
-    expect(result).toMatch(/^2026-0[23]-/);
-  });
-
-  it('returns YYYY-MM-DD format', () => {
-    const result = calculateExpirationDate('2026-07-15');
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
-
-  it('is idempotent across repeated calls', () => {
-    const input = '2026-04-12';
-    expect(calculateExpirationDate(input)).toBe(calculateExpirationDate(input));
-  });
-
-  it('produces an expired date for a 1-year-old performance', () => {
-    const result = calculateExpirationDate('2025-01-15');
-    expect(result).toBe('2025-10-15');
-    expect(new Date(result).getTime()).toBeLessThan(Date.now());
+  describe('regression: nobody gets the prior false 9-month deadline', () => {
+    // Pre-fix bug: code added +9 months to event date, telling users they had
+    // until ~Oct 15 for a Jan 15 performance. Actual BMI deadline is Jun 30.
+    it('Jan 15 perf NEVER returns "9 months later" (Oct 15) — that was the bug', () => {
+      const result = calculateExpirationDate('2026-01-15');
+      expect(result).not.toBe('2026-10-15');
+      expect(result).toBe('2026-06-30');
+    });
   });
 });
 

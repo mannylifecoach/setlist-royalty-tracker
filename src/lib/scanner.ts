@@ -103,7 +103,11 @@ async function scanArtistForUser(
       .map((ls) => [ls.song.workMbid as string, ls.song])
   );
 
-  // 9 months ago cutoff
+  // Stale-data cutoff: don't bother with setlist.fm rows older than 9 months.
+  // BMI's filing windows mean any performance more than ~6 months old is
+  // already past its deadline (per calculateExpirationDate's quarterly logic),
+  // but we keep 9 months of margin so users can still SEE recently-expired
+  // rows on their dashboard rather than having them silently disappear.
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 9);
 

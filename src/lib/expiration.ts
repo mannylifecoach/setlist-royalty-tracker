@@ -6,8 +6,12 @@ import { sendExpirationWarningEmail } from './email';
 const WARNING_THRESHOLDS_DAYS = [30, 14, 7] as const;
 
 /**
- * Check for performances approaching their 9-month expiration deadline
+ * Check for performances approaching their BMI Live filing deadline
  * and send warning emails to affected users.
+ *
+ * Deadlines are calculated by `calculateExpirationDate()` based on BMI's
+ * actual quarterly tracking windows (verified 2026-05-04) — not a flat
+ * 9-month rule. See setlistfm.ts for the full quarter→deadline mapping.
  *
  * Runs daily. Sends one email per user per threshold crossed
  * (e.g. "5 performances expiring in 14 days").

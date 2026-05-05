@@ -106,9 +106,46 @@ export function parseSetlistFmDate(dateStr: string): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Calculate the BMI Live filing deadline for a given performance date.
+ *
+ * BMI Live runs biannual (overlapping) tracking windows, NOT a rolling 9-month
+ * deadline. Each performance falls into TWO 6-month tracking windows; the filing
+ * deadline is exactly 3 months after each window's close. Verified 2026-05-04
+ * against BMI Live deadline pages — Jul-Dec 2023 perfs → Mar 31 2024; Oct 2025
+ * - Mar 2026 perfs → Jun 30 2026.
+ *
+ * SRT shows the EARLIER of the two valid deadlines for each performance — the
+ * conservative framing. Worst case: user files earlier than strictly necessary.
+ * Best case: avoids the prior bug where users believed they had 9 months when
+ * BMI's actual practical window for them was much shorter (Mckay's 2026-05-03
+ * beta-test feedback drove this fix).
+ *
+ * Per-quarter mapping:
+ *   Q1 perfs (Jan-Mar) → Jun 30 same year       (3-6 month filing window)
+ *   Q2 perfs (Apr-Jun) → Sep 30 same year       (3-6 month filing window)
+ *   Q3 perfs (Jul-Sep) → Dec 31 same year       (3-6 month filing window)
+ *   Q4 perfs (Oct-Dec) → Mar 31 NEXT year       (3-6 month filing window)
+ */
 export function calculateExpirationDate(eventDate: string): string {
-  const [year, month, day] = eventDate.split('-').map(Number);
-  const d = new Date(Date.UTC(year, month - 1, day));
-  d.setUTCMonth(d.getUTCMonth() + 9);
+  const [year, month] = eventDate.split('-').map(Number);
+  let deadlineYear = year;
+  let deadlineMonth: number; // 1-12
+  let deadlineDay: number;
+  if (month <= 3) {
+    deadlineMonth = 6;
+    deadlineDay = 30;
+  } else if (month <= 6) {
+    deadlineMonth = 9;
+    deadlineDay = 30;
+  } else if (month <= 9) {
+    deadlineMonth = 12;
+    deadlineDay = 31;
+  } else {
+    deadlineYear = year + 1;
+    deadlineMonth = 3;
+    deadlineDay = 31;
+  }
+  const d = new Date(Date.UTC(deadlineYear, deadlineMonth - 1, deadlineDay));
   return d.toISOString().split('T')[0];
 }

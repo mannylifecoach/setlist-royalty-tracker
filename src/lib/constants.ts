@@ -98,9 +98,6 @@ export const REFERRAL_SOURCES = [
   'other',
 ] as const;
 
-// BMI Live requires submission within 9 months of performance
-export const BMI_EXPIRATION_MONTHS = 9;
-
 // BMI Live CSV field mappings
 export const BMI_LIVE_FIELDS = [
   'Venue Name',
