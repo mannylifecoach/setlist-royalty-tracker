@@ -186,13 +186,17 @@ export const GET = withHandler(async (request: NextRequest) => {
           p.attendance,
           p.venueCapacity ? parseInt(p.venueCapacity, 10) || null : null
         ),
-        ticketCharge: p.ticketCharge,
+        // Default to 'Yes' when unset — most live performances are ticketed.
+        // Mckay 2026-05-03: BMI Live's ticket-charge toggle pops up on every
+        // Add Performance flow; he wants it pre-set to Yes. Free-event
+        // performers can override per-row via the detail page editor.
+        ticketCharge: p.ticketCharge ?? 'Yes',
         // ASCAP defaults — derived where possible, otherwise sensible default.
         // Real per-performance storage of these is a follow-up if/when users
         // need to set non-defaults from inside SRT.
         perfType: 'CNCRT',
         liveStreamViews: null,
-        ticketFee: p.ticketCharge === 'Yes',
+        ticketFee: (p.ticketCharge ?? 'Yes') === 'Yes',
         advanceTickets: false,
         songs: [],
       });

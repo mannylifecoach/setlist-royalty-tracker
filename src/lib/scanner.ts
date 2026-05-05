@@ -26,16 +26,10 @@ interface ScanResult {
 }
 
 export async function scanForUser(userId: string): Promise<ScanResult[]> {
-  // Load user's default times for new performances
-  const [userDefaults] = await db
-    .select({
-      defaultStartTimeHour: users.defaultStartTimeHour,
-      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
-      defaultEndTimeHour: users.defaultEndTimeHour,
-      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
-    })
-    .from(users)
-    .where(eq(users.id, userId));
+  // Times are NOT eager-filled here on creation — they get resolved at READ
+  // time in the extension API via user.default*Time fallback (commit fixing
+  // the 2026-05-03 Mckay bug). This means changes to settings always win on
+  // future fills, even for performances created before the change.
 
   const results: ScanResult[] = [];
 
@@ -54,7 +48,7 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
     }
 
     console.log(`[scan] Scanning ${artist.artistName} (${artist.mbid})...`);
-    const result = await scanArtistForUser(userId, artist, userDefaults || null);
+    const result = await scanArtistForUser(userId, artist);
     console.log(`[scan] ${artist.artistName}: ${result.setlistsFound} setlists, ${result.newPerformances} new performances`);
     results.push(result);
   }
@@ -62,17 +56,9 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
   return results;
 }
 
-interface TimeDefaults {
-  defaultStartTimeHour: string | null;
-  defaultStartTimeAmPm: string | null;
-  defaultEndTimeHour: string | null;
-  defaultEndTimeAmPm: string | null;
-}
-
 async function scanArtistForUser(
   userId: string,
   artist: typeof trackedArtists.$inferSelect,
-  timeDefaults: TimeDefaults | null
 ): Promise<ScanResult> {
   const result: ScanResult = {
     artistName: artist.artistName,
@@ -179,10 +165,10 @@ async function scanArtistForUser(
           venueCity: setlist.venue?.city?.name || null,
           venueState: setlist.venue?.city?.stateCode || setlist.venue?.city?.state || null,
           venueCountry: setlist.venue?.city?.country?.code || null,
-          startTimeHour: timeDefaults?.defaultStartTimeHour || null,
-          startTimeAmPm: timeDefaults?.defaultStartTimeAmPm || null,
-          endTimeHour: timeDefaults?.defaultEndTimeHour || null,
-          endTimeAmPm: timeDefaults?.defaultEndTimeAmPm || null,
+          startTimeHour: null,
+          startTimeAmPm: null,
+          endTimeHour: null,
+          endTimeAmPm: null,
           status: 'discovered',
           expiresAt: calculateExpirationDate(eventDate),
           setlistFmUrl: setlist.url,

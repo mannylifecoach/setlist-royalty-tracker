@@ -105,7 +105,10 @@ function fillField(fieldName: string, value: string | null): FillResult {
   if (!el) return { field: fieldName, status: 'not_found' };
 
   if (spec.type === 'checkbox') {
-    const ok = setCheckbox(el, value === 'true' || value === 'yes' || value === '1');
+    // Case-insensitive — DB stores "Yes" (capital Y) for ticketCharge.
+    // Pre-2026-05-04 fix: comparison was lowercase-only and silently failed.
+    const v = value.toLowerCase();
+    const ok = setCheckbox(el, v === 'true' || v === 'yes' || v === '1');
     return { field: fieldName, status: ok ? 'filled' : 'not_found' };
   }
 

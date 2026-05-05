@@ -75,18 +75,12 @@ export const POST = withHandler(async (request: NextRequest) => {
     return NextResponse.json({ error: 'one or more songs not found' }, { status: 404 });
   }
 
-  const [userDefaults] = await db
-    .select({
-      defaultStartTimeHour: users.defaultStartTimeHour,
-      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
-      defaultEndTimeHour: users.defaultEndTimeHour,
-      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
-    })
-    .from(users)
-    .where(eq(users.id, userId));
-
   const expiresAt = calculateExpirationDate(body.eventDate);
 
+  // Times stored as null on creation; the extension API resolves them via
+  // user.default*Time at READ time so changes to settings always win. Eager-
+  // filling here was the 2026-05-03 Mckay bug — when he updated his settings
+  // defaults, existing rows kept the old hardcoded values forever.
   const rows = body.songIds.map((songId) => ({
     userId,
     songId,
@@ -100,10 +94,10 @@ export const POST = withHandler(async (request: NextRequest) => {
     venueCountry: body.venueCountry ?? null,
     eventName: body.eventName ?? null,
     tourName: body.tourName ?? null,
-    startTimeHour: userDefaults?.defaultStartTimeHour ?? null,
-    startTimeAmPm: userDefaults?.defaultStartTimeAmPm ?? null,
-    endTimeHour: userDefaults?.defaultEndTimeHour ?? null,
-    endTimeAmPm: userDefaults?.defaultEndTimeAmPm ?? null,
+    startTimeHour: null,
+    startTimeAmPm: null,
+    endTimeHour: null,
+    endTimeAmPm: null,
     status: 'confirmed' as const,
     expiresAt,
   }));

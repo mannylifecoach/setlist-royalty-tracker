@@ -169,12 +169,16 @@ describe('POST /api/performances — happy path', () => {
     }
   });
 
-  it('applies user default times to inserted rows', async () => {
+  it('writes time fields as null on creation (NOT eager-fill from defaults)', async () => {
+    // Per the 2026-05-04 fix for the Mckay 2026-05-03 bug: times are stored
+    // null at creation; the extension API resolves them from user.default*Time
+    // at READ time so settings changes always win for future fills.
     await POST(makeRequest(validBody) as never);
     const rows = mockInsertedRows.value as Array<Record<string, unknown>>;
-    expect(rows[0].startTimeHour).toBe('8');
-    expect(rows[0].startTimeAmPm).toBe('PM');
-    expect(rows[0].endTimeHour).toBe('11');
+    expect(rows[0].startTimeHour).toBeNull();
+    expect(rows[0].startTimeAmPm).toBeNull();
+    expect(rows[0].endTimeHour).toBeNull();
+    expect(rows[0].endTimeAmPm).toBeNull();
   });
 
   it('passes through venue + event metadata to inserted rows', async () => {

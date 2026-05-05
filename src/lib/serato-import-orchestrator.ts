@@ -51,16 +51,9 @@ export async function importSeratoTracks(
   tracks: SeratoTrack[],
   venue: SeratoImportVenue
 ): Promise<SeratoImportResult> {
-  // Load user's default times for new performances
-  const [userDefaults] = await db
-    .select({
-      defaultStartTimeHour: users.defaultStartTimeHour,
-      defaultStartTimeAmPm: users.defaultStartTimeAmPm,
-      defaultEndTimeHour: users.defaultEndTimeHour,
-      defaultEndTimeAmPm: users.defaultEndTimeAmPm,
-    })
-    .from(users)
-    .where(eq(users.id, userId));
+  // Times are NOT eager-filled here — they get resolved at READ time in the
+  // extension API via user.default*Time fallback (commit fixing the
+  // 2026-05-03 Mckay bug where settings changes never reached existing rows).
 
   // Load all of the user's registered songs — we match against every song,
   // not just songs linked to specific artists, because a DJ's own productions
@@ -190,10 +183,10 @@ export async function importSeratoTracks(
       venueCountry: venue.country,
       attendance: resolvedCapacity,
       venueCapacity: resolvedCapacity !== null ? String(resolvedCapacity) : null,
-      startTimeHour: userDefaults?.defaultStartTimeHour || null,
-      startTimeAmPm: userDefaults?.defaultStartTimeAmPm || null,
-      endTimeHour: userDefaults?.defaultEndTimeHour || null,
-      endTimeAmPm: userDefaults?.defaultEndTimeAmPm || null,
+      startTimeHour: null,
+      startTimeAmPm: null,
+      endTimeHour: null,
+      endTimeAmPm: null,
       status: 'discovered',
       expiresAt,
     });
