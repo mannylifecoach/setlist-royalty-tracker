@@ -6,7 +6,7 @@ const faqs = [
   {
     question: 'is this an official bmi or ascap tool?',
     answer:
-      'no. setlist royalty tracker is an independent tool that helps you prepare and organize your live performance data. you still submit directly to bmi live or ascap onstage yourself — we just automate the tedious data entry so you don\'t miss the 9-month reporting deadline.',
+      'no. setlist royalty tracker is an independent tool that helps you prepare and organize your live performance data. you still submit directly to bmi live or ascap onstage yourself — we just automate the tedious data entry so you don\'t miss bmi\'s biannual filing deadline.',
   },
   {
     question: 'where does the performance data come from?',
@@ -34,9 +34,9 @@ const faqs = [
       'yes — if you wrote the music. they\'re two completely separate revenue streams. the venue pays the dj a performance fee for showing up. your pro pays the songwriter a performance royalty for the use of their composition. if you wrote the track, you\'re owed performance royalties whether you played it yourself, another dj played it, or you weren\'t at the show at all. djs who only play other artists\' music do not earn performance royalties — those belong to the original songwriters.',
   },
   {
-    question: 'what is the 9-month deadline?',
+    question: 'what is the bmi filing deadline for live performances?',
     answer:
-      'bmi requires live performance reports to be submitted within 9 months of the event date. after that window closes, you can no longer claim royalties for that performance. we track this deadline for every discovered performance and warn you as it approaches.',
+      'bmi runs biannual filing deadlines, not a flat 9-month window. each performance falls into a 6-month tracking window with a 3-month grace period for filing — so the practical filing window is typically 3-6 months from the event date depending on when in the quarter the show happened. specifically: q1 perfs (jan-mar) → file by jun 30 same year. q2 perfs (apr-jun) → sep 30. q3 perfs (jul-sep) → dec 31. q4 perfs (oct-dec) → mar 31 next year. the app calculates the exact deadline for each performance and warns you as it approaches. miss it and you can\'t claim royalties for that performance.',
   },
   {
     question: 'does this work for both songwriters and publishers?',

@@ -242,8 +242,11 @@ export default function LearnPage() {
               <div>
                 <p className="text-[12px] text-text font-medium mb-1">bmi live</p>
                 <p className="text-[12px] text-text-muted leading-[1.7]">
-                  rolling 6-month windows with a broader <strong className="text-status-expiring">9-month
-                  eligibility window</strong>. miss it and you can&apos;t claim that performance.
+                  biannual filing deadlines: <strong className="text-status-expiring">3-6 month windows</strong> per
+                  show, depending on which calendar quarter the performance falls in. q1 perfs (jan-mar) due jun 30,
+                  q2 (apr-jun) due sep 30, q3 (jul-sep) due dec 31, q4 (oct-dec) due mar 31 next year. miss the window
+                  and you can&apos;t claim that performance. srt calculates the exact deadline for every row and warns
+                  you as it approaches.
                 </p>
               </div>
               <div>
@@ -385,8 +388,9 @@ export default function LearnPage() {
                 <p className="text-[11px] text-text-muted font-medium mb-1">step 4</p>
                 <p className="text-[13px] text-text font-medium">submit before the deadline</p>
                 <p className="text-[12px] text-text-muted mt-1">
-                  bmi: within 9 months. ascap: within 3 months of quarter end.
-                  miss the window and the money gets redistributed to other writers.
+                  bmi runs biannual filing deadlines (3-6 months per show, depending on which calendar
+                  quarter the performance falls in — see the table above). ascap: within 3 months of
+                  quarter end. miss the window and the money gets redistributed to other writers.
                 </p>
               </div>
             </div>

@@ -30,18 +30,18 @@ const SLIDES: Slide[] = [
       "if you created the music — wrote it, produced it, composed it — and it gets performed live at a concert, a festival, or a club, you're owed a royalty. it doesn't matter if you're on stage or not. a songwriter whose song gets covered, a producer whose beat gets played in a dj set, an artist performing their own music at a bar — all owed money. but the system to collect it is broken, and most creators don't even know these royalties exist.",
     stats: [
       { value: "9.9m+", label: "live performances we scan" },
-      { value: "9 mo", label: "deadline before money is gone" },
+      { value: "3-6 mo", label: "deadline before money is gone" },
       { value: "billions", label: "unclaimed every year" },
     ],
   },
   {
     title: "the system only works for the biggest artists.",
     description:
-      "performing rights organizations like bmi and ascap collect royalties from venues and distribute them to creators. but they only auto-track the highest-grossing tours using pollstar data. everyone else — indie artists, touring bands, dj-producers — must manually report every single show through online portals like bmi live or ascap onstage. most don't know these portals exist. those who do face 5+ minutes of data entry per show. miss the 9-month deadline and the money is gone forever.",
+      "performing rights organizations like bmi and ascap collect royalties from venues and distribute them to creators. but they only auto-track the highest-grossing tours using pollstar data. everyone else — indie artists, touring bands, dj-producers — must manually report every single show through online portals like bmi live or ascap onstage. most don't know these portals exist. those who do face 5+ minutes of data entry per show. miss bmi's biannual filing deadline (typically 3-6 months from the show) and the money is gone forever.",
     stats: [
       { value: "top tours", label: "only ones auto-tracked" },
       { value: "5+ min", label: "manual entry per show" },
-      { value: "9 mo", label: "miss it, lose it" },
+      { value: "biannual", label: "miss the deadline, lose it" },
     ],
   },
   {

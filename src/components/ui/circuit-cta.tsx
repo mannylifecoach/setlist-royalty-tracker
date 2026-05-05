@@ -138,7 +138,7 @@ export function CircuitCTA() {
           supports both{' '}
           <span className="text-text-secondary">bmi live</span> and{' '}
           <span className="text-text-secondary">ascap onstage</span> ·
-          chrome extension auto-fill · csv export · 9 month expiration
+          chrome extension auto-fill · csv export · biannual deadline
           tracking · email notifications
         </p>
         <p className="text-[11px] text-text-disabled">

@@ -42,7 +42,7 @@ export function ProExplainer() {
               </li>
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
-                9-month deadline from event date
+                biannual filing deadlines (3-6 months per show)
               </li>
               <li className="flex gap-2">
                 <span className="text-text-disabled shrink-0">—</span>
