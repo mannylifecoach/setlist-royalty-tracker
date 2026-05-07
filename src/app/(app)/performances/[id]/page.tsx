@@ -146,7 +146,7 @@ export default function PerformanceDetailPage({
     : null;
 
   return (
-    <div className="max-w-[600px] space-y-6">
+    <div className="max-w-[600px] mx-auto space-y-6">
       <button
         onClick={() => router.push('/performances')}
         className="text-[12px] text-text-muted hover:text-text transition-colors"
