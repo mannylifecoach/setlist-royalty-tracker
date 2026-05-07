@@ -10,6 +10,7 @@ import {
   BMI_HOURS,
   type Capability,
 } from '@/lib/constants';
+import { restoreCoverageBanner } from '@/components/coverage-banner';
 
 type Pro = 'bmi' | 'ascap' | 'sesac' | 'gmr' | 'prs' | 'socan' | 'apra' | 'gema' | 'sacem' | 'buma';
 
@@ -204,7 +205,7 @@ export default function SettingsPage() {
               <button
                 key={p}
                 onClick={() => setPro(p)}
-                className={`btn text-[12px] ${pro === p ? 'bg-white text-black' : ''}`}
+                className={`btn text-[12px] ${pro === p ? 'bg-status-confirmed text-black border-status-confirmed' : ''}`}
               >
                 {PRO_LABELS[p] || p.toUpperCase()}
               </button>
@@ -227,14 +228,14 @@ export default function SettingsPage() {
                   onClick={() => toggleCapability(opt.value)}
                   className={`w-full text-left px-3 py-2 border transition-colors ${
                     isChecked
-                      ? 'border-white bg-white/5'
+                      ? 'border-status-confirmed bg-status-confirmed/10'
                       : 'border-border-subtle hover:bg-white/[0.02]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-3 h-3 border ${
-                        isChecked ? 'border-white bg-white' : 'border-border'
+                        isChecked ? 'border-status-confirmed bg-status-confirmed' : 'border-border'
                       }`}
                     />
                     <span className="text-[12px]">{opt.label}</span>
@@ -262,14 +263,14 @@ export default function SettingsPage() {
           <span
             className={`relative inline-block w-[36px] h-[18px] border transition-colors ${
               emailNotifications
-                ? 'bg-white border-white'
+                ? 'bg-status-confirmed border-status-confirmed'
                 : 'bg-transparent border-[#222]'
             }`}
           >
             <span
               className={`absolute top-[2px] w-[12px] h-[12px] transition-all ${
                 emailNotifications
-                  ? 'left-[20px] bg-black'
+                  ? 'left-[20px] bg-white'
                   : 'left-[2px] bg-[#444]'
               }`}
             />
@@ -282,6 +283,16 @@ export default function SettingsPage() {
         </p>
         <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
           {saving ? 'saving...' : saved ? 'saved' : 'save'}
+        </button>
+        <button
+          onClick={() => {
+            restoreCoverageBanner();
+            setSaved(true);
+            setTimeout(() => setSaved(false), 1500);
+          }}
+          className="text-[11px] text-text-muted hover:text-text-secondary transition-colors block"
+        >
+          show setlist.fm coverage tip again
         </button>
       </div>
 

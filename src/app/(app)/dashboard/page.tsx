@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/status-badge';
+import { CoverageBanner } from '@/components/coverage-banner';
 import { useRouter } from 'next/navigation';
 import { analytics } from '@/lib/analytics';
 
@@ -119,6 +120,8 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+
+      <CoverageBanner />
 
       {data && (
         <>

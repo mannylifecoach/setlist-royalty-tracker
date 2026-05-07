@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
+import { CoverageBanner } from '@/components/coverage-banner';
 import { analytics } from '@/lib/analytics';
 import type { PerformanceRow } from '@/lib/performance-grouping';
 import type { PerformanceStatus } from '@/lib/constants';
@@ -118,6 +119,8 @@ export default function PerformancesPage() {
           ))}
         </div>
       </div>
+
+      <CoverageBanner />
 
       <div className="flex items-center gap-4">
         <button onClick={handleScan} disabled={scanning} className="btn">
