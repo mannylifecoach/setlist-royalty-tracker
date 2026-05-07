@@ -1,47 +1,51 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
 import { analytics } from '@/lib/analytics';
+import type { PerformanceRow } from '@/lib/performance-grouping';
 import type { PerformanceStatus } from '@/lib/constants';
 
-interface PerformanceRow {
-  performance: {
-    id: string;
-    eventDate: string;
-    venueName: string | null;
-    venueCity: string | null;
-    venueState: string | null;
-    venueCountry: string | null;
-    status: PerformanceStatus;
-    expiresAt: string | null;
-    setlistFmUrl: string | null;
-    tourName: string | null;
-  };
-  song: { id: string; title: string };
-  artist: { id: string; artistName: string };
-}
+// `active` is a virtual filter: discovered + confirmed (the things still
+// awaiting user action). It's the default so beta testers don't drown in
+// rows they've already filed — the original 2026-05-03 Mckay complaint.
+type StatusFilter = 'active' | 'all' | PerformanceStatus;
+const STATUS_FILTERS: StatusFilter[] = [
+  'active',
+  'all',
+  'discovered',
+  'confirmed',
+  'submitted',
+  'expired',
+  'ineligible',
+];
 
-const STATUS_FILTERS = ['all', 'discovered', 'confirmed', 'submitted', 'expired', 'ineligible'] as const;
+function matchesFilter(row: PerformanceRow, filter: StatusFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'active') {
+    return row.performance.status === 'discovered' || row.performance.status === 'confirmed';
+  }
+  return row.performance.status === filter;
+}
 
 export default function PerformancesPage() {
   const [data, setData] = useState<PerformanceRow[]>([]);
-  const [filter, setFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<StatusFilter>('active');
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
   const router = useRouter();
 
+  // Fetches every performance once per refresh, then filters + counts client-
+  // side. Pattern matches the dashboard, which already does the same. Keeps
+  // pill counts always-accurate without requiring per-filter round trips.
   const loadData = useCallback(async function loadData() {
-    const params = new URLSearchParams();
-    if (filter !== 'all') params.set('status', filter);
-    const res = await fetch(`/api/performances?${params}`);
+    const res = await fetch('/api/performances');
     if (res.ok) setData(await res.json());
-  }, [filter]);
+  }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -70,6 +74,28 @@ export default function PerformancesPage() {
     await loadData();
   }
 
+  const counts = useMemo(() => {
+    const c: Record<StatusFilter, number> = {
+      active: 0,
+      all: data.length,
+      discovered: 0,
+      confirmed: 0,
+      submitted: 0,
+      expired: 0,
+      ineligible: 0,
+    };
+    for (const row of data) {
+      c[row.performance.status] += 1;
+    }
+    c.active = c.discovered + c.confirmed;
+    return c;
+  }, [data]);
+
+  const visibleData = useMemo(
+    () => data.filter((row) => matchesFilter(row, filter)),
+    [data, filter]
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -87,7 +113,7 @@ export default function PerformancesPage() {
                   : 'text-text-muted hover:text-text-secondary'
               }`}
             >
-              {s}
+              {s} <span className="text-text-disabled">({counts[s]})</span>
             </button>
           ))}
         </div>
@@ -115,7 +141,7 @@ export default function PerformancesPage() {
       </div>
 
       {(() => {
-        const confirmedCount = data.filter((d) => d.performance.status === 'confirmed').length;
+        const confirmedCount = counts.confirmed;
         if (confirmedCount === 0) return null;
         return (
           <div className="card px-4 py-3 text-[12px] text-text-secondary">
@@ -134,7 +160,7 @@ export default function PerformancesPage() {
       })()}
 
       <PerformanceTable
-        data={data}
+        data={visibleData}
         onConfirm={handleConfirm}
         onRowClick={(id) => router.push(`/performances/${id}`)}
       />

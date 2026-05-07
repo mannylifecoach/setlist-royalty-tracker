@@ -1,37 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { StatusBadge } from './status-badge';
-import type { PerformanceStatus } from '@/lib/constants';
-
-interface Performance {
-  id: string;
-  eventDate: string;
-  venueName: string | null;
-  venueCity: string | null;
-  venueState: string | null;
-  venueCountry: string | null;
-  status: PerformanceStatus;
-  expiresAt: string | null;
-  setlistFmUrl: string | null;
-  tourName: string | null;
-}
-
-interface Song {
-  id: string;
-  title: string;
-}
-
-interface Artist {
-  id: string;
-  artistName: string;
-}
-
-interface PerformanceRow {
-  performance: Performance;
-  song: Song;
-  artist: Artist;
-}
+import {
+  groupByShow,
+  formatStatusSummary,
+  type PerformanceRow,
+  type ShowGroup,
+} from '@/lib/performance-grouping';
 
 interface PerformanceTableProps {
   data: PerformanceRow[];
@@ -54,12 +30,23 @@ function daysUntilExpiration(expiresAt: string | null): number | null {
   );
 }
 
+function formatLocation(group: { venueCity: string | null; venueState: string | null; venueCountry: string | null }): string {
+  return [group.venueCity, group.venueState, group.venueCountry].filter(Boolean).join(', ') || '—';
+}
+
 export function PerformanceTable({
   data,
   onConfirm,
   onRowClick,
 }: PerformanceTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const groups = useMemo(() => groupByShow(data), [data]);
+  const allDiscoveredIds = useMemo(
+    () => data.filter((d) => d.performance.status === 'discovered').map((d) => d.performance.id),
+    [data]
+  );
 
   function toggleSelect(id: string) {
     const next = new Set(selected);
@@ -68,12 +55,25 @@ export function PerformanceTable({
     setSelected(next);
   }
 
-  function toggleAll() {
-    if (selected.size === data.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(data.map((d) => d.performance.id)));
+  function selectIds(ids: string[], shouldSelect: boolean) {
+    const next = new Set(selected);
+    for (const id of ids) {
+      if (shouldSelect) next.add(id);
+      else next.delete(id);
     }
+    setSelected(next);
+  }
+
+  function toggleAllDiscovered() {
+    const allSelected = allDiscoveredIds.length > 0 && allDiscoveredIds.every((id) => selected.has(id));
+    selectIds(allDiscoveredIds, !allSelected);
+  }
+
+  function toggleExpand(key: string) {
+    const next = new Set(expanded);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setExpanded(next);
   }
 
   const discoveredSelected = data.filter(
@@ -103,11 +103,16 @@ export function PerformanceTable({
         <table className="w-full text-[12px]">
           <thead>
             <tr className="border-b border-border-subtle text-text-muted text-left">
+              <th className="pb-2 pr-1 w-6"></th>
               <th className="pb-2 pr-3 w-8">
                 <input
                   type="checkbox"
-                  checked={selected.size === data.length && data.length > 0}
-                  onChange={toggleAll}
+                  checked={
+                    allDiscoveredIds.length > 0 &&
+                    allDiscoveredIds.every((id) => selected.has(id))
+                  }
+                  onChange={toggleAllDiscovered}
+                  disabled={allDiscoveredIds.length === 0}
                   className="accent-status-discovered"
                 />
               </th>
@@ -121,69 +126,22 @@ export function PerformanceTable({
             </tr>
           </thead>
           <tbody>
-            {data.map(({ performance, song, artist }) => {
-              const days = daysUntilExpiration(performance.expiresAt);
-              const expiring = isExpiringSoon(performance.expiresAt);
-              const displayStatus =
-                expiring && performance.status !== 'submitted'
-                  ? 'expiring'
-                  : performance.status;
-
-              return (
-                <tr
-                  key={performance.id}
-                  onClick={() => onRowClick?.(performance.id)}
-                  className="border-b border-border-subtle hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
-                >
-                  <td className="py-2.5 pr-3">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(performance.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(performance.id);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="accent-status-discovered"
-                    />
-                  </td>
-                  <td className="py-2.5 pr-3 text-text-secondary whitespace-nowrap">
-                    {performance.eventDate}
-                  </td>
-                  <td className="py-2.5 pr-3 text-text font-medium">
-                    {song.title}
-                  </td>
-                  <td className="py-2.5 pr-3 text-text-secondary">
-                    {artist.artistName}
-                  </td>
-                  <td className="py-2.5 pr-3 text-text-secondary">
-                    {performance.venueName || '—'}
-                  </td>
-                  <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">
-                    {[performance.venueCity, performance.venueState, performance.venueCountry]
-                      .filter(Boolean)
-                      .join(', ') || '—'}
-                  </td>
-                  <td className="py-2.5 pr-3">
-                    <StatusBadge status={displayStatus} />
-                  </td>
-                  <td className="py-2.5 pr-3 whitespace-nowrap">
-                    {days !== null && performance.expiresAt ? (
-                      <div className="flex flex-col">
-                        <span className={`text-text-secondary ${expiring ? 'text-status-expiring font-medium' : ''}`}>
-                          {performance.expiresAt}
-                        </span>
-                        <span className={`text-[10px] ${expiring ? 'text-status-expiring' : 'text-text-muted'}`}>
-                          {days > 0 ? `${days}d left` : 'expired'}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-text-muted">—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {groups.map((group) =>
+              group.songCount === 1
+                ? renderSingleSongRow(group, {
+                    selected,
+                    toggleSelect,
+                    onRowClick,
+                  })
+                : renderShowGroup(group, {
+                    expanded: expanded.has(group.key),
+                    toggleExpand: () => toggleExpand(group.key),
+                    selected,
+                    toggleSelect,
+                    selectIds,
+                    onRowClick,
+                  })
+            )}
           </tbody>
         </table>
       </div>
@@ -194,5 +152,187 @@ export function PerformanceTable({
         </div>
       )}
     </div>
+  );
+}
+
+function renderSingleSongRow(
+  group: ShowGroup,
+  ctx: {
+    selected: Set<string>;
+    toggleSelect: (id: string) => void;
+    onRowClick?: (id: string) => void;
+  }
+) {
+  const row = group.rows[0];
+  const { performance, song, artist } = row;
+  const days = daysUntilExpiration(performance.expiresAt);
+  const expiring = isExpiringSoon(performance.expiresAt);
+  const displayStatus =
+    expiring && performance.status !== 'submitted' ? 'expiring' : performance.status;
+
+  return (
+    <tr
+      key={group.key}
+      onClick={() => ctx.onRowClick?.(performance.id)}
+      className="border-b border-border-subtle hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
+    >
+      <td className="py-2.5 pr-1"></td>
+      <td className="py-2.5 pr-3">
+        <input
+          type="checkbox"
+          checked={ctx.selected.has(performance.id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            ctx.toggleSelect(performance.id);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="accent-status-discovered"
+        />
+      </td>
+      <td className="py-2.5 pr-3 text-text-secondary whitespace-nowrap">
+        {performance.eventDate}
+      </td>
+      <td className="py-2.5 pr-3 text-text font-medium">{song.title}</td>
+      <td className="py-2.5 pr-3 text-text-secondary">{artist.artistName}</td>
+      <td className="py-2.5 pr-3 text-text-secondary">{performance.venueName || '—'}</td>
+      <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">{formatLocation(group)}</td>
+      <td className="py-2.5 pr-3">
+        <StatusBadge status={displayStatus} />
+      </td>
+      <td className="py-2.5 pr-3 whitespace-nowrap">
+        {days !== null && performance.expiresAt ? (
+          <div className="flex flex-col">
+            <span className={`text-text-secondary ${expiring ? 'text-status-expiring font-medium' : ''}`}>
+              {performance.expiresAt}
+            </span>
+            <span className={`text-[10px] ${expiring ? 'text-status-expiring' : 'text-text-muted'}`}>
+              {days > 0 ? `${days}d left` : 'expired'}
+            </span>
+          </div>
+        ) : (
+          <span className="text-text-muted">—</span>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function renderShowGroup(
+  group: ShowGroup,
+  ctx: {
+    expanded: boolean;
+    toggleExpand: () => void;
+    selected: Set<string>;
+    toggleSelect: (id: string) => void;
+    selectIds: (ids: string[], shouldSelect: boolean) => void;
+    onRowClick?: (id: string) => void;
+  }
+) {
+  const earliestDays = daysUntilExpiration(group.earliestExpiresAt);
+  const earliestExpiring = isExpiringSoon(group.earliestExpiresAt);
+  const allDiscoveredSelected =
+    group.discoveredIds.length > 0 &&
+    group.discoveredIds.every((id) => ctx.selected.has(id));
+  const noDiscovered = group.discoveredIds.length === 0;
+
+  return (
+    <Fragment key={group.key}>
+      <tr
+        onClick={ctx.toggleExpand}
+        className="border-b border-border-subtle hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
+      >
+        <td className="py-2.5 pr-1 text-text-muted text-center">
+          {ctx.expanded ? '▼' : '▶'}
+        </td>
+        <td className="py-2.5 pr-3">
+          <input
+            type="checkbox"
+            checked={allDiscoveredSelected}
+            disabled={noDiscovered}
+            onChange={(e) => {
+              e.stopPropagation();
+              ctx.selectIds(group.discoveredIds, !allDiscoveredSelected);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="accent-status-discovered"
+          />
+        </td>
+        <td className="py-2.5 pr-3 text-text-secondary whitespace-nowrap">
+          {group.eventDate}
+        </td>
+        <td className="py-2.5 pr-3 text-text font-medium">{group.songCount} songs</td>
+        <td className="py-2.5 pr-3 text-text-secondary">{group.artist.artistName}</td>
+        <td className="py-2.5 pr-3 text-text-secondary">{group.venueName || '—'}</td>
+        <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">{formatLocation(group)}</td>
+        <td className="py-2.5 pr-3 text-text-muted text-[11px]">
+          {formatStatusSummary(group.statusCounts)}
+        </td>
+        <td className="py-2.5 pr-3 whitespace-nowrap">
+          {earliestDays !== null && group.earliestExpiresAt ? (
+            <div className="flex flex-col">
+              <span className={`text-text-secondary ${earliestExpiring ? 'text-status-expiring font-medium' : ''}`}>
+                {group.earliestExpiresAt}
+              </span>
+              <span className={`text-[10px] ${earliestExpiring ? 'text-status-expiring' : 'text-text-muted'}`}>
+                {earliestDays > 0 ? `earliest · ${earliestDays}d` : 'expired'}
+              </span>
+            </div>
+          ) : (
+            <span className="text-text-muted">—</span>
+          )}
+        </td>
+      </tr>
+      {ctx.expanded &&
+        group.rows.map((row) => {
+          const { performance, song } = row;
+          const days = daysUntilExpiration(performance.expiresAt);
+          const expiring = isExpiringSoon(performance.expiresAt);
+          const displayStatus =
+            expiring && performance.status !== 'submitted' ? 'expiring' : performance.status;
+          return (
+            <tr
+              key={performance.id}
+              onClick={() => ctx.onRowClick?.(performance.id)}
+              className="border-b border-border-subtle bg-bg-card/40 hover:bg-bg-hover transition-colors duration-150 cursor-pointer"
+            >
+              <td className="py-2 pr-1"></td>
+              <td className="py-2 pr-3 pl-2">
+                <input
+                  type="checkbox"
+                  checked={ctx.selected.has(performance.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    ctx.toggleSelect(performance.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="accent-status-discovered"
+                />
+              </td>
+              <td className="py-2 pr-3"></td>
+              <td className="py-2 pr-3 text-text pl-4">{song.title}</td>
+              <td className="py-2 pr-3"></td>
+              <td className="py-2 pr-3"></td>
+              <td className="py-2 pr-3"></td>
+              <td className="py-2 pr-3">
+                <StatusBadge status={displayStatus} />
+              </td>
+              <td className="py-2 pr-3 whitespace-nowrap">
+                {days !== null && performance.expiresAt ? (
+                  <div className="flex flex-col">
+                    <span className={`text-text-secondary ${expiring ? 'text-status-expiring font-medium' : ''}`}>
+                      {performance.expiresAt}
+                    </span>
+                    <span className={`text-[10px] ${expiring ? 'text-status-expiring' : 'text-text-muted'}`}>
+                      {days > 0 ? `${days}d left` : 'expired'}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-text-muted">—</span>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+    </Fragment>
   );
 }
