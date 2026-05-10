@@ -5,7 +5,7 @@ const testBtn = document.getElementById('test')!;
 const statusEl = document.getElementById('status')!;
 
 // Load saved settings
-chrome.storage.sync.get(['apiKey', 'apiUrl'], (result) => {
+chrome.storage.local.get(['apiKey', 'apiUrl'], (result) => {
   if (result.apiUrl) apiUrlInput.value = result.apiUrl;
   if (result.apiKey) apiKeyInput.value = result.apiKey;
 });
@@ -26,7 +26,7 @@ saveBtn.addEventListener('click', () => {
     return;
   }
 
-  chrome.storage.sync.set({ apiUrl, apiKey }, () => {
+  chrome.storage.local.set({ apiUrl, apiKey }, () => {
     statusEl.className = 'status-success';
     statusEl.textContent = 'Settings saved';
     setTimeout(() => {
@@ -46,7 +46,7 @@ testBtn.addEventListener('click', async () => {
     return;
   }
 
-  await chrome.storage.sync.set({ apiUrl, apiKey });
+  await chrome.storage.local.set({ apiUrl, apiKey });
 
   statusEl.className = 'status-info';
   statusEl.textContent = 'Testing connection...';

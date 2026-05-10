@@ -6,10 +6,28 @@ interface StorageConfig {
 }
 
 async function getConfig(): Promise<StorageConfig | null> {
-  const result = await chrome.storage.sync.get(['apiKey', 'apiUrl']);
+  const result = await chrome.storage.local.get(['apiKey', 'apiUrl']);
   if (!result.apiKey || !result.apiUrl) return null;
   return { apiKey: result.apiKey, apiUrl: result.apiUrl };
 }
+
+// One-time migration v1.2.0 → v1.3.0: prior versions stored apiKey/apiUrl in
+// chrome.storage.sync, which travels through Google's cloud when the user is
+// signed in to Chrome. Move any existing values to chrome.storage.local
+// (per-device, never syncs) and clear the sync copy.
+chrome.runtime.onInstalled.addListener(async () => {
+  const synced = await chrome.storage.sync.get(['apiKey', 'apiUrl']);
+  if (!synced.apiKey && !synced.apiUrl) return;
+
+  const local = await chrome.storage.local.get(['apiKey', 'apiUrl']);
+  const updates: Record<string, string> = {};
+  if (synced.apiKey && !local.apiKey) updates.apiKey = synced.apiKey;
+  if (synced.apiUrl && !local.apiUrl) updates.apiUrl = synced.apiUrl;
+  if (Object.keys(updates).length > 0) {
+    await chrome.storage.local.set(updates);
+  }
+  await chrome.storage.sync.remove(['apiKey', 'apiUrl']);
+});
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const config = await getConfig();

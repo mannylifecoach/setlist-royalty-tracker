@@ -7,6 +7,7 @@ import { getCorsHeaders } from '@/lib/cors';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { markSubmittedSchema } from '@/lib/schemas';
 import { recordStatusChanges } from '@/lib/status-history';
+import { checkRateLimit, getClientIp } from '@/lib/route-rate-limit';
 
 export async function OPTIONS(request: NextRequest) {
   return new Response(null, { status: 204, headers: getCorsHeaders(request, 'POST, OPTIONS') });
@@ -20,6 +21,23 @@ export const POST = withHandler(async (request: NextRequest) => {
     return NextResponse.json(
       { error: 'unauthorized' },
       { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const limit = checkRateLimit({
+    keyId: user.id,
+    ip: getClientIp(request),
+    route: '/api/extension/performances/mark-submitted',
+    perKeyPerHour: 60,
+    perIpPerHour: 120,
+  });
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'rate limit exceeded' },
+      {
+        status: 429,
+        headers: { ...corsHeaders, 'Retry-After': String(limit.retryAfterSec) },
+      }
     );
   }
 

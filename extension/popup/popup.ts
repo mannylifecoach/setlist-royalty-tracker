@@ -66,7 +66,7 @@ const content = document.getElementById('content')!;
 const submittedKeys = new Set<string>();
 
 async function init() {
-  const config = await chrome.storage.sync.get(['apiKey', 'apiUrl']);
+  const config = await chrome.storage.local.get(['apiKey', 'apiUrl']);
   if (!config.apiKey || !config.apiUrl) {
     renderUnconfigured();
     return;

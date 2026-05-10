@@ -5,6 +5,7 @@ import { songs, songWriters, users } from '@/db/schema';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { getCorsHeaders } from '@/lib/cors';
 import { withHandler } from '@/lib/api-utils';
+import { checkRateLimit, getClientIp } from '@/lib/route-rate-limit';
 
 export async function OPTIONS(request: NextRequest) {
   return new Response(null, {
@@ -47,6 +48,23 @@ export const GET = withHandler(async (request: NextRequest) => {
     return NextResponse.json(
       { error: 'unauthorized' },
       { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const limit = checkRateLimit({
+    keyId: user.id,
+    ip: getClientIp(request),
+    route: '/api/extension/works-registration',
+    perKeyPerHour: 60,
+    perIpPerHour: 120,
+  });
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'rate limit exceeded' },
+      {
+        status: 429,
+        headers: { ...corsHeaders, 'Retry-After': String(limit.retryAfterSec) },
+      }
     );
   }
 
