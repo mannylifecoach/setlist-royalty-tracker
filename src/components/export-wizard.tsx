@@ -148,7 +148,11 @@ export function ExportWizard({ data }: ExportWizardProps) {
 
       <div className="space-y-1">
         <a
-          href={pro === 'bmi' ? 'https://ols.bmi.com' : 'https://members.ascap.com'}
+          href={
+            pro === 'bmi'
+              ? 'https://ols.bmi.com'
+              : 'https://www.ascap.com/member-access#onstage/performance/add'
+          }
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary btn w-full text-center block"
@@ -156,16 +160,12 @@ export function ExportWizard({ data }: ExportWizardProps) {
           open {pro === 'bmi' ? 'bmi live' : 'ascap onstage'} →
         </a>
         <p className="text-[10px] text-text-muted text-center">
-          opens {pro === 'bmi' ? 'ols.bmi.com' : 'members.ascap.com'} in a new tab —{' '}
-          {pro === 'bmi' ? (
-            <>
-              install the{' '}
-              <a href="/help/chrome-extension" className="text-status-discovered hover:underline">chrome extension</a>{' '}
-              first to auto-fill your performances directly into the form
-            </>
-          ) : (
-            <>chrome extension auto-fill is coming for ascap onstage; for now use the csv below as a reference while you fill the form manually</>
-          )}
+          opens {pro === 'bmi' ? 'ols.bmi.com' : 'ascap.com performance add page'} in a new tab —{' '}
+          install the{' '}
+          <a href="/help/chrome-extension" className="text-status-discovered hover:underline">
+            chrome extension
+          </a>{' '}
+          first to auto-fill your performance directly into the form
         </p>
       </div>
 

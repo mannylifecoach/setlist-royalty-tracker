@@ -102,19 +102,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // (which the framework accepts as user input), then detach immediately.
   // The "DevTools is debugging this tab" banner flashes for ~300ms during fill.
   if (message.type === 'CDP_TYPE_INTO_FIELD') {
-    const tabId: number | undefined = _sender.tab?.id ?? message.tabId;
     const selector: string = message.selector;
     const value: string = message.value;
-    if (!tabId || !selector || typeof value !== 'string') {
-      sendResponse({ success: false, error: 'CDP_TYPE_INTO_FIELD missing tabId/selector/value' });
+    if (!selector || typeof value !== 'string') {
+      sendResponse({ success: false, error: 'CDP_TYPE_INTO_FIELD missing selector/value' });
       return false;
     }
-    typeIntoFieldViaCDP(tabId, selector, value)
+    // Resolve target tab in order: explicit message.tabId → _sender.tab.id →
+    // active tab query. The fallback chain handles edge cases where the
+    // content-script sender info is missing (some MV3 service-worker quirks).
+    resolveCdpTargetTab(_sender, message.tabId)
+      .then((tabId) => typeIntoFieldViaCDP(tabId, selector, value))
       .then(() => sendResponse({ success: true }))
-      .catch((err) => sendResponse({ success: false, error: String(err?.message ?? err) }));
+      .catch((err) => {
+        // Surface to SW console so we can diagnose without re-shipping.
+        console.error('[SRT] CDP_TYPE_INTO_FIELD failed:', err, {
+          senderTabId: _sender.tab?.id,
+          senderUrl: _sender.tab?.url,
+          messageTabId: message.tabId,
+          selector,
+          valueLength: value.length,
+        });
+        sendResponse({ success: false, error: String(err?.message ?? err) });
+      });
     return true;
   }
 });
+
+// Determine which tab the CDP attach should target. Tries explicit messageTabId,
+// then content-script sender tab, then the currently-active tab in the focused
+// window. Throws a descriptive error if none works — we'd rather fail loudly
+// than silently attach to the wrong tab.
+async function resolveCdpTargetTab(
+  sender: chrome.runtime.MessageSender,
+  messageTabId: number | undefined
+): Promise<number> {
+  const candidate = messageTabId ?? sender.tab?.id;
+  if (candidate) return candidate;
+  const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (active?.id) return active.id;
+  throw new Error('Could not resolve CDP target tab (no sender tab, no active tab)');
+}
 
 // Type `value` character-by-character into the element matching `selector`
 // on the given tab, using Chrome DevTools Protocol's Input.dispatchKeyEvent
@@ -127,6 +155,22 @@ async function typeIntoFieldViaCDP(
   selector: string,
   value: string
 ): Promise<void> {
+  // Verify the target tab is a real http(s) page before attaching — Chrome
+  // rejects debugger.attach on chrome:// / chrome-extension:// URLs with a
+  // confusing "different extension" error. Surface a clearer message.
+  let tabInfo: chrome.tabs.Tab;
+  try {
+    tabInfo = await chrome.tabs.get(tabId);
+  } catch (e) {
+    throw new Error(`Tab ${tabId} not found: ${String(e)}`);
+  }
+  const targetUrl = tabInfo.url || '';
+  if (!/^https?:\/\//.test(targetUrl)) {
+    throw new Error(
+      `Cannot attach debugger to tab ${tabId} — URL is "${targetUrl}" (must be http/https)`
+    );
+  }
+
   const target: chrome.debugger.Debuggee = { tabId };
   let attached = false;
   try {

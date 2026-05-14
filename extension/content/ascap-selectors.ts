@@ -191,15 +191,20 @@ export function setInputValueAscap(el: HTMLElement, value: string): boolean {
 // `$(el).selectpicker('val', value)` so the visible bootstrap-select button
 // label updates — plain `.value = ...` only updates the underlying option,
 // not the rendered widget. Safe no-op when jQuery isn't on the page.
+//
+// Live-confirmed 2026-05-14: this helper had a case-sensitivity bug — SRT
+// stores state codes lowercase ("ca") from setlist.fm scans, but ASCAP's
+// option values are uppercase ("CA"). Without case-insensitive value match,
+// the state dropdown silently stayed empty and venue search returned nothing.
 export function setBootstrapSelectValue(
   el: HTMLSelectElement,
   value: string
 ): boolean {
-  // Try matching by option value first, then by visible label (case-insensitive).
+  const target = value.trim().toLowerCase();
   const option = Array.from(el.options).find(
     (o) =>
-      o.value === value ||
-      o.textContent?.trim().toLowerCase() === value.toLowerCase()
+      o.value.toLowerCase() === target ||
+      o.textContent?.trim().toLowerCase() === target
   );
   if (!option) return false;
   el.value = option.value;

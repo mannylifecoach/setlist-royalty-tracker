@@ -271,12 +271,41 @@ function renderAscapOnstageEvents(
       // Show first-fill disclosure modal once per install. Resolves immediately
       // for users who've already seen it.
       await ensureCdpDisclosureSeen();
+      // Pre-write the artist name to the clipboard from popup context using
+      // the legacy execCommand('copy') API — works synchronously, no permission
+      // prompt (unlike navigator.clipboard.writeText which triggers Chrome's
+      // clipboard-allow dialog). The popup has a fresh user gesture which
+      // satisfies execCommand's requirements.
+      if (isPerf && event.artistName) {
+        const ta = document.createElement('textarea');
+        ta.value = event.artistName;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+        } catch {
+          // Best-effort.
+        }
+        document.body.removeChild(ta);
+      }
       chrome.tabs.sendMessage(tabId, {
         type: isPerf ? 'FILL_ASCAP_PERFORMANCE' : 'FILL_ASCAP_SETLIST',
         event,
+        // Explicit tabId so the content script can forward it to the
+        // background's chrome.debugger.attach. Avoids any ambiguity from
+        // `_sender.tab` in MV3 service-worker message flows.
+        tabId,
+        clipboardPrimed: isPerf && !!event.artistName,
       }).catch(() => undefined);
       btn.textContent = 'Filling… see ASCAP page';
       btn.setAttribute('disabled', 'true');
+      // Close the popup so the page regains focus — content script will
+      // then be able to focus the Performers field, and ⌘V will paste
+      // because the user's last gesture was inside the popup which is
+      // still "fresh" enough for paste handling in the page.
+      setTimeout(() => window.close(), 100);
     },
   });
 }

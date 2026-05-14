@@ -438,17 +438,25 @@ describe('fillAscapPerformance — performance details', () => {
     expect(document.querySelector<HTMLSelectElement>('select#perfStartHours')!.value).toBe('20');
   });
 
-  it('falls back gracefully when CDP background is unavailable (e.g. DevTools open)', async () => {
-    // Mock background returning a failure — filler should report ok:false
-    // with an actionable detail message rather than throwing.
+  it('falls back to clipboard-paste prompt when CDP background fails', async () => {
+    // Mock background returning a failure — filler should fall back to
+    // copying value to clipboard + focusing the field + prompting the user.
     (chrome.runtime.sendMessage as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       success: false,
       error: 'Another debugger is already attached to this tab',
     });
+    // Stub the clipboard API since happy-dom doesn't have it by default.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+
     const results = await fillAscapPerformance(baseEvent);
     const artistStep = results.find((r) => r.step === 'artist-name');
     expect(artistStep?.ok).toBe(false);
-    expect(artistStep?.detail).toContain('Another debugger');
+    expect(artistStep?.detail).toMatch(/paste.*Manny|type.*Manny/);
+    expect(writeText).toHaveBeenCalledWith('Manny');
   });
 
   it('skips CDP path entirely when user disabled advanced fill in settings', async () => {
@@ -490,12 +498,13 @@ describe('fillAscapPerformance — performance details', () => {
 });
 
 describe('fillAscapPerformance — setlist dropdown', () => {
+  // Skip venue search in these tests so they don't wait the 6s venue timeout.
+  // Setlist tests don't exercise venue logic — keep them focused + fast.
+  const eventNoVenue: AscapEventInput = { ...baseEvent, venueName: null, venueState: null };
+
   it('selects the matching setlist when present', async () => {
     buildPerformanceAddDom({ setlistOptions: ['Other - 2025-12-01', 'Manny - 2026-04-15'] });
-    document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!.click = () => {
-      // Skip venue branching for this test
-    };
-    const results = await fillAscapPerformance(baseEvent);
+    const results = await fillAscapPerformance(eventNoVenue);
     const setlistStep = results.find((r) => r.step === 'setlist')!;
     expect(setlistStep.ok).toBe(true);
     expect(setlistStep.detail).toContain('Manny - 2026-04-15');
@@ -506,8 +515,7 @@ describe('fillAscapPerformance — setlist dropdown', () => {
 
   it('reports missing setlist with actionable detail', async () => {
     buildPerformanceAddDom({ setlistOptions: ['Other - 2025-12-01'] });
-    document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!.click = () => {};
-    const results = await fillAscapPerformance(baseEvent);
+    const results = await fillAscapPerformance(eventNoVenue);
     const setlistStep = results.find((r) => r.step === 'setlist')!;
     expect(setlistStep.ok).toBe(false);
     expect(setlistStep.detail).toContain('create one first');
@@ -515,8 +523,7 @@ describe('fillAscapPerformance — setlist dropdown', () => {
 
   it('reports dropdown not present', async () => {
     buildPerformanceAddDom({ hasSetlistDropdown: false });
-    document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!.click = () => {};
-    const results = await fillAscapPerformance(baseEvent);
+    const results = await fillAscapPerformance(eventNoVenue);
     const setlistStep = results.find((r) => r.step === 'setlist')!;
     expect(setlistStep.ok).toBe(false);
     expect(setlistStep.detail).toContain('not present');

@@ -96,7 +96,9 @@ export function setlistNameFor(event: Pick<AscapEventInput, 'artistName' | 'even
 // ---------- Performance Add flow ----------
 
 const SHORT_WAIT_MS = 200;
-const VENUE_RESULTS_TIMEOUT_MS = 2500;
+// Live-measured 2026-05-14: ASCAP's venue search XHR took ~3.9s to render
+// results on the Hotel Cafe query. Bumped from 2.5s to 6s with margin.
+const VENUE_RESULTS_TIMEOUT_MS = 6000;
 
 export async function fillAscapPerformance(
   event: AscapEventInput,
@@ -268,24 +270,57 @@ async function typeIntoSaveOnFocusField(
     if (response?.success) {
       return { ok: true, usedCdp: true };
     }
-    return {
-      ok: false,
-      usedCdp: false,
-      detail:
-        response?.error ||
-        'Advanced fill unavailable for this field — please type it manually',
-    };
+    // CDP path failed (another extension on the page blocks it, DevTools
+    // already attached, etc.). Fall back to clipboard-paste: copy the value
+    // to clipboard, focus the field, prompt user to ⌘V/Ctrl-V. ASCAP's
+    // saveOnFocus binding accepts paste events (real user gesture) the way
+    // it accepts real keystrokes.
+    return await clipboardPasteFallback(el, value);
   } catch (e) {
-    // Background unavailable, or chrome.debugger denied → graceful degrade.
-    // Fall back to legacy programmatic fill (value will appear visually but
-    // ASCAP may reject on Submit; user can re-type if needed).
-    setInputValueAscap(el, value);
-    return {
-      ok: false,
-      usedCdp: false,
-      detail: `Advanced fill failed (${String(e)}); falling back to legacy fill — verify before Submit`,
-    };
+    // Background unavailable or chrome.debugger denied → same fallback path.
+    return await clipboardPasteFallback(el, value, String(e));
   }
+}
+
+async function clipboardPasteFallback(
+  el: HTMLInputElement,
+  value: string,
+  errCtx?: string
+): Promise<{ ok: boolean; detail?: string; usedCdp: boolean }> {
+  // Try clipboard.writeText from content-script context — works when page
+  // has focus (rare when popup just dismissed). Otherwise relies on the
+  // popup having pre-primed the clipboard before dispatching FILL.
+  let clipboardOk = false;
+  try {
+    await navigator.clipboard.writeText(value);
+    clipboardOk = true;
+  } catch {
+    // Likely focus/permission issue — fall back to legacy execCommand path.
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      clipboardOk = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch {
+      // Still no clipboard — popup may have primed it. Continue with the
+      // paste prompt anyway; user can verify clipboard manually if needed.
+    }
+  }
+  // Focus the target field so user can ⌘V or type immediately.
+  try {
+    el.focus();
+  } catch {}
+  // Always show the paste-prompt — popup pre-primed the clipboard in most
+  // cases, so even if our content-script writes failed, the value is likely
+  // already there. Suffix with a fallback "or type" instruction.
+  const detail = `Press ⌘V (or Ctrl+V) to paste "${value}" — or type it manually. ASCAP requires manual entry here.${
+    errCtx ? ` (CDP error: ${errCtx})` : ''
+  }`;
+  return { ok: false, usedCdp: false, detail, };
 }
 
 async function fillPerfDetails(event: AscapEventInput): Promise<AscapFillResult[]> {
