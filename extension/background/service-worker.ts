@@ -94,4 +94,91 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .catch((err) => sendResponse({ success: false, error: err.message }));
     return true;
   }
+
+  // v1.3.3 — chrome.debugger CDP path for ASCAP's saveOnFocus-classed inputs.
+  // ASCAP's jQuery framework rejects programmatic values on Submit because
+  // synthetic events have `isTrusted: false`. We attach the Chrome DevTools
+  // Protocol debugger, focus the target field, dispatch real keyboard events
+  // (which the framework accepts as user input), then detach immediately.
+  // The "DevTools is debugging this tab" banner flashes for ~300ms during fill.
+  if (message.type === 'CDP_TYPE_INTO_FIELD') {
+    const tabId: number | undefined = _sender.tab?.id ?? message.tabId;
+    const selector: string = message.selector;
+    const value: string = message.value;
+    if (!tabId || !selector || typeof value !== 'string') {
+      sendResponse({ success: false, error: 'CDP_TYPE_INTO_FIELD missing tabId/selector/value' });
+      return false;
+    }
+    typeIntoFieldViaCDP(tabId, selector, value)
+      .then(() => sendResponse({ success: true }))
+      .catch((err) => sendResponse({ success: false, error: String(err?.message ?? err) }));
+    return true;
+  }
 });
+
+// Type `value` character-by-character into the element matching `selector`
+// on the given tab, using Chrome DevTools Protocol's Input.dispatchKeyEvent
+// (which produces `isTrusted: true` events — indistinguishable from real
+// keystrokes, so ASCAP's jQuery saveOnFocus binding actually commits the
+// value into its form-state engine). Detach in try/finally so the banner
+// never persists past the fill window.
+async function typeIntoFieldViaCDP(
+  tabId: number,
+  selector: string,
+  value: string
+): Promise<void> {
+  const target: chrome.debugger.Debuggee = { tabId };
+  let attached = false;
+  try {
+    await chrome.debugger.attach(target, '1.3');
+    attached = true;
+
+    // Focus the field via Runtime.evaluate. JSON.stringify guards against
+    // selectors containing quotes or backslashes.
+    const focusExpr = `(function(){var el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;el.focus();return document.activeElement===el;})()`;
+    const focusRes = (await chrome.debugger.sendCommand(target, 'Runtime.evaluate', {
+      expression: focusExpr,
+      returnByValue: true,
+    })) as { result?: { value?: boolean } };
+    if (!focusRes?.result?.value) {
+      throw new Error(`Could not focus selector ${selector}`);
+    }
+
+    // Dispatch each character as keyDown → char → keyUp. The `char` event
+    // is what actually inserts the visible text in Chrome's CDP; keyDown
+    // alone doesn't produce a character.
+    for (const ch of value) {
+      await chrome.debugger.sendCommand(target, 'Input.dispatchKeyEvent', {
+        type: 'keyDown',
+        text: ch,
+        unmodifiedText: ch,
+        key: ch,
+      });
+      await chrome.debugger.sendCommand(target, 'Input.dispatchKeyEvent', {
+        type: 'char',
+        text: ch,
+        unmodifiedText: ch,
+        key: ch,
+      });
+      await chrome.debugger.sendCommand(target, 'Input.dispatchKeyEvent', {
+        type: 'keyUp',
+        text: ch,
+        unmodifiedText: ch,
+        key: ch,
+      });
+    }
+
+    // Blur to commit. ASCAP's saveOnFocus may also commit on focus-out.
+    await chrome.debugger.sendCommand(target, 'Runtime.evaluate', {
+      expression: `(function(){var el=document.querySelector(${JSON.stringify(selector)});if(el)el.blur();})()`,
+    });
+  } finally {
+    if (attached) {
+      try {
+        await chrome.debugger.detach(target);
+      } catch {
+        // Ignore — tab may have closed or already detached.
+      }
+    }
+  }
+}

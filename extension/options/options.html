@@ -27,6 +27,24 @@
     </div>
 
     <div id="status"></div>
+
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd" />
+
+    <h2 style="font-size: 14px; margin-top: 0">Advanced ASCAP fill</h2>
+    <div class="form-group">
+      <label style="display: flex; gap: 8px; align-items: flex-start; font-weight: normal; cursor: pointer">
+        <input type="checkbox" id="advancedFillEnabled" checked style="margin-top: 3px" />
+        <span>
+          <strong>Enable advanced fill for ASCAP OnStage</strong> (recommended)
+          <span class="hint" style="display: block; margin-top: 4px">
+            ASCAP's form rejects programmatic input on Submit unless typed via real keyboard events.
+            With this enabled, the extension briefly uses Chrome's developer protocol to type the
+            Performers field — you'll see a "DevTools is debugging this tab" banner for ~300ms
+            during auto-fill. Without this enabled, you'll need to type Performers manually.
+          </span>
+        </span>
+      </label>
+    </div>
   </div>
   <script src="options.js"></script>
 </body>

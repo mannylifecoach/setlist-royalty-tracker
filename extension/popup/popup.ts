@@ -229,6 +229,33 @@ async function renderBmiEvents(events: EventData[], tabId: number) {
   });
 }
 
+// v1.3.3 — first-fill disclosure modal. Shown ONCE per install before the
+// first ASCAP auto-fill kicks off. Explains the brief "DevTools is debugging"
+// banner so testers aren't alarmed when they see it.
+async function ensureCdpDisclosureSeen(): Promise<void> {
+  const cfg = await chrome.storage.local.get(['cdpDisclosureSeen']);
+  if (cfg.cdpDisclosureSeen) return;
+  return new Promise<void>((resolve) => {
+    const modal = document.createElement('div');
+    modal.style.cssText =
+      'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:12px;';
+    modal.innerHTML = `
+      <div style="background:#1a1a1a;color:#fff;border-radius:8px;padding:16px;max-width:320px;font-size:12px;line-height:1.4">
+        <div style="font-weight:bold;margin-bottom:8px;font-size:13px">One quick heads-up</div>
+        <p style="margin:0 0 10px">ASCAP's form requires us to type the Performers field at the browser level. You'll see a brief <strong>"DevTools is debugging this tab"</strong> banner for about 300ms during auto-fill — that's normal.</p>
+        <p style="margin:0 0 12px;font-size:11px;opacity:0.7">We only use this to type your artist name. You can turn this off anytime in Settings.</p>
+        <button id="srt-cdp-ok" style="background:#1db954;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">Got it — auto-fill</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#srt-cdp-ok')?.addEventListener('click', async () => {
+      await chrome.storage.local.set({ cdpDisclosureSeen: true });
+      modal.remove();
+      resolve();
+    });
+  });
+}
+
 function renderAscapOnstageEvents(
   events: EventData[],
   tabId: number,
@@ -240,7 +267,10 @@ function renderAscapOnstageEvents(
     hint: isPerf
       ? 'Pick a performance — SRT fills the OnStage form using your saved venue + setlist data.'
       : 'Pick an event — SRT creates the setlist with the matched songs.',
-    onClick: (event, btn) => {
+    onClick: async (event, btn) => {
+      // Show first-fill disclosure modal once per install. Resolves immediately
+      // for users who've already seen it.
+      await ensureCdpDisclosureSeen();
       chrome.tabs.sendMessage(tabId, {
         type: isPerf ? 'FILL_ASCAP_PERFORMANCE' : 'FILL_ASCAP_SETLIST',
         event,

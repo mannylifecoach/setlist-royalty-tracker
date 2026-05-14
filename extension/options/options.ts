@@ -1,13 +1,22 @@
 const apiUrlInput = document.getElementById('apiUrl') as HTMLInputElement;
 const apiKeyInput = document.getElementById('apiKey') as HTMLInputElement;
+const advancedFillCheckbox = document.getElementById('advancedFillEnabled') as HTMLInputElement;
 const saveBtn = document.getElementById('save')!;
 const testBtn = document.getElementById('test')!;
 const statusEl = document.getElementById('status')!;
 
 // Load saved settings
-chrome.storage.local.get(['apiKey', 'apiUrl'], (result) => {
+chrome.storage.local.get(['apiKey', 'apiUrl', 'advancedFillEnabled'], (result) => {
   if (result.apiUrl) apiUrlInput.value = result.apiUrl;
   if (result.apiKey) apiKeyInput.value = result.apiKey;
+  // Default to true (advanced fill ON) for new installs — undefined means
+  // "never set", treat as enabled.
+  advancedFillCheckbox.checked = result.advancedFillEnabled !== false;
+});
+
+// Persist the toggle immediately on change — no Save click needed for it.
+advancedFillCheckbox.addEventListener('change', () => {
+  chrome.storage.local.set({ advancedFillEnabled: advancedFillCheckbox.checked });
 });
 
 saveBtn.addEventListener('click', () => {
@@ -26,13 +35,16 @@ saveBtn.addEventListener('click', () => {
     return;
   }
 
-  chrome.storage.local.set({ apiUrl, apiKey }, () => {
-    statusEl.className = 'status-success';
-    statusEl.textContent = 'Settings saved';
-    setTimeout(() => {
-      statusEl.textContent = '';
-    }, 2000);
-  });
+  chrome.storage.local.set(
+    { apiUrl, apiKey, advancedFillEnabled: advancedFillCheckbox.checked },
+    () => {
+      statusEl.className = 'status-success';
+      statusEl.textContent = 'Settings saved';
+      setTimeout(() => {
+        statusEl.textContent = '';
+      }, 2000);
+    }
+  );
 });
 
 testBtn.addEventListener('click', async () => {

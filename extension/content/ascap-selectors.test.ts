@@ -251,8 +251,24 @@ describe('Fixture validation — Venue Detail (post-match + new venue)', () => {
 describe('Fixture validation — Works Catalog Search', () => {
   const fixture = loadFixture('onstage_works_search');
 
-  it.each(Object.entries(WORKS_CATALOG_SEARCH_FIELDS))(
-    'WORKS_CATALOG_SEARCH_FIELDS.%s — %s — resolves',
+  // Result-row selectors (`resultRow`, `rowCheckbox`, `rowStatusBadge`,
+  // `addToSetlistButton`) only render AFTER the user types a search +
+  // clicks Search. The static fixture captures the empty-search state so
+  // it doesn't contain those elements — exempting them from this static
+  // validation. They're exercised live via the happy-dom integration tests
+  // in `ascap-filler.test.ts` (auto-pick + Add to Setlist behavior).
+  const ROW_STATE_ONLY = new Set([
+    'resultRow',
+    'rowCheckbox',
+    'rowStatusBadge',
+    'addToSetlistButton',
+  ]);
+  const searchInputEntries = Object.entries(WORKS_CATALOG_SEARCH_FIELDS).filter(
+    ([key]) => !ROW_STATE_ONLY.has(key)
+  );
+
+  it.each(searchInputEntries)(
+    'WORKS_CATALOG_SEARCH_FIELDS.%s — %s — resolves in empty-search state',
     (_key, selector) => {
       expect(selectorMatchesAny(selector, fixture)).toBe(true);
     }
@@ -351,28 +367,39 @@ describe('setBootstrapSelectValue', () => {
 
 describe('setCheckbox', () => {
   function makeCheckbox(initial: boolean) {
-    const dispatched: Event[] = [];
+    const calls: string[] = [];
     const el = {
       checked: initial,
-      dispatchEvent: (e: Event) => {
-        dispatched.push(e);
-        return true;
+      focus: () => {
+        calls.push('focus');
+      },
+      click: () => {
+        // Simulate browser click flipping the checked state.
+        (el as unknown as { checked: boolean }).checked = !el.checked;
+        calls.push('click');
       },
     } as unknown as HTMLInputElement;
-    return { el, dispatched };
+    return { el, calls };
   }
 
-  it('flips false → true and fires change', () => {
-    const { el, dispatched } = makeCheckbox(false);
+  it('flips false → true via focus + click (mirrors user behavior — live-confirmed 2026-05-14)', () => {
+    const { el, calls } = makeCheckbox(false);
     setCheckbox(el, true);
     expect(el.checked).toBe(true);
-    expect(dispatched.some((e) => e.type === 'change')).toBe(true);
+    expect(calls).toEqual(['focus', 'click']);
   });
 
-  it('is a no-op when already in the target state (no event fired)', () => {
-    const { el, dispatched } = makeCheckbox(true);
+  it('flips true → false via focus + click', () => {
+    const { el, calls } = makeCheckbox(true);
+    setCheckbox(el, false);
+    expect(el.checked).toBe(false);
+    expect(calls).toEqual(['focus', 'click']);
+  });
+
+  it('is a no-op when already in the target state (no focus, no click)', () => {
+    const { el, calls } = makeCheckbox(true);
     setCheckbox(el, true);
-    expect(dispatched).toHaveLength(0);
+    expect(calls).toEqual([]);
   });
 });
 

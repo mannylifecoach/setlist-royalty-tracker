@@ -212,10 +212,13 @@ export const GET = withHandler(async (request: NextRequest) => {
         // ASCAP defaults — derived where possible, otherwise sensible default.
         // Real per-performance storage of these is a follow-up if/when users
         // need to set non-defaults from inside SRT.
+        // ticketFee + advanceTickets default to true per 2026-05-14 feedback —
+        // most live performances are ticketed shows with advance sales.
+        // Free-event / door-only performers can untick per-row before Submit.
         perfType: 'CNCRT',
         liveStreamViews: null,
         ticketFee: (p.ticketCharge ?? 'Yes') === 'Yes',
-        advanceTickets: false,
+        advanceTickets: true,
         songs: [],
       });
     }

@@ -108,6 +108,8 @@ export const VENUE_DETAIL_FIELDS = {
 
 // Add Works inside Setlist Add — full ASCAP catalog search with optional filters.
 // Cleanest path for filler: pass workId if SRT has it; otherwise fuzzy by title.
+// Result-row + Add-to-Setlist selectors captured live 2026-05-14 from Tiffany's
+// session — 3 KARMA results returned with statuses "Accepted" + "Possible Match".
 export const WORKS_CATALOG_SEARCH_FIELDS = {
   workTitle: 'input.workTitle',
   publisher: 'input.publisher',
@@ -118,6 +120,15 @@ export const WORKS_CATALOG_SEARCH_FIELDS = {
   ipiNumber: 'input.ipiNumber',
   searchApplyButton: 'button.search-apply',
   moreOptionsLink: 'a.more-options-button',
+  // Result row selectors — for auto-picking after search returns.
+  // Each row has a checkbox + status badge. Status text is one of "Accepted"
+  // (the writer's claimed work — prefer this) or "Possible Match" (ASCAP
+  // thinks it might be theirs but unclaimed). After ticking the right row's
+  // checkbox, click the Add to Setlist button at the bottom of the results.
+  resultRow: 'tr.is-selectable',
+  rowCheckbox: 'input.c-checkbox__input',
+  rowStatusBadge: 'td.jsPillWrapper',
+  addToSetlistButton: 'button.js-add-to-setlist',
 } as const;
 
 // All FIELD_MAPs combined — used for the "validate every selector against a fixture" test.
@@ -255,12 +266,14 @@ export async function fillJqueryTypeahead(
   return false;
 }
 
-// Set a checkbox's checked state and fire change. ASCAP uses Materialize-style
-// checkboxes with no special widget refresh needed.
+// Toggle a checkbox to match the desired `checked` state. Live-confirmed
+// 2026-05-14 on ASCAP OnStage: programmatic `el.checked = X` doesn't trigger
+// the jQuery binding that ASCAP's form-state engine listens to; focus + click
+// matches the user-click semantics and persists through Submit.
 export function setCheckbox(el: HTMLInputElement, checked: boolean): boolean {
   if (el.checked === checked) return true;
-  el.checked = checked;
-  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.focus();
+  el.click();
   return true;
 }
 

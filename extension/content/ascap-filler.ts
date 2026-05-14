@@ -120,7 +120,7 @@ export async function fillAscapPerformance(
   }
 
   // 2. Performance details (artist, type, date, duration, start time, fee/advance).
-  fillPerfDetails(event).forEach(push);
+  (await fillPerfDetails(event)).forEach(push);
 
   // 3. Setlist dropdown — try to pick existing setlist by name. If none, surface
   // a clear message; the user can click the page's Create Setlist button.
@@ -240,13 +240,72 @@ function fillVenueAddress(event: AscapEventInput): void {
   if (country) setBootstrapSelectValue(country, event.venueCountry || 'US');
 }
 
-function fillPerfDetails(event: AscapEventInput): AscapFillResult[] {
+// v1.3.3 — type a value into a saveOnFocus-classed input via the chrome.debugger
+// CDP path (real keyboard events that pass ASCAP's `isTrusted` check). Falls
+// back to setInputValueAscap if the background can't attach (e.g. DevTools
+// already open, user has disabled advanced fill in settings).
+async function typeIntoSaveOnFocusField(
+  el: HTMLInputElement,
+  selector: string,
+  value: string
+): Promise<{ ok: boolean; detail?: string; usedCdp: boolean }> {
+  // Settings toggle: users can opt out of advanced fill — falls back to manual.
+  const cfg = await chrome.storage.local.get(['advancedFillEnabled']);
+  const advancedEnabled = cfg.advancedFillEnabled !== false; // default true
+  if (!advancedEnabled) {
+    return {
+      ok: false,
+      usedCdp: false,
+      detail: 'Advanced fill is disabled in settings — please type this field manually',
+    };
+  }
+  try {
+    const response = (await chrome.runtime.sendMessage({
+      type: 'CDP_TYPE_INTO_FIELD',
+      selector,
+      value,
+    })) as { success: boolean; error?: string };
+    if (response?.success) {
+      return { ok: true, usedCdp: true };
+    }
+    return {
+      ok: false,
+      usedCdp: false,
+      detail:
+        response?.error ||
+        'Advanced fill unavailable for this field — please type it manually',
+    };
+  } catch (e) {
+    // Background unavailable, or chrome.debugger denied → graceful degrade.
+    // Fall back to legacy programmatic fill (value will appear visually but
+    // ASCAP may reject on Submit; user can re-type if needed).
+    setInputValueAscap(el, value);
+    return {
+      ok: false,
+      usedCdp: false,
+      detail: `Advanced fill failed (${String(e)}); falling back to legacy fill — verify before Submit`,
+    };
+  }
+}
+
+async function fillPerfDetails(event: AscapEventInput): Promise<AscapFillResult[]> {
   const out: AscapFillResult[] = [];
 
   const perfArtist = findAscapField<HTMLInputElement>(PERF_ADD_FIELDS.perfArtistName);
   if (perfArtist && event.artistName) {
-    setInputValueAscap(perfArtist, event.artistName);
-    out.push({ step: 'artist-name', ok: true });
+    // perfArtistName has the `saveOnFocus` class — ASCAP's framework rejects
+    // programmatic values at Submit time unless typed via real keyboard
+    // events. Route through chrome.debugger CDP for trusted-event dispatch.
+    const cdpResult = await typeIntoSaveOnFocusField(
+      perfArtist,
+      PERF_ADD_FIELDS.perfArtistName,
+      event.artistName
+    );
+    out.push({
+      step: 'artist-name',
+      ok: cdpResult.ok,
+      detail: cdpResult.detail,
+    });
   }
 
   const perfType = findAscapField<HTMLSelectElement>(PERF_ADD_FIELDS.perfTypeCode);
@@ -357,7 +416,92 @@ export async function fillAscapSetlist(
     push(await prepareWorkSearch(song));
   }
 
+  // v1.3.3 — after autoPickFromCatalog clicks Add to Setlist, ASCAP
+  // SPA-navigates back to /setlist/add. The hash-route change clears the
+  // setlist name input (form state not persisted across the navigation).
+  // Wait for the navigation, then re-fill the name so the user can click
+  // Save without retyping. Live-confirmed bug from 2026-05-14 Tiffany session.
+  await wait(1500);
+  if (!/\/works/.test(window.location.hash)) {
+    const nameInput2 = findAscapField<HTMLInputElement>(SETLIST_ADD_FIELDS.setlistName);
+    if (nameInput2 && !nameInput2.value) {
+      setInputValueAscap(nameInput2, setlistNameFor(event));
+      push({
+        step: 'setlist-name-refill',
+        ok: true,
+        detail: 'Re-filled setlist name after Add Works round-trip',
+      });
+    }
+  }
+
   return results;
+}
+
+const WORKS_RESULTS_TIMEOUT_MS = 3000;
+
+// After typing a search + clicking Search, poll for result rows and auto-pick
+// the highest-priority match. "Accepted" status (writer's claimed work) wins
+// over "Possible Match" (ASCAP thinks it might be theirs, unclaimed). Tick
+// the chosen row's checkbox + click Add to Setlist — that commits the work
+// to the in-progress setlist and ASCAP SPA-navigates back to /setlist/add.
+async function autoPickFromCatalog(timeoutMs: number): Promise<{
+  picked: boolean;
+  detail: string;
+  workId?: string;
+  status?: string;
+}> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>(WORKS_CATALOG_SEARCH_FIELDS.resultRow)
+    );
+    if (rows.length > 0) {
+      // Each row → { row, status }. Status comes from the jsPillWrapper td.
+      const ranked = rows.map((row) => {
+        const badge = row.querySelector(WORKS_CATALOG_SEARCH_FIELDS.rowStatusBadge);
+        const status = (badge?.textContent || '').trim();
+        return { row, status };
+      });
+      const best =
+        ranked.find((r) => /^accepted$/i.test(r.status)) ||
+        ranked.find((r) => /possible match/i.test(r.status)) ||
+        ranked[0];
+      if (!best) {
+        return { picked: false, detail: 'Results rendered but no usable rows' };
+      }
+      const checkbox = best.row.querySelector<HTMLInputElement>(
+        WORKS_CATALOG_SEARCH_FIELDS.rowCheckbox
+      );
+      if (!checkbox) {
+        return { picked: false, detail: 'Row found but row checkbox missing' };
+      }
+      if (!checkbox.checked) {
+        checkbox.click();
+      }
+      const addBtn = document.querySelector<HTMLButtonElement>(
+        WORKS_CATALOG_SEARCH_FIELDS.addToSetlistButton
+      );
+      if (!addBtn) {
+        return {
+          picked: false,
+          detail: 'Checkbox ticked but Add to Setlist button missing',
+        };
+      }
+      // Extract Work ID from the row's text for reporting (9+ digit number).
+      const workIdMatch = (best.row.textContent || '').match(/\b(\d{9,})\b/);
+      addBtn.click();
+      return {
+        picked: true,
+        detail: `Picked ${best.status || 'first matching'} row${
+          workIdMatch ? ` (Work ID ${workIdMatch[1]})` : ''
+        } and clicked Add to Setlist`,
+        workId: workIdMatch?.[1],
+        status: best.status,
+      };
+    }
+    await wait(100);
+  }
+  return { picked: false, detail: `No results rendered within ${timeoutMs}ms` };
 }
 
 async function prepareWorkSearch(song: AscapEventSong): Promise<AscapFillResult> {
@@ -380,31 +524,36 @@ async function prepareWorkSearch(song: AscapEventSong): Promise<AscapFillResult>
   if (titleInput) setInputValueAscap(titleInput, '');
 
   // Prefer Work ID — exact match.
+  const searchedBy = song.ascapWorkId && workIdInput ? 'work-id' : 'title';
   if (song.ascapWorkId && workIdInput) {
     setInputValueAscap(workIdInput, song.ascapWorkId);
-    searchBtn.click();
-    await wait(SHORT_WAIT_MS);
+  } else if (titleInput) {
+    setInputValueAscap(titleInput, song.title);
+  } else {
     return {
       step: `song-search:${song.title}`,
-      ok: true,
-      detail: `Searched by work id ${song.ascapWorkId} — pick the result and click Add`,
+      ok: false,
+      detail: 'Catalog search controls not found',
     };
   }
-  // Fallback to title search.
-  if (titleInput) {
-    setInputValueAscap(titleInput, song.title);
-    searchBtn.click();
-    await wait(SHORT_WAIT_MS);
+  searchBtn.click();
+  await wait(SHORT_WAIT_MS);
+
+  // NEW v1.3.3 — auto-pick the best result + commit. Live-confirmed selectors
+  // from 2026-05-14 Tiffany session (3 KARMA results with Accepted + Possible
+  // Match statuses; "Accepted" row was the right pick).
+  const pick = await autoPickFromCatalog(WORKS_RESULTS_TIMEOUT_MS);
+  if (pick.picked) {
     return {
       step: `song-search:${song.title}`,
       ok: true,
-      detail: 'Searched by title — pick the result and click Add',
+      detail: `Searched by ${searchedBy}; ${pick.detail}`,
     };
   }
   return {
     step: `song-search:${song.title}`,
     ok: false,
-    detail: 'Catalog search controls not found',
+    detail: `Searched by ${searchedBy}; ${pick.detail}`,
   };
 }
 

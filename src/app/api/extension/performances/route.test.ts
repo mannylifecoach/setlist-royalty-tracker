@@ -185,11 +185,11 @@ describe('GET /api/extension/performances — ASCAP fields', () => {
     expect(body.events[0].ticketFee).toBe(true);
   });
 
-  it('defaults perfType to "CNCRT" and advanceTickets to false', async () => {
+  it('defaults perfType to "CNCRT" and advanceTickets to true (2026-05-14 default flip)', async () => {
     const res = await GET(makeRequest() as never);
     const body = await res.json();
     expect(body.events[0].perfType).toBe('CNCRT');
-    expect(body.events[0].advanceTickets).toBe(false);
+    expect(body.events[0].advanceTickets).toBe(true);
     expect(body.events[0].liveStreamViews).toBeNull();
   });
 
