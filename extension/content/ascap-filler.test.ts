@@ -73,6 +73,10 @@ function buildPerformanceAddDom(opts: {
 }
 
 function buildVenueResults(matches: { name: string; address: string }[]) {
+  // Verified live against ASCAP 2026-05-13: when ASCAP's venue search returns
+  // 1+ results, the Add New Venue button is NOT rendered — it only appears in
+  // the empty-state container (see buildVenueEmptyResults). The original
+  // fixture (pre-2026-05-13) incorrectly appended addNewVenue here.
   const container = document.createElement('div');
   container.className = 'list venue-results';
   for (let i = 0; i < matches.length; i++) {
@@ -86,12 +90,6 @@ function buildVenueResults(matches: { name: string; address: string }[]) {
     `;
     container.appendChild(row);
   }
-  // ASCAP renders the Add New Venue button alongside results so the user can
-  // create a new venue even when the search returned non-matching results.
-  const addNew = document.createElement('button');
-  addNew.className = 'btn btn-add-venue addNewVenue';
-  addNew.textContent = 'Add New Venue';
-  container.appendChild(addNew);
   document.body.appendChild(container);
 }
 
@@ -267,36 +265,74 @@ describe('fillAscapPerformance — venue search match', () => {
     expect(selectSpy).toHaveBeenCalled();
   });
 
-  it('falls back to Add New Venue when no result matches the venue name', async () => {
+  it('clicks Select on a substring-matching venue (chain venue case from 2026-05-13)', async () => {
+    // Live-caught 2026-05-13 in Tiffany's session: SRT typed "House of Blues"
+    // and ASCAP returned "House of Blues - Orlando". The old exact-equal check
+    // missed it; the v1.3.2 substring fallback should now select it.
     buildPerformanceAddDom();
     const searchBtn = document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!;
     const orig = searchBtn.click.bind(searchBtn);
     searchBtn.click = () => {
       buildVenueResults([
-        { name: 'Some Other Venue', address: '123 Wrong St' },
+        { name: 'House of Blues - Orlando', address: '1490 EAST BUENA VISTA DRIVE' },
       ]);
       orig();
     };
-
-    let addNewClicked = false;
+    let selectClicked = false;
     document.addEventListener('click', (e) => {
       const t = e.target as HTMLElement;
-      if (t.matches('button.addNewVenue')) {
-        addNewClicked = true;
-        // Simulate the new-venue address form rendering after the click.
-        buildVenueDetailFields();
-      }
+      if (t.matches('button.selectVenue')) selectClicked = true;
     });
-
-    const results = await fillAscapPerformance(baseEvent);
-    expect(addNewClicked).toBe(true);
+    const event: AscapEventInput = { ...baseEvent, venueName: 'House of Blues' };
+    const results = await fillAscapPerformance(event);
     const venueStep = results.find((r) => r.step === 'venue-search');
     expect(venueStep?.ok).toBe(true);
-    expect(venueStep?.detail?.toLowerCase()).toContain('new');
-    // Address fields populated from the event data
-    expect(document.querySelector<HTMLInputElement>('input#addressLine1')!.value).toBe('628 Divisadero St');
-    expect(document.querySelector<HTMLInputElement>('input#city')!.value).toBe('San Francisco');
-    expect(document.querySelector<HTMLInputElement>('input#postalCode')!.value).toBe('94117');
+    expect(selectClicked).toBe(true);
+  });
+
+  it('prefers exact match over substring match when both exist', async () => {
+    // If ASCAP returns both "House of Blues" and "House of Blues - Orlando",
+    // the exact match should win (pass 1 of the 2-pass matcher).
+    buildPerformanceAddDom();
+    const searchBtn = document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!;
+    const orig = searchBtn.click.bind(searchBtn);
+    searchBtn.click = () => {
+      buildVenueResults([
+        { name: 'House of Blues - Orlando', address: '1490 EAST BUENA VISTA DRIVE' },
+        { name: 'House of Blues', address: '329 N Dearborn St' },
+      ]);
+      orig();
+    };
+    const selectedRowIndexes: string[] = [];
+    document.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.matches('button.selectVenue')) {
+        const idx = t.getAttribute('data-index');
+        if (idx) selectedRowIndexes.push(idx);
+      }
+    });
+    const event: AscapEventInput = { ...baseEvent, venueName: 'House of Blues' };
+    await fillAscapPerformance(event);
+    expect(selectedRowIndexes).toEqual(['1']); // row 1 is the exact match
+  });
+
+  it('reports user-actionable error when results exist but none match (no Add New Venue button)', async () => {
+    // Live-confirmed 2026-05-13: when ASCAP returns 1+ results that don't
+    // match, Add New Venue button is NOT rendered. The filler surfaces an
+    // actionable detail message instead of trying a missing fallback.
+    buildPerformanceAddDom();
+    const searchBtn = document.querySelector<HTMLButtonElement>('button.js-search-venues-button')!;
+    const orig = searchBtn.click.bind(searchBtn);
+    searchBtn.click = () => {
+      buildVenueResults([
+        { name: 'Completely Different Venue', address: '999 Nowhere Ln' },
+      ]);
+      orig();
+    };
+    const results = await fillAscapPerformance(baseEvent);
+    const venueStep = results.find((r) => r.step === 'venue-search');
+    expect(venueStep?.ok).toBe(false);
+    expect(venueStep?.detail?.toLowerCase()).toContain('manually');
   });
 
   it('uses Add New Venue path when search returns empty results (no rows, only Add button)', async () => {

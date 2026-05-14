@@ -145,16 +145,19 @@ async function fillVenueSearch(event: AscapEventInput): Promise<AscapFillResult>
 
   const matched = await pollForVenueMatch(event.venueName!, VENUE_RESULTS_TIMEOUT_MS);
   if (matched) {
-    return { step: 'venue-search', ok: true, detail: `Selected matching venue "${event.venueName}"` };
+    return { step: 'venue-search', ok: true, detail: `Selected a matching venue from ASCAP's results for "${event.venueName}"` };
   }
 
   // No match — fall back to "Add New Venue" + populate address fields.
+  // ASCAP only renders the Add New Venue button in the empty-results state.
+  // If results exist but none match (even loosely), the button won't be there —
+  // we surface a user-actionable message instead of an internal error.
   const addNewBtn = findAscapField<HTMLButtonElement>(VENUE_RESULTS_FIELDS.addNewVenueButton);
   if (!addNewBtn) {
     return {
       step: 'venue-search',
       ok: false,
-      detail: 'No matching venue found and Add New Venue button not present',
+      detail: `Couldn't auto-pick a venue from ASCAP's results for "${event.venueName}" — pick one manually or modify the search`,
     };
   }
   addNewBtn.click();
@@ -169,11 +172,13 @@ async function fillVenueSearch(event: AscapEventInput): Promise<AscapFillResult>
 
 async function pollForVenueMatch(venueName: string, timeoutMs: number): Promise<boolean> {
   const target = venueName.trim().toLowerCase();
+  if (!target) return false;
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const container = document.querySelector(VENUE_RESULTS_FIELDS.resultsContainer);
     if (container) {
       const rows = Array.from(container.querySelectorAll(VENUE_RESULTS_FIELDS.resultRow));
+      // Pass 1 — exact match wins when available.
       for (const row of rows) {
         const nameEl = row.querySelector(VENUE_RESULTS_FIELDS.resultVenueName);
         const text = nameEl?.textContent?.trim().toLowerCase() ?? '';
@@ -187,7 +192,25 @@ async function pollForVenueMatch(venueName: string, timeoutMs: number): Promise<
           }
         }
       }
-      // Container rendered but no exact match — return so we can fall back.
+      // Pass 2 — substring match for the chain-venue case: SRT typed "House of
+      // Blues" but ASCAP's catalog has "House of Blues - Orlando". Picks the
+      // first row whose name contains the target (or vice versa, in case the
+      // user typed a more specific name than ASCAP's catalog stores).
+      for (const row of rows) {
+        const nameEl = row.querySelector(VENUE_RESULTS_FIELDS.resultVenueName);
+        const text = nameEl?.textContent?.trim().toLowerCase() ?? '';
+        if (text && (text.includes(target) || target.includes(text))) {
+          const selectBtn = row.querySelector<HTMLButtonElement>(
+            VENUE_RESULTS_FIELDS.selectVenueButton
+          );
+          if (selectBtn) {
+            selectBtn.click();
+            return true;
+          }
+        }
+      }
+      // Container rendered but no match (exact or substring) — return so the
+      // caller can fall back to Add New Venue (when ASCAP renders it).
       if (rows.length > 0) return false;
       // Empty-state container with the Add New Venue button → also done waiting.
       if (container.querySelector(VENUE_RESULTS_FIELDS.addNewVenueButton)) return false;

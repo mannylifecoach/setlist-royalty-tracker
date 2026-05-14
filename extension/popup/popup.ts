@@ -240,16 +240,12 @@ function renderAscapOnstageEvents(
     hint: isPerf
       ? 'Pick a performance — SRT fills the OnStage form using your saved venue + setlist data.'
       : 'Pick an event — SRT creates the setlist with the matched songs.',
-    onClick: (_event, btn) => {
-      // Card #19 wires the actual ASCAP fill via the content script. For now
-      // the content script no-ops on ASCAP and returns "not yet implemented".
-      // This branch intentionally still posts the message so #19 can land
-      // without changing the popup contract.
+    onClick: (event, btn) => {
       chrome.tabs.sendMessage(tabId, {
         type: isPerf ? 'FILL_ASCAP_PERFORMANCE' : 'FILL_ASCAP_SETLIST',
-        event: _event,
+        event,
       }).catch(() => undefined);
-      btn.textContent = 'ASCAP auto-fill landing soon';
+      btn.textContent = 'Filling… see ASCAP page';
       btn.setAttribute('disabled', 'true');
     },
   });
