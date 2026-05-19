@@ -7,7 +7,7 @@
     "watch": "node build.mjs --watch"
   },
   "devDependencies": {
-    "chrome-types": "^0.1.425",
-    "esbuild": "^0.24.0"
+    "chrome-types": "^0.1.428",
+    "esbuild": "^0.28.0"
   }
 }
