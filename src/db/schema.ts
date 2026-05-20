@@ -44,6 +44,10 @@ export const users = pgTable('users', {
   publisherName: text('publisher_name'),
   publisherIpi: text('publisher_ipi'),
   noPublisher: boolean('no_publisher').default(false).notNull(),
+  // Default setlist template: array of song UUIDs. New performance creation
+  // (manual entry, Bandsintown imports) pre-fills from this list when songIds
+  // is missing/empty. Empty/null = no pre-fill (opt-in).
+  defaultSetlistSongIds: jsonb('default_setlist_song_ids').$type<string[]>(),
 });
 
 export const accounts = pgTable('accounts', {

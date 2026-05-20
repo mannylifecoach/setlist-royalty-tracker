@@ -46,6 +46,8 @@ export default function SettingsPage() {
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKeyPreview, setApiKeyPreview] = useState<string | null>(null);
   const [generatingKey, setGeneratingKey] = useState(false);
+  const [songs, setSongs] = useState<Array<{ id: string; title: string }>>([]);
+  const [defaultSetlistSongIds, setDefaultSetlistSongIds] = useState<string[]>([]);
 
   const availablePros = useMemo(() => getProsForCountry(country), [country]);
 
@@ -66,6 +68,9 @@ export default function SettingsPage() {
         setDefaultStartTimeAmPm(data.defaultStartTimeAmPm || 'PM');
         setDefaultEndTimeHour(data.defaultEndTimeHour || '11:00');
         setDefaultEndTimeAmPm(data.defaultEndTimeAmPm || 'PM');
+        setDefaultSetlistSongIds(
+          Array.isArray(data.defaultSetlistSongIds) ? data.defaultSetlistSongIds : []
+        );
       }
     }
     load();
@@ -78,7 +83,27 @@ export default function SettingsPage() {
       }
     }
     loadApiKey();
+    async function loadSongs() {
+      const res = await fetch('/api/songs');
+      if (res.ok) {
+        const data = await res.json();
+        // /api/songs returns either an array of songs or an object with a `songs` array
+        const list: Array<{ id: string; title: string }> = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.songs)
+            ? data.songs
+            : [];
+        setSongs(list.map((s) => ({ id: s.id, title: s.title })));
+      }
+    }
+    loadSongs();
   }, []);
+
+  function toggleDefaultSetlistSong(songId: string) {
+    setDefaultSetlistSongIds((prev) =>
+      prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]
+    );
+  }
 
   function toggleCapability(cap: Capability) {
     setCapabilities((prev) =>
@@ -105,6 +130,7 @@ export default function SettingsPage() {
           defaultStartTimeAmPm,
           defaultEndTimeHour,
           defaultEndTimeAmPm,
+          defaultSetlistSongIds,
         }),
       });
       if (res.ok) {
@@ -348,6 +374,57 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
+          {saving ? 'saving...' : saved ? 'saved' : 'save'}
+        </button>
+      </div>
+
+      <div className="card p-4 space-y-3">
+        <div className="text-[11px] text-text-muted">default setlist</div>
+        <p className="text-[11px] text-text-disabled">
+          pick the songs you typically play. when a new performance is created without a
+          setlist (manual entry left blank, or future bandsintown imports), we&apos;ll
+          pre-fill from this list — you can edit per show. leave empty to skip pre-fill.
+        </p>
+        {songs.length === 0 ? (
+          <p className="text-[11px] text-text-muted italic">
+            register some songs on the songs page first, then come back here.
+          </p>
+        ) : (
+          <div className="space-y-[2px] max-h-[280px] overflow-y-auto">
+            {songs.map((s) => {
+              const isChecked = defaultSetlistSongIds.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => toggleDefaultSetlistSong(s.id)}
+                  className={`w-full text-left px-3 py-2 border transition-colors ${
+                    isChecked
+                      ? 'border-status-confirmed bg-status-confirmed/10'
+                      : 'border-border-subtle hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-3 h-3 border ${
+                        isChecked ? 'border-status-confirmed bg-status-confirmed' : 'border-border'
+                      }`}
+                    />
+                    <span className="text-[12px] truncate">{s.title}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {songs.length > 0 && (
+          <div className="text-[11px] text-text-disabled">
+            {defaultSetlistSongIds.length === 0
+              ? 'no template — new performances start empty.'
+              : `${defaultSetlistSongIds.length} song${defaultSetlistSongIds.length === 1 ? '' : 's'} in template.`}
+          </div>
+        )}
         <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
           {saving ? 'saving...' : saved ? 'saved' : 'save'}
         </button>

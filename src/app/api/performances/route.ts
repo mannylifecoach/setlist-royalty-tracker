@@ -6,6 +6,7 @@ import { eq, and, desc, inArray } from 'drizzle-orm';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { createManualPerformanceSchema } from '@/lib/schemas';
 import { calculateExpirationDate } from '@/lib/setlistfm';
+import { resolveCandidateSongIds } from '@/lib/setlist-template';
 
 export const GET = withHandler(async (request: NextRequest) => {
   const session = await auth();
@@ -66,13 +67,37 @@ export const POST = withHandler(async (request: NextRequest) => {
     return NextResponse.json({ error: 'artist not found' }, { status: 404 });
   }
 
+  // If caller omitted songIds (or sent an empty array), fall back to the user's
+  // default setlist template. Empty template + empty input → 400. Used by the
+  // manual entry form when the user leaves songs unchecked, and by Bandsintown
+  // imports (Card 2) where API responses don't carry setlists.
+  const candidateSongIds = await resolveCandidateSongIds(userId, body.songIds);
+  if (candidateSongIds.length === 0) {
+    return NextResponse.json(
+      { error: 'no songs provided and no default setlist template configured' },
+      { status: 400 }
+    );
+  }
+  const fromTemplate = !body.songIds || body.songIds.length === 0;
+
   // IDOR check: every song must belong to caller. Single bulk query.
   const ownedSongs = await db
     .select({ id: songs.id })
     .from(songs)
-    .where(and(inArray(songs.id, body.songIds), eq(songs.userId, userId)));
-  if (ownedSongs.length !== body.songIds.length) {
+    .where(and(inArray(songs.id, candidateSongIds), eq(songs.userId, userId)));
+
+  // User-provided ids → strict IDOR (404 on any mismatch, no enumeration oracle).
+  // Template-derived ids → silently filter stale entries (template may reference
+  // songs the user has since deleted; don't fail the whole insert for that).
+  if (!fromTemplate && ownedSongs.length !== candidateSongIds.length) {
     return NextResponse.json({ error: 'one or more songs not found' }, { status: 404 });
+  }
+  const finalSongIds = ownedSongs.map((s) => s.id);
+  if (finalSongIds.length === 0) {
+    return NextResponse.json(
+      { error: 'default setlist template has no valid songs' },
+      { status: 400 }
+    );
   }
 
   const expiresAt = calculateExpirationDate(body.eventDate);
@@ -81,7 +106,7 @@ export const POST = withHandler(async (request: NextRequest) => {
   // user.default*Time at READ time so changes to settings always win. Eager-
   // filling here was the 2026-05-03 Mckay bug — when he updated his settings
   // defaults, existing rows kept the old hardcoded values forever.
-  const rows = body.songIds.map((songId) => ({
+  const rows = finalSongIds.map((songId) => ({
     userId,
     songId,
     artistId: body.artistId,

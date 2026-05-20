@@ -88,6 +88,9 @@ export const updateSettingsSchema = z
     publisherName: z.string().max(200).nullish(),
     publisherIpi: ipiSchema,
     noPublisher: z.boolean().optional(),
+    // Default setlist template — array of song UUIDs the user typically plays.
+    // Empty array clears the template (opt-out); null is also accepted.
+    defaultSetlistSongIds: z.array(uuidParam).max(50).nullish(),
   })
   .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
 
@@ -166,7 +169,10 @@ export const setlistfmSearchSchema = z.object({
 export const createManualPerformanceSchema = z.object({
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'eventDate must be YYYY-MM-DD'),
   artistId: uuidParam,
-  songIds: z.array(uuidParam).min(1, 'select at least one song').max(50),
+  // Optional: if omitted/empty, the route falls back to the user's default
+  // setlist template (users.default_setlist_song_ids) via resolveCandidateSongIds.
+  // A request with neither songIds nor a configured template returns 400.
+  songIds: z.array(uuidParam).max(50).optional(),
   venueName: z.string().min(1, 'venueName is required').max(500),
   venueCity: z.string().min(1, 'venueCity is required').max(200),
   venueState: z.string().max(100).nullish(),

@@ -6,17 +6,17 @@ const SONG_ID_1 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const SONG_ID_2 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const NEW_PERF_ID = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
+type Flow = 'with-songs' | 'template';
+
 const { mockSession, mockState, mockInsertedRows } = vi.hoisted(() => ({
   mockSession: { value: null as { user: { id: string; email: string } } | null },
   mockState: {
+    flow: 'with-songs' as 'with-songs' | 'template',
     artistMatches: true,
     songMatchCount: 2,
-    userDefaults: {
-      defaultStartTimeHour: '8',
-      defaultStartTimeAmPm: 'PM',
-      defaultEndTimeHour: '11',
-      defaultEndTimeAmPm: 'PM',
-    } as Record<string, string | null> | null,
+    // Only consulted when flow === 'template'. null mimics "no user row found"
+    // or "user row exists but defaultSetlistSongIds is null".
+    templateIds: null as string[] | null,
   },
   mockInsertedRows: { value: [] as unknown[] },
 }));
@@ -25,22 +25,38 @@ vi.mock('@/lib/auth', () => ({
   auth: vi.fn(async () => mockSession.value),
 }));
 
-// Mock db.select() / db.insert() — three select calls happen in order:
-//   1. artist ownership check  → returns [{id}] when artistMatches is true
-//   2. songs ownership check   → returns N rows where N == songMatchCount
-//   3. user defaults lookup    → returns mockState.userDefaults wrapped
+// db.select() dispatch order depends on flow:
+//   'with-songs' (default, songIds in body): idx 0 = artist, idx 1 = songs
+//   'template'   (no songIds in body):       idx 0 = artist, idx 1 = template lookup, idx 2 = songs
 let selectCallIdx = 0;
 vi.mock('@/db', () => ({
   db: {
     select: () => {
       const idx = selectCallIdx++;
       let dataset: unknown[];
-      if (idx === 0) dataset = mockState.artistMatches ? [{ id: ARTIST_ID }] : [];
-      else if (idx === 1) {
-        dataset = Array.from({ length: mockState.songMatchCount }, (_, i) => ({
-          id: i === 0 ? SONG_ID_1 : SONG_ID_2,
-        }));
-      } else dataset = mockState.userDefaults ? [mockState.userDefaults] : [];
+
+      if (mockState.flow === 'template') {
+        if (idx === 0) {
+          dataset = mockState.artistMatches ? [{ id: ARTIST_ID }] : [];
+        } else if (idx === 1) {
+          dataset =
+            mockState.templateIds === null
+              ? []
+              : [{ defaultSetlistSongIds: mockState.templateIds }];
+        } else {
+          dataset = Array.from({ length: mockState.songMatchCount }, (_, i) => ({
+            id: i === 0 ? SONG_ID_1 : SONG_ID_2,
+          }));
+        }
+      } else {
+        if (idx === 0) {
+          dataset = mockState.artistMatches ? [{ id: ARTIST_ID }] : [];
+        } else {
+          dataset = Array.from({ length: mockState.songMatchCount }, (_, i) => ({
+            id: i === 0 ? SONG_ID_1 : SONG_ID_2,
+          }));
+        }
+      }
 
       return {
         from: () => ({
@@ -86,14 +102,10 @@ const validBody = {
 beforeEach(() => {
   selectCallIdx = 0;
   mockSession.value = { user: { id: USER_ID, email: 'test@example.com' } };
+  mockState.flow = 'with-songs';
   mockState.artistMatches = true;
   mockState.songMatchCount = 2;
-  mockState.userDefaults = {
-    defaultStartTimeHour: '8',
-    defaultStartTimeAmPm: 'PM',
-    defaultEndTimeHour: '11',
-    defaultEndTimeAmPm: 'PM',
-  };
+  mockState.templateIds = null;
   mockInsertedRows.value = [];
 });
 
@@ -108,11 +120,6 @@ describe('POST /api/performances — auth', () => {
 describe('POST /api/performances — validation', () => {
   it('returns 400 when eventDate is malformed', async () => {
     const res = await POST(makeRequest({ ...validBody, eventDate: '04/15/2026' }) as never);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 when songIds is empty', async () => {
-    const res = await POST(makeRequest({ ...validBody, songIds: [] }) as never);
     expect(res.status).toBe(400);
   });
 
@@ -138,7 +145,7 @@ describe('POST /api/performances — IDOR protection', () => {
     expect(body.error).toMatch(/artist/i);
   });
 
-  it('returns 404 when one or more songs do not belong to caller', async () => {
+  it('returns 404 when one or more provided songs do not belong to caller', async () => {
     mockState.songMatchCount = 1;
     const res = await POST(makeRequest(validBody) as never);
     expect(res.status).toBe(404);
@@ -147,7 +154,7 @@ describe('POST /api/performances — IDOR protection', () => {
   });
 });
 
-describe('POST /api/performances — happy path', () => {
+describe('POST /api/performances — happy path (songs provided)', () => {
   it('creates one row per song and returns 201', async () => {
     const res = await POST(makeRequest(validBody) as never);
     expect(res.status).toBe(201);
@@ -192,20 +199,68 @@ describe('POST /api/performances — happy path', () => {
   });
 
   it('calculates expiresAt per BMI quarterly window (eventDate Apr 15 → Sep 30 same year)', async () => {
-    // validBody.eventDate is '2026-04-15' — Q2 perf → Sep 30 same year per
-    // calculateExpirationDate's quarterly mapping (verified 2026-05-04 against
-    // BMI Live deadline pages). The prior implementation incorrectly returned
-    // 2027-01-15 (+9 months); the new mapping is window-aware and conservative.
     await POST(makeRequest(validBody) as never);
     const rows = mockInsertedRows.value as Array<Record<string, unknown>>;
     expect(rows[0].expiresAt).toBe('2026-09-30');
   });
+});
 
-  it('handles missing user defaults without crashing', async () => {
-    mockState.userDefaults = null;
-    const res = await POST(makeRequest(validBody) as never);
+describe('POST /api/performances — default setlist template fallback', () => {
+  it('falls back to template when songIds is omitted', async () => {
+    mockState.flow = 'template';
+    mockState.templateIds = [SONG_ID_1, SONG_ID_2];
+    mockState.songMatchCount = 2;
+    const body: Record<string, unknown> = { ...validBody };
+    delete body.songIds;
+    const res = await POST(makeRequest(body) as never);
     expect(res.status).toBe(201);
-    const rows = mockInsertedRows.value as Array<Record<string, unknown>>;
-    expect(rows[0].startTimeHour).toBeNull();
+    const json = await res.json();
+    expect(json.created).toBe(2);
+  });
+
+  it('falls back to template when songIds is an empty array', async () => {
+    mockState.flow = 'template';
+    mockState.templateIds = [SONG_ID_1, SONG_ID_2];
+    mockState.songMatchCount = 2;
+    const res = await POST(makeRequest({ ...validBody, songIds: [] }) as never);
+    expect(res.status).toBe(201);
+  });
+
+  it('returns 400 when no songIds provided and no template configured', async () => {
+    mockState.flow = 'template';
+    mockState.templateIds = null;
+    const body: Record<string, unknown> = { ...validBody };
+    delete body.songIds;
+    const res = await POST(makeRequest(body) as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/default setlist template/i);
+  });
+
+  it('returns 400 when template is empty array (opt-out state)', async () => {
+    mockState.flow = 'template';
+    mockState.templateIds = [];
+    const res = await POST(makeRequest({ ...validBody, songIds: [] }) as never);
+    expect(res.status).toBe(400);
+  });
+
+  it('silently filters stale template ids that no longer belong to user', async () => {
+    // Template references 2 songs, only 1 is still owned (user deleted the other).
+    // Don't fail the insert — create rows for the surviving songs.
+    mockState.flow = 'template';
+    mockState.templateIds = [SONG_ID_1, SONG_ID_2];
+    mockState.songMatchCount = 1;
+    const res = await POST(makeRequest({ ...validBody, songIds: [] }) as never);
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.created).toBe(1);
+  });
+
+  it('returns 400 when all template ids are stale (zero owned songs survive)', async () => {
+    mockState.flow = 'template';
+    mockState.templateIds = [SONG_ID_1, SONG_ID_2];
+    mockState.songMatchCount = 0;
+    const res = await POST(makeRequest({ ...validBody, songIds: [] }) as never);
+    expect(res.status).toBe(400);
   });
 });

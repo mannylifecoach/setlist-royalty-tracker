@@ -33,6 +33,7 @@ export const GET = withHandler(async () => {
       publisherName: users.publisherName,
       publisherIpi: users.publisherIpi,
       noPublisher: users.noPublisher,
+      defaultSetlistSongIds: users.defaultSetlistSongIds,
     })
     .from(users)
     .where(eq(users.id, session.user.id));
@@ -58,6 +59,7 @@ export const GET = withHandler(async () => {
       publisherName: null,
       publisherIpi: null,
       noPublisher: false,
+      defaultSetlistSongIds: null,
     }
   );
 });
@@ -94,6 +96,9 @@ export const PATCH = withHandler(async (request: NextRequest) => {
       publisherName: data.publisherName ?? undefined,
       publisherIpi: data.publisherIpi ?? undefined,
       noPublisher: data.noPublisher ?? undefined,
+      // Pass null through to clear the template; undefined leaves it alone.
+      defaultSetlistSongIds:
+        data.defaultSetlistSongIds === undefined ? undefined : data.defaultSetlistSongIds,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
@@ -119,5 +124,6 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     publisherName: updated.publisherName,
     publisherIpi: updated.publisherIpi,
     noPublisher: updated.noPublisher,
+    defaultSetlistSongIds: updated.defaultSetlistSongIds,
   });
 });
