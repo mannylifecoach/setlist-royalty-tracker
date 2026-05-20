@@ -91,8 +91,17 @@ export const updateSettingsSchema = z
     // Default setlist template — array of song UUIDs the user typically plays.
     // Empty array clears the template (opt-out); null is also accepted.
     defaultSetlistSongIds: z.array(uuidParam).max(50).nullish(),
+    // Bandsintown Path A credentials. Empty string clears (delete-key affordance).
+    bandsintownApiKey: z.string().max(200).nullish(),
+    bandsintownArtistSlug: z.string().max(200).nullish(),
   })
   .refine((obj) => Object.keys(obj).length > 0, 'At least one field is required');
+
+// POST /api/settings/bandsintown/test — verify a key + slug combo before saving.
+export const bandsintownTestSchema = z.object({
+  apiKey: z.string().min(1, 'api key is required').max(200),
+  artistSlug: z.string().min(1, 'artist slug is required').max(200),
+});
 
 // PATCH /api/songs/[id] — edit metadata on existing songs (added for ASCAP fields,
 // also lets users fix typos in existing IDs).

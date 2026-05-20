@@ -17,12 +17,14 @@ import {
 import { sendNewPerformancesEmail } from './email';
 import { normalizeTitle, findBestMatch } from './fuzzy-match';
 import { lookupSongMetadata } from './musicbrainz';
+import { scanBandsintownForUser } from './bandsintown-scanner';
 
 interface ScanResult {
   artistName: string;
   setlistsFound: number;
   newPerformances: number;
   songTitles: string[];
+  source?: 'setlist_fm' | 'bandsintown';
 }
 
 export async function scanForUser(userId: string): Promise<ScanResult[]> {
@@ -51,6 +53,21 @@ export async function scanForUser(userId: string): Promise<ScanResult[]> {
     const result = await scanArtistForUser(userId, artist);
     console.log(`[scan] ${artist.artistName}: ${result.setlistsFound} setlists, ${result.newPerformances} new performances`);
     results.push(result);
+  }
+
+  // Bandsintown Path A — runs once per user (key is bound to a single artist).
+  // null = nothing configured; skipped reason = configured but precondition
+  // failed (no template, slug doesn't match a tracked artist, fetch error).
+  const bandsintown = await scanBandsintownForUser(userId);
+  if (bandsintown) {
+    if (bandsintown.skipped) {
+      console.log(`[scan/bandsintown] skipped: ${bandsintown.skipped}`);
+    } else {
+      console.log(
+        `[scan/bandsintown] ${bandsintown.artistName}: ${bandsintown.setlistsFound} events, ${bandsintown.newPerformances} new performances`
+      );
+    }
+    results.push(bandsintown);
   }
 
   return results;

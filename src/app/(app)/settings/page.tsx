@@ -48,6 +48,14 @@ export default function SettingsPage() {
   const [generatingKey, setGeneratingKey] = useState(false);
   const [songs, setSongs] = useState<Array<{ id: string; title: string }>>([]);
   const [defaultSetlistSongIds, setDefaultSetlistSongIds] = useState<string[]>([]);
+  const [bandsintownApiKey, setBandsintownApiKey] = useState('');
+  const [bandsintownArtistSlug, setBandsintownArtistSlug] = useState('');
+  const [bandsintownTestStatus, setBandsintownTestStatus] = useState<
+    | { kind: 'idle' }
+    | { kind: 'testing' }
+    | { kind: 'ok'; artistName: string }
+    | { kind: 'error'; message: string }
+  >({ kind: 'idle' });
 
   const availablePros = useMemo(() => getProsForCountry(country), [country]);
 
@@ -71,6 +79,8 @@ export default function SettingsPage() {
         setDefaultSetlistSongIds(
           Array.isArray(data.defaultSetlistSongIds) ? data.defaultSetlistSongIds : []
         );
+        setBandsintownApiKey(data.bandsintownApiKey || '');
+        setBandsintownArtistSlug(data.bandsintownArtistSlug || '');
       }
     }
     load();
@@ -105,6 +115,41 @@ export default function SettingsPage() {
     );
   }
 
+  async function testBandsintownConnection() {
+    setBandsintownTestStatus({ kind: 'testing' });
+    try {
+      const res = await fetch('/api/settings/bandsintown/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: bandsintownApiKey,
+          artistSlug: bandsintownArtistSlug,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setBandsintownTestStatus({ kind: 'ok', artistName: data.artistName });
+      } else {
+        setBandsintownTestStatus({ kind: 'error', message: data.error || 'unknown error' });
+      }
+    } catch {
+      setBandsintownTestStatus({ kind: 'error', message: 'request failed' });
+    }
+  }
+
+  async function disconnectBandsintown() {
+    setBandsintownApiKey('');
+    setBandsintownArtistSlug('');
+    setBandsintownTestStatus({ kind: 'idle' });
+    // Persist immediately so the disconnect isn't dependent on the user remembering
+    // to click "save settings" afterward. Sends empty strings → API treats as delete.
+    await fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bandsintownApiKey: '', bandsintownArtistSlug: '' }),
+    });
+  }
+
   function toggleCapability(cap: Capability) {
     setCapabilities((prev) =>
       prev.includes(cap) ? prev.filter((c) => c !== cap) : [...prev, cap]
@@ -131,6 +176,8 @@ export default function SettingsPage() {
           defaultEndTimeHour,
           defaultEndTimeAmPm,
           defaultSetlistSongIds,
+          bandsintownApiKey,
+          bandsintownArtistSlug,
         }),
       });
       if (res.ok) {
@@ -429,6 +476,90 @@ export default function SettingsPage() {
           {saving ? 'saving...' : saved ? 'saved' : 'save'}
         </button>
       </div>
+
+      {(capabilities.includes('perform') || capabilities.includes('dj')) && (
+        <div className="card p-4 space-y-3">
+          <div className="text-[11px] text-text-muted">
+            bandsintown <span className="text-text-disabled">· fills setlist.fm coverage gaps</span>
+          </div>
+          <p className="text-[11px] text-text-disabled">
+            connect your bandsintown profile to import past tour dates. setlist.fm misses
+            about 30% of shows (especially small venues + festival sets); bandsintown
+            fills part of that gap. needs your own api key — get one from your
+            bandsintown for artists dashboard → settings → general → get api key. each
+            key only works for your own artist profile.
+          </p>
+          <div>
+            <label className="text-[11px] text-text-muted block mb-1">artist slug</label>
+            <input
+              type="text"
+              value={bandsintownArtistSlug}
+              onChange={(e) => {
+                setBandsintownArtistSlug(e.target.value);
+                setBandsintownTestStatus({ kind: 'idle' });
+              }}
+              placeholder="e.g. tiffany-alvord"
+              className="input w-full text-[12px]"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <p className="text-[11px] text-text-disabled mt-1">
+              the slug from your bandsintown.com/a/&lt;slug&gt; profile url.
+            </p>
+          </div>
+          <div>
+            <label className="text-[11px] text-text-muted block mb-1">api key</label>
+            <input
+              type="password"
+              value={bandsintownApiKey}
+              onChange={(e) => {
+                setBandsintownApiKey(e.target.value);
+                setBandsintownTestStatus({ kind: 'idle' });
+              }}
+              placeholder="paste your bandsintown api key"
+              className="input w-full text-[12px]"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={testBandsintownConnection}
+              disabled={
+                !bandsintownApiKey ||
+                !bandsintownArtistSlug ||
+                bandsintownTestStatus.kind === 'testing'
+              }
+              className="btn text-[12px]"
+            >
+              {bandsintownTestStatus.kind === 'testing' ? 'testing...' : 'test connection'}
+            </button>
+            <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
+              {saving ? 'saving...' : saved ? 'saved' : 'save'}
+            </button>
+            {(bandsintownApiKey || bandsintownArtistSlug) && (
+              <button
+                type="button"
+                onClick={disconnectBandsintown}
+                className="text-[11px] text-text-muted hover:text-status-expired transition-colors"
+              >
+                disconnect
+              </button>
+            )}
+          </div>
+          {bandsintownTestStatus.kind === 'ok' && (
+            <p className="text-[11px] text-status-confirmed">
+              ✓ connected to {bandsintownTestStatus.artistName}
+            </p>
+          )}
+          {bandsintownTestStatus.kind === 'error' && (
+            <p className="text-[11px] text-status-expired">
+              ✗ {bandsintownTestStatus.message}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="card p-4 space-y-4">
         <div className="text-[11px] text-text-muted">chrome extension <span className="text-text-disabled">· requires google chrome</span></div>

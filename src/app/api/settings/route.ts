@@ -34,6 +34,8 @@ export const GET = withHandler(async () => {
       publisherIpi: users.publisherIpi,
       noPublisher: users.noPublisher,
       defaultSetlistSongIds: users.defaultSetlistSongIds,
+      bandsintownApiKey: users.bandsintownApiKey,
+      bandsintownArtistSlug: users.bandsintownArtistSlug,
     })
     .from(users)
     .where(eq(users.id, session.user.id));
@@ -60,6 +62,8 @@ export const GET = withHandler(async () => {
       publisherIpi: null,
       noPublisher: false,
       defaultSetlistSongIds: null,
+      bandsintownApiKey: null,
+      bandsintownArtistSlug: null,
     }
   );
 });
@@ -99,6 +103,21 @@ export const PATCH = withHandler(async (request: NextRequest) => {
       // Pass null through to clear the template; undefined leaves it alone.
       defaultSetlistSongIds:
         data.defaultSetlistSongIds === undefined ? undefined : data.defaultSetlistSongIds,
+      // Empty string treated as a delete signal (same as null) — settings UI's
+      // delete-key affordance sends ''; users who want to keep the key untouched
+      // simply omit the field.
+      bandsintownApiKey:
+        data.bandsintownApiKey === undefined
+          ? undefined
+          : data.bandsintownApiKey === ''
+            ? null
+            : data.bandsintownApiKey,
+      bandsintownArtistSlug:
+        data.bandsintownArtistSlug === undefined
+          ? undefined
+          : data.bandsintownArtistSlug === ''
+            ? null
+            : data.bandsintownArtistSlug,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))
@@ -125,5 +144,7 @@ export const PATCH = withHandler(async (request: NextRequest) => {
     publisherIpi: updated.publisherIpi,
     noPublisher: updated.noPublisher,
     defaultSetlistSongIds: updated.defaultSetlistSongIds,
+    bandsintownApiKey: updated.bandsintownApiKey,
+    bandsintownArtistSlug: updated.bandsintownArtistSlug,
   });
 });

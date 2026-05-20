@@ -269,6 +269,20 @@ function EmptyState({ capabilities }: { capabilities: Capability[] }) {
           ? 'you can use both tools anytime — they feed the same dashboard.'
           : 'already have songs registered? visit /songs to review them.'}
       </div>
+
+      {/* Pure-songwriter messaging: write-only / publish-only users have no
+          way to claim shows they didn't personally perform. setlist.fm fills
+          some of the gap; the rest waits on the planned two-sided network. */}
+      {capabilities.length > 0 &&
+        !capabilities.includes('perform') &&
+        !capabilities.includes('dj') && (
+          <div className="max-w-[520px] mx-auto text-center text-[11px] text-text-muted leading-[1.6] pt-2">
+            we discover concerts via setlist.fm + your manual entries. if you&apos;d
+            like more coverage of shows where artists perform your songs, ask
+            those artists to use SRT too — we&apos;re building features that
+            share data with consent.
+          </div>
+        )}
     </div>
   );
 }

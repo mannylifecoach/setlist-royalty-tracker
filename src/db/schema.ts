@@ -48,6 +48,11 @@ export const users = pgTable('users', {
   // (manual entry, Bandsintown imports) pre-fills from this list when songIds
   // is missing/empty. Empty/null = no pre-fill (opt-in).
   defaultSetlistSongIds: jsonb('default_setlist_song_ids').$type<string[]>(),
+  // Bandsintown Path A (BYO key per user). Each key is bound to a single
+  // artist on Bandsintown's side; we also store the slug so we know which
+  // artist to query. Both null when the user hasn't connected.
+  bandsintownApiKey: text('bandsintown_api_key'),
+  bandsintownArtistSlug: text('bandsintown_artist_slug'),
 });
 
 export const accounts = pgTable('accounts', {
@@ -174,7 +179,7 @@ export const performances = pgTable('performances', {
     .notNull(),
   setlistFmId: text('setlist_fm_id'),
   source: text('source')
-    .$type<'setlist_fm' | 'serato_import' | 'manual'>()
+    .$type<'setlist_fm' | 'serato_import' | 'manual' | 'bandsintown'>()
     .default('setlist_fm')
     .notNull(),
   matchMethod: text('match_method').$type<'fuzzy' | 'work_mbid' | 'exact' | 'manual'>(),

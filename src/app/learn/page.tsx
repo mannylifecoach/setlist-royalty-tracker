@@ -396,6 +396,28 @@ export default function LearnPage() {
             </div>
           </section>
 
+          {/* setlist.fm coverage section */}
+          <section className="space-y-4">
+            <h2 className="text-[16px] font-medium tracking-[-0.3px]">
+              if setlist.fm misses your shows
+            </h2>
+            <p className="text-[13px] text-text-secondary leading-[1.7]">
+              setlist.fm is crowdsourced — fans submit setlists after concerts they attend. coverage
+              is great for arena tours and major festivals, weaker for small venues, private events,
+              festival side-stages, and shows in non-english markets. expect roughly 30% of any
+              given artist&apos;s history to be missing.
+            </p>
+            <p className="text-[13px] text-text-secondary leading-[1.7]">
+              srt fills the gap in three ways. if you performed the show yourself, add it manually
+              from /performances — takes 30 seconds with a default setlist template. if you&apos;re a
+              touring artist or dj-producer, connect your bandsintown account from /settings and
+              srt will pull your past tour dates automatically. if you&apos;re a pure songwriter
+              whose songs are performed by other artists, the most reliable path today is asking
+              those artists to use srt too — we&apos;re building features that share performance
+              data across user catalogs with consent.
+            </p>
+          </section>
+
           {/* SRT CTA */}
           <section className="space-y-4">
             <h2 className="text-[16px] font-medium tracking-[-0.3px]">this is what srt automates</h2>
