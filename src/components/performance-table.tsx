@@ -8,11 +8,25 @@ import {
   type PerformanceRow,
   type ShowGroup,
 } from '@/lib/performance-grouping';
+import { SOURCE_BADGE_LABELS } from '@/lib/source-display';
 
 interface PerformanceTableProps {
   data: PerformanceRow[];
   onConfirm?: (ids: string[]) => void;
   onRowClick?: (id: string) => void;
+  // When true, renders "· via {source}" next to the venue name on every
+  // group header. Driven by the page-level hasMultipleSources check so the
+  // badge only appears for users with rows from 2+ distinct sources.
+  showSourceBadge?: boolean;
+}
+
+function SourceBadge({ sources }: { sources: ShowGroup['sources'] }) {
+  if (sources.length === 0) return null;
+  const label =
+    sources.length === 1 ? SOURCE_BADGE_LABELS[sources[0]] : 'mixed sources';
+  return (
+    <span className="ml-1 text-[10px] text-text-disabled">· via {label}</span>
+  );
 }
 
 function isExpiringSoon(expiresAt: string | null): boolean {
@@ -38,6 +52,7 @@ export function PerformanceTable({
   data,
   onConfirm,
   onRowClick,
+  showSourceBadge = false,
 }: PerformanceTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -132,6 +147,7 @@ export function PerformanceTable({
                     selected,
                     toggleSelect,
                     onRowClick,
+                    showSourceBadge,
                   })
                 : renderShowGroup(group, {
                     expanded: expanded.has(group.key),
@@ -140,6 +156,7 @@ export function PerformanceTable({
                     toggleSelect,
                     selectIds,
                     onRowClick,
+                    showSourceBadge,
                   })
             )}
           </tbody>
@@ -161,6 +178,7 @@ function renderSingleSongRow(
     selected: Set<string>;
     toggleSelect: (id: string) => void;
     onRowClick?: (id: string) => void;
+    showSourceBadge: boolean;
   }
 ) {
   const row = group.rows[0];
@@ -194,7 +212,10 @@ function renderSingleSongRow(
       </td>
       <td className="py-2.5 pr-3 text-text font-medium">{song.title}</td>
       <td className="py-2.5 pr-3 text-text-secondary">{artist.artistName}</td>
-      <td className="py-2.5 pr-3 text-text-secondary">{performance.venueName || '—'}</td>
+      <td className="py-2.5 pr-3 text-text-secondary">
+        {performance.venueName || '—'}
+        {ctx.showSourceBadge && <SourceBadge sources={group.sources} />}
+      </td>
       <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">{formatLocation(group)}</td>
       <td className="py-2.5 pr-3">
         <StatusBadge status={displayStatus} />
@@ -226,6 +247,7 @@ function renderShowGroup(
     toggleSelect: (id: string) => void;
     selectIds: (ids: string[], shouldSelect: boolean) => void;
     onRowClick?: (id: string) => void;
+    showSourceBadge: boolean;
   }
 ) {
   const earliestDays = daysUntilExpiration(group.earliestExpiresAt);
@@ -262,7 +284,10 @@ function renderShowGroup(
         </td>
         <td className="py-2.5 pr-3 text-text font-medium">{group.songCount} songs</td>
         <td className="py-2.5 pr-3 text-text-secondary">{group.artist.artistName}</td>
-        <td className="py-2.5 pr-3 text-text-secondary">{group.venueName || '—'}</td>
+        <td className="py-2.5 pr-3 text-text-secondary">
+          {group.venueName || '—'}
+          {ctx.showSourceBadge && <SourceBadge sources={group.sources} />}
+        </td>
         <td className="py-2.5 pr-3 text-text-muted whitespace-nowrap">{formatLocation(group)}</td>
         <td className="py-2.5 pr-3 text-text-muted text-[11px]">
           {formatStatusSummary(group.statusCounts)}

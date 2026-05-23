@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/status-badge';
 import type { PerformanceStatus } from '@/lib/constants';
 import { BMI_EVENT_TYPES, BMI_VENUE_TYPES, BMI_HOURS } from '@/lib/constants';
 import { getMissingFields } from '@/lib/export';
+import { SOURCE_DETAIL_PHRASES, type PerformanceSource } from '@/lib/source-display';
 
 interface CapacityEnrichmentResult {
   resolvedCapacity: number | null;
@@ -40,7 +41,7 @@ interface PerformanceDetail {
   venueType: string | null;
   venueCapacity: string | null;
   ticketCharge: string | null;
-  source: 'setlist_fm' | 'serato_import' | 'manual';
+  source: PerformanceSource;
   matchMethod: 'fuzzy' | 'work_mbid' | 'exact' | 'manual' | null;
 }
 
@@ -165,6 +166,10 @@ export default function PerformanceDetailPage({
         </div>
         <StatusBadge status={perf.status} />
       </div>
+
+      <p className="text-[11px] text-text-disabled">
+        {SOURCE_DETAIL_PHRASES[perf.source] ?? `source: ${perf.source}`}
+      </p>
 
       {perf.tourName && (
         <div className="text-[12px] text-text-muted">

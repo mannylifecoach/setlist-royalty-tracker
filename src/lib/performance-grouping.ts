@@ -1,4 +1,5 @@
 import type { PerformanceStatus } from '@/lib/constants';
+import type { PerformanceSource } from '@/lib/source-display';
 
 export interface PerformanceRow {
   performance: {
@@ -12,6 +13,7 @@ export interface PerformanceRow {
     expiresAt: string | null;
     setlistFmUrl: string | null;
     tourName: string | null;
+    source: PerformanceSource;
   };
   song: { id: string; title: string };
   artist: { id: string; artistName: string };
@@ -30,6 +32,10 @@ export interface ShowGroup {
   statusCounts: Partial<Record<PerformanceStatus, number>>;
   earliestExpiresAt: string | null;
   discoveredIds: string[];
+  // Sources represented in this group (almost always length 1 — a show is
+  // discovered once by one source. Length 2+ only if dedupe misses, e.g.
+  // venue-name capitalization differs between scan sources).
+  sources: PerformanceSource[];
 }
 
 export function showKey(eventDate: string, venueName: string | null, artistId: string): string {
@@ -61,6 +67,7 @@ export function groupByShow(rows: PerformanceRow[]): ShowGroup[] {
         statusCounts: {},
         earliestExpiresAt: null,
         discoveredIds: [],
+        sources: [],
       };
       groups.set(key, group);
     }
@@ -69,6 +76,9 @@ export function groupByShow(rows: PerformanceRow[]): ShowGroup[] {
     group.songCount += 1;
     group.statusCounts[performance.status] =
       (group.statusCounts[performance.status] ?? 0) + 1;
+    if (!group.sources.includes(performance.source)) {
+      group.sources.push(performance.source);
+    }
 
     if (performance.expiresAt) {
       if (

@@ -6,6 +6,7 @@ import {
   type PerformanceRow,
 } from './performance-grouping';
 import type { PerformanceStatus } from '@/lib/constants';
+import type { PerformanceSource } from '@/lib/source-display';
 
 function makeRow(opts: {
   id: string;
@@ -20,6 +21,7 @@ function makeRow(opts: {
   venueCity?: string | null;
   venueState?: string | null;
   venueCountry?: string | null;
+  source?: PerformanceSource;
 }): PerformanceRow {
   return {
     performance: {
@@ -33,6 +35,7 @@ function makeRow(opts: {
       expiresAt: opts.expiresAt ?? null,
       setlistFmUrl: null,
       tourName: null,
+      source: opts.source ?? 'setlist_fm',
     },
     song: { id: opts.songId ?? `song-${opts.id}`, title: opts.songTitle ?? 'a song' },
     artist: { id: opts.artistId ?? 'artist-1', artistName: opts.artistName ?? 'Fred Again..' },
@@ -164,6 +167,44 @@ describe('groupByShow', () => {
       makeRow({ id: 'p2', eventDate: '2026-04-15', expiresAt: null }),
     ]);
     expect(groups[0].earliestExpiresAt).toBeNull();
+  });
+});
+
+describe('groupByShow — sources', () => {
+  it('records a single source on the group when every row matches', () => {
+    const groups = groupByShow([
+      makeRow({ id: 'p1', eventDate: '2026-04-15', source: 'setlist_fm' }),
+      makeRow({ id: 'p2', eventDate: '2026-04-15', source: 'setlist_fm' }),
+    ]);
+    expect(groups[0].sources).toEqual(['setlist_fm']);
+  });
+
+  it('dedupes repeated sources within a group', () => {
+    const groups = groupByShow([
+      makeRow({ id: 'p1', eventDate: '2026-04-15', source: 'bandsintown' }),
+      makeRow({ id: 'p2', eventDate: '2026-04-15', source: 'bandsintown' }),
+      makeRow({ id: 'p3', eventDate: '2026-04-15', source: 'bandsintown' }),
+    ]);
+    expect(groups[0].sources).toEqual(['bandsintown']);
+  });
+
+  it('collects every distinct source when a group spans multiple (edge case)', () => {
+    // This shouldn't normally happen — dedupe is supposed to prevent it —
+    // but if e.g. venue-name capitalization differs between two scan sources
+    // the helper must still surface both.
+    const groups = groupByShow([
+      makeRow({ id: 'p1', eventDate: '2026-04-15', source: 'setlist_fm' }),
+      makeRow({ id: 'p2', eventDate: '2026-04-15', source: 'bandsintown' }),
+    ]);
+    expect(groups[0].sources.sort()).toEqual(['bandsintown', 'setlist_fm']);
+  });
+
+  it('keeps source insertion order (first-seen wins)', () => {
+    const groups = groupByShow([
+      makeRow({ id: 'p1', eventDate: '2026-04-15', source: 'manual' }),
+      makeRow({ id: 'p2', eventDate: '2026-04-15', source: 'setlist_fm' }),
+    ]);
+    expect(groups[0].sources).toEqual(['manual', 'setlist_fm']);
   });
 });
 

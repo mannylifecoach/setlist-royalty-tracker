@@ -2,12 +2,20 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
 import { CoverageBanner } from '@/components/coverage-banner';
 import { analytics } from '@/lib/analytics';
 import type { PerformanceRow } from '@/lib/performance-grouping';
 import type { PerformanceStatus } from '@/lib/constants';
+import {
+  PERFORMANCE_SOURCES,
+  SOURCE_CHIP_LABELS,
+  hasMultipleSources,
+  countBySource,
+  matchesSourceFilter,
+  type PerformanceSource,
+} from '@/lib/source-display';
 
 // `active` is a virtual filter: discovered + confirmed (the things still
 // awaiting user action). It's the default so beta testers don't drown in
@@ -23,6 +31,11 @@ const STATUS_FILTERS: StatusFilter[] = [
   'ineligible',
 ];
 
+// Source filter is URL-driven (?source=bandsintown). The settings "scan now"
+// toast links here with the param pre-set so users land already-filtered.
+type SourceFilter = 'all' | PerformanceSource;
+const SOURCE_FILTERS: SourceFilter[] = ['all', ...PERFORMANCE_SOURCES];
+
 function matchesFilter(row: PerformanceRow, filter: StatusFilter): boolean {
   if (filter === 'all') return true;
   if (filter === 'active') {
@@ -31,12 +44,32 @@ function matchesFilter(row: PerformanceRow, filter: StatusFilter): boolean {
   return row.performance.status === filter;
 }
 
+
 export default function PerformancesPage() {
   const [data, setData] = useState<PerformanceRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>('active');
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ scanned: number; newPerformances: number } | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Source filter is read from ?source= every render — clicks rewrite the URL,
+  // so URL is the single source of truth (no setSourceFilter useState).
+  const sourceFilter = useMemo<SourceFilter>(() => {
+    const param = searchParams.get('source');
+    if (param && (PERFORMANCE_SOURCES as readonly string[]).includes(param)) {
+      return param as PerformanceSource;
+    }
+    return 'all';
+  }, [searchParams]);
+
+  function setSourceFilter(next: SourceFilter) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'all') params.delete('source');
+    else params.set('source', next);
+    const query = params.toString();
+    router.replace(`/performances${query ? `?${query}` : ''}`);
+  }
 
   // Fetches every performance once per refresh, then filters + counts client-
   // side. Pattern matches the dashboard, which already does the same. Keeps
@@ -92,9 +125,18 @@ export default function PerformancesPage() {
     return c;
   }, [data]);
 
+  const sources = useMemo(() => data.map((d) => d.performance.source), [data]);
+  const multiSource = useMemo(() => hasMultipleSources(sources), [sources]);
+  const sourceCounts = useMemo(() => countBySource(sources), [sources]);
+
   const visibleData = useMemo(
-    () => data.filter((row) => matchesFilter(row, filter)),
-    [data, filter]
+    () =>
+      data.filter(
+        (row) =>
+          matchesFilter(row, filter) &&
+          matchesSourceFilter(row.performance.source, sourceFilter)
+      ),
+    [data, filter, sourceFilter]
   );
 
   return (
@@ -119,6 +161,29 @@ export default function PerformancesPage() {
           ))}
         </div>
       </div>
+
+      {multiSource && (
+        <div className="flex items-center gap-1 justify-end flex-wrap">
+          <span className="text-[11px] text-text-disabled mr-1">source:</span>
+          {SOURCE_FILTERS.map((s) => {
+            const label = s === 'all' ? 'all' : SOURCE_CHIP_LABELS[s];
+            const count = s === 'all' ? data.length : sourceCounts[s];
+            return (
+              <button
+                key={s}
+                onClick={() => setSourceFilter(s)}
+                className={`text-[11px] px-2.5 py-1 rounded-[2px] transition-colors ${
+                  sourceFilter === s
+                    ? 'bg-bg-hover text-text border border-border'
+                    : 'text-text-muted hover:text-text-secondary'
+                }`}
+              >
+                {label} <span className="text-text-disabled">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <CoverageBanner />
 
@@ -166,6 +231,7 @@ export default function PerformancesPage() {
         data={visibleData}
         onConfirm={handleConfirm}
         onRowClick={(id) => router.push(`/performances/${id}`)}
+        showSourceBadge={multiSource}
       />
     </div>
   );
