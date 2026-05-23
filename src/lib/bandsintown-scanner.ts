@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/db';
 import { users, songs, trackedArtists, performances } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
@@ -7,6 +8,12 @@ import { calculateExpirationDate } from './setlistfm';
 // Bandsintown Path A scanner — runs once per user during the normal scan flow.
 // Returns a result row compatible with the existing ScanResult shape so the
 // email digest in scanAllUsers consumes both setlist.fm + bandsintown matches.
+
+// 24h between outbound Bandsintown calls per user. Bandsintown's docs don't
+// publish a documented rate limit; this cooldown is defense-in-depth against
+// both the daily cron and the manual /api/scan/bandsintown endpoint hammering
+// the API. Enforced inside scanBandsintownForUser so every caller benefits.
+const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 export interface BandsintownScanResult {
   artistName: string;
@@ -39,6 +46,7 @@ export async function scanBandsintownForUser(
       bandsintownApiKey: users.bandsintownApiKey,
       bandsintownArtistSlug: users.bandsintownArtistSlug,
       defaultSetlistSongIds: users.defaultSetlistSongIds,
+      lastBandsintownScanAt: users.lastBandsintownScanAt,
     })
     .from(users)
     .where(eq(users.id, userId));
@@ -104,8 +112,59 @@ export async function scanBandsintownForUser(
   }
   const artist = matches[0];
 
+  // Cooldown gate — only enforced for callers that would actually hit
+  // Bandsintown's API. Preflight checks above (template, owned songs, artist
+  // match) are config diagnostics and still surface their own skipped reasons
+  // when the cooldown is active.
+  if (user.lastBandsintownScanAt) {
+    const elapsed = Date.now() - user.lastBandsintownScanAt.getTime();
+    if (elapsed < COOLDOWN_MS) {
+      const nextIn = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+      console.warn(
+        `[scan/bandsintown] cooldown active for userId=${userId} (next in ${nextIn}s)`
+      );
+      return {
+        artistName: artist.artistName,
+        setlistsFound: 0,
+        newPerformances: 0,
+        songTitles: [],
+        source: 'bandsintown',
+        skipped: `cooldown_active:next_in_${nextIn}s`,
+      };
+    }
+  }
+
   const eventsResult = await fetchPastEvents(user.bandsintownApiKey, slug);
+
+  // Record the attempt so the cooldown applies uniformly to success AND 429.
+  // Network/abort errors (status 0) didn't actually hit Bandsintown, so they
+  // don't count — otherwise a flaky local network would lock the user out.
+  if (eventsResult.ok || eventsResult.status > 0) {
+    await db
+      .update(users)
+      .set({ lastBandsintownScanAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
   if (!eventsResult.ok) {
+    if (eventsResult.status === 429) {
+      // Default to 1h if Bandsintown didn't send Retry-After. Sentry-warn so
+      // we know our cooldown didn't prevent the upstream rate limit — that's
+      // the signal that Bandsintown's actual limit is tighter than 1/24h.
+      const retryAfter = eventsResult.retryAfter ?? 3600;
+      Sentry.captureMessage(
+        `Bandsintown 429 for userId=${userId} slug=${slug} retryAfter=${retryAfter}s`,
+        'warning'
+      );
+      return {
+        artistName: artist.artistName,
+        setlistsFound: 0,
+        newPerformances: 0,
+        songTitles: [],
+        source: 'bandsintown',
+        skipped: `rate_limited:retry_after_${retryAfter}s`,
+      };
+    }
     return {
       artistName: artist.artistName,
       setlistsFound: 0,

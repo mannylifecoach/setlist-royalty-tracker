@@ -53,6 +53,11 @@ export const users = pgTable('users', {
   // artist to query. Both null when the user hasn't connected.
   bandsintownApiKey: text('bandsintown_api_key'),
   bandsintownArtistSlug: text('bandsintown_artist_slug'),
+  // Timestamp of the most recent Bandsintown outbound call for this user
+  // (success or 429). Bandsintown-scanner enforces a 24h cooldown against
+  // this column to keep the daily cron + manual scan-now button from blowing
+  // through whatever undocumented rate limit Bandsintown enforces.
+  lastBandsintownScanAt: timestamp('last_bandsintown_scan_at', { mode: 'date' }),
 });
 
 export const accounts = pgTable('accounts', {

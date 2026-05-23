@@ -14,13 +14,15 @@ function mockOk(body: unknown) {
   fetchSpy.mockResolvedValueOnce({
     ok: true,
     status: 200,
+    headers: { get: () => null },
     json: async () => body,
   });
 }
-function mockStatus(status: number) {
+function mockStatus(status: number, headers: Record<string, string> = {}) {
   fetchSpy.mockResolvedValueOnce({
     ok: false,
     status,
+    headers: { get: (k: string) => headers[k] ?? null },
     json: async () => ({ error: `mock ${status}` }),
   });
 }
@@ -133,7 +135,49 @@ describe('bandsintown.fetchPastEvents', () => {
     mockStatus(429);
     const result = await fetchPastEvents(KEY, SLUG);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.status).toBe(429);
+    if (!result.ok) {
+      expect(result.status).toBe(429);
+      expect(result.retryAfter).toBeUndefined();
+    }
+  });
+
+  it('parses Retry-After as integer seconds on 429', async () => {
+    mockStatus(429, { 'Retry-After': '120' });
+    const result = await fetchPastEvents(KEY, SLUG);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.retryAfter).toBe(120);
+  });
+
+  it('parses Retry-After as HTTP-date on 429', async () => {
+    const future = new Date(Date.now() + 90_000).toUTCString(); // ~90s out
+    mockStatus(429, { 'Retry-After': future });
+    const result = await fetchPastEvents(KEY, SLUG);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.retryAfter).toBeGreaterThanOrEqual(80);
+      expect(result.retryAfter).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('rounds fractional Retry-After seconds up', async () => {
+    mockStatus(429, { 'Retry-After': '0.4' });
+    const result = await fetchPastEvents(KEY, SLUG);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.retryAfter).toBe(1);
+  });
+
+  it('ignores garbage Retry-After header', async () => {
+    mockStatus(429, { 'Retry-After': 'not-a-number' });
+    const result = await fetchPastEvents(KEY, SLUG);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.retryAfter).toBeUndefined();
+  });
+
+  it('does not populate retryAfter on non-429 errors', async () => {
+    mockStatus(503, { 'Retry-After': '60' });
+    const result = await fetchPastEvents(KEY, SLUG);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.retryAfter).toBeUndefined();
   });
 });
 

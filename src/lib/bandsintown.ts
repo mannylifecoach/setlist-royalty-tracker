@@ -41,7 +41,7 @@ export type BandsintownArtist = {
 
 export type FetchResult<T> =
   | { ok: true; data: T }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; retryAfter?: number };
 
 function buildUrl(path: string, apiKey: string, extra?: Record<string, string>): string {
   const url = new URL(path, BASE);
@@ -52,13 +52,35 @@ function buildUrl(path: string, apiKey: string, extra?: Record<string, string>):
   return url.toString();
 }
 
+// Per RFC 7231 §7.1.3, Retry-After is either a delta-seconds integer or an
+// HTTP-date. Numeric is far more common from API providers; we fall back to
+// the date form for completeness. Returns seconds-from-now, or undefined if
+// the header is missing or unparseable.
+function parseRetryAfter(header: string | null): number | undefined {
+  if (!header) return undefined;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds > 0) return Math.ceil(seconds);
+  const when = Date.parse(header);
+  if (Number.isFinite(when)) return Math.max(1, Math.ceil((when - Date.now()) / 1000));
+  return undefined;
+}
+
 async function call<T>(url: string): Promise<FetchResult<T>> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
     if (!res.ok) {
-      return { ok: false, status: res.status, error: `bandsintown returned ${res.status}` };
+      const result: { ok: false; status: number; error: string; retryAfter?: number } = {
+        ok: false,
+        status: res.status,
+        error: `bandsintown returned ${res.status}`,
+      };
+      if (res.status === 429) {
+        const retryAfter = parseRetryAfter(res.headers.get('Retry-After'));
+        if (retryAfter !== undefined) result.retryAfter = retryAfter;
+      }
+      return result;
     }
     const data = (await res.json()) as T;
     return { ok: true, data };

@@ -10,11 +10,13 @@ type DbState = {
     bandsintownApiKey: string | null;
     bandsintownArtistSlug: string | null;
     defaultSetlistSongIds: string[] | null;
+    lastBandsintownScanAt: Date | null;
   } | null;
   ownedSongs: Array<{ id: string; title: string }>;
   trackedArtists: Array<{ id: string; artistName: string; userId: string; mbid: string | null }>;
   existingPerformances: unknown[]; // returned for the dedupe SELECT
   inserted: unknown[][];
+  updates: Array<Record<string, unknown>>; // captured users.lastBandsintownScanAt writes
 };
 
 let mockDbState: DbState;
@@ -48,9 +50,20 @@ vi.mock('@/db', () => {
           return Promise.resolve();
         },
       }),
+      update: () => ({
+        set: (patch: Record<string, unknown>) => {
+          mockDbState.updates.push(patch);
+          return { where: () => Promise.resolve() };
+        },
+      }),
     },
   };
 });
+
+const sentryCaptureMessage = vi.fn();
+vi.mock('@sentry/nextjs', () => ({
+  captureMessage: (...args: unknown[]) => sentryCaptureMessage(...args),
+}));
 
 const fetchEventsMock = vi.fn();
 vi.mock('./bandsintown', async (importOriginal) => {
@@ -82,11 +95,13 @@ function makeEvent(overrides: { datetime: string; venueName?: string; city?: str
 
 beforeEach(() => {
   fetchEventsMock.mockReset();
+  sentryCaptureMessage.mockReset();
   mockDbState = {
     userRow: {
       bandsintownApiKey: 'test-key',
       bandsintownArtistSlug: 'tiffany-alvord',
       defaultSetlistSongIds: [SONG_ID_1, SONG_ID_2],
+      lastBandsintownScanAt: null,
     },
     ownedSongs: [
       { id: SONG_ID_1, title: 'Karma' },
@@ -97,6 +112,7 @@ beforeEach(() => {
     ],
     existingPerformances: [],
     inserted: [],
+    updates: [],
   };
 });
 
@@ -252,5 +268,118 @@ describe('scanBandsintownForUser — dedupe', () => {
     expect(result?.skipped).toBeUndefined();
     expect(result?.setlistsFound).toBe(0);
     expect(result?.newPerformances).toBe(0);
+  });
+});
+
+describe('scanBandsintownForUser — cooldown', () => {
+  it('skips with cooldown_active reason when last scan was inside the 24h window', async () => {
+    // Last scan 6h ago → cooldown still active
+    mockDbState.userRow!.lastBandsintownScanAt = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toMatch(/^cooldown_active:next_in_\d+s$/);
+    // The next_in value should be roughly 18h = 64800s, give or take a few seconds
+    const next = Number(result?.skipped?.match(/next_in_(\d+)s/)?.[1]);
+    expect(next).toBeGreaterThan(64000);
+    expect(next).toBeLessThan(65000);
+    expect(fetchEventsMock).not.toHaveBeenCalled();
+    expect(mockDbState.updates).toHaveLength(0);
+  });
+
+  it('allows a scan when last scan was outside the 24h window', async () => {
+    mockDbState.userRow!.lastBandsintownScanAt = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    fetchEventsMock.mockResolvedValueOnce({ ok: true, data: [] });
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toBeUndefined();
+    expect(fetchEventsMock).toHaveBeenCalledOnce();
+  });
+
+  it('allows the first-ever scan when lastBandsintownScanAt is null', async () => {
+    mockDbState.userRow!.lastBandsintownScanAt = null;
+    fetchEventsMock.mockResolvedValueOnce({ ok: true, data: [] });
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toBeUndefined();
+    expect(fetchEventsMock).toHaveBeenCalledOnce();
+  });
+
+  it('does NOT enforce cooldown before preflight checks (config diagnostics still surface)', async () => {
+    // Even with cooldown active, if the user's config is broken they should
+    // still see the config error — not "cooldown_active".
+    mockDbState.userRow!.lastBandsintownScanAt = new Date(Date.now() - 1 * 60 * 60 * 1000);
+    mockDbState.trackedArtists = []; // slug matches zero tracked artists
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toMatch(/does not match any tracked artist/i);
+    expect(fetchEventsMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('scanBandsintownForUser — lastBandsintownScanAt write', () => {
+  it('records the timestamp after a successful fetch', async () => {
+    fetchEventsMock.mockResolvedValueOnce({ ok: true, data: [] });
+    await scanBandsintownForUser(USER_ID);
+    expect(mockDbState.updates).toHaveLength(1);
+    expect(mockDbState.updates[0].lastBandsintownScanAt).toBeInstanceOf(Date);
+  });
+
+  it('records the timestamp on 401 (any server-returned status)', async () => {
+    fetchEventsMock.mockResolvedValueOnce({ ok: false, status: 401, error: 'bad key' });
+    await scanBandsintownForUser(USER_ID);
+    expect(mockDbState.updates).toHaveLength(1);
+  });
+
+  it('does NOT record the timestamp on status 0 (local network/abort error)', async () => {
+    // Flaky local network shouldn't lock the user out of retrying soon.
+    fetchEventsMock.mockResolvedValueOnce({ ok: false, status: 0, error: 'ECONNREFUSED' });
+    await scanBandsintownForUser(USER_ID);
+    expect(mockDbState.updates).toHaveLength(0);
+  });
+});
+
+describe('scanBandsintownForUser — 429 handling', () => {
+  it('surfaces rate_limited:retry_after_<n>s when Bandsintown returns 429 with Retry-After', async () => {
+    fetchEventsMock.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      error: 'bandsintown returned 429',
+      retryAfter: 120,
+    });
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toBe('rate_limited:retry_after_120s');
+  });
+
+  it('defaults retryAfter to 3600s when Bandsintown returned 429 with no Retry-After header', async () => {
+    fetchEventsMock.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      error: 'bandsintown returned 429',
+    });
+    const result = await scanBandsintownForUser(USER_ID);
+    expect(result?.skipped).toBe('rate_limited:retry_after_3600s');
+  });
+
+  it('fires a Sentry warning on 429 (signals our cooldown failed upstream)', async () => {
+    fetchEventsMock.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      error: 'bandsintown returned 429',
+      retryAfter: 90,
+    });
+    await scanBandsintownForUser(USER_ID);
+    expect(sentryCaptureMessage).toHaveBeenCalledOnce();
+    const [msg, level] = sentryCaptureMessage.mock.calls[0];
+    expect(level).toBe('warning');
+    expect(msg).toMatch(/Bandsintown 429/);
+    expect(msg).toContain(USER_ID);
+    expect(msg).toContain('retryAfter=90s');
+  });
+
+  it('records the timestamp on 429 just like any other server response', async () => {
+    fetchEventsMock.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      error: 'bandsintown returned 429',
+      retryAfter: 60,
+    });
+    await scanBandsintownForUser(USER_ID);
+    expect(mockDbState.updates).toHaveLength(1);
   });
 });
