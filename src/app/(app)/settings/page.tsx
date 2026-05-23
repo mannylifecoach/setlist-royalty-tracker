@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { analytics } from '@/lib/analytics';
 import {
@@ -11,6 +12,7 @@ import {
   type Capability,
 } from '@/lib/constants';
 import { restoreCoverageBanner } from '@/components/coverage-banner';
+import { canScanBandsintownNow, describeScanSkipReason } from '@/lib/scan-button-gate';
 
 type Pro = 'bmi' | 'ascap' | 'sesac' | 'gmr' | 'prs' | 'socan' | 'apra' | 'gema' | 'sacem' | 'buma';
 
@@ -54,6 +56,13 @@ export default function SettingsPage() {
     | { kind: 'idle' }
     | { kind: 'testing' }
     | { kind: 'ok'; artistName: string }
+    | { kind: 'error'; message: string }
+  >({ kind: 'idle' });
+  const [bandsintownScanStatus, setBandsintownScanStatus] = useState<
+    | { kind: 'idle' }
+    | { kind: 'scanning' }
+    | { kind: 'ok'; artistName: string; events: number; newPerformances: number }
+    | { kind: 'skipped'; message: string }
     | { kind: 'error'; message: string }
   >({ kind: 'idle' });
 
@@ -137,10 +146,41 @@ export default function SettingsPage() {
     }
   }
 
+  async function scanBandsintownNow() {
+    setBandsintownScanStatus({ kind: 'scanning' });
+    try {
+      const res = await fetch('/api/scan/bandsintown', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        setBandsintownScanStatus({
+          kind: 'error',
+          message: data.error || 'scan failed',
+        });
+        return;
+      }
+      if (data.skipped) {
+        setBandsintownScanStatus({
+          kind: 'skipped',
+          message: describeScanSkipReason(data.skipped),
+        });
+        return;
+      }
+      setBandsintownScanStatus({
+        kind: 'ok',
+        artistName: data.artistName,
+        events: data.events,
+        newPerformances: data.newPerformances,
+      });
+    } catch {
+      setBandsintownScanStatus({ kind: 'error', message: 'request failed' });
+    }
+  }
+
   async function disconnectBandsintown() {
     setBandsintownApiKey('');
     setBandsintownArtistSlug('');
     setBandsintownTestStatus({ kind: 'idle' });
+    setBandsintownScanStatus({ kind: 'idle' });
     // Persist immediately so the disconnect isn't dependent on the user remembering
     // to click "save settings" afterward. Sends empty strings → API treats as delete.
     await fetch('/api/settings', {
@@ -497,6 +537,7 @@ export default function SettingsPage() {
               onChange={(e) => {
                 setBandsintownArtistSlug(e.target.value);
                 setBandsintownTestStatus({ kind: 'idle' });
+                setBandsintownScanStatus({ kind: 'idle' });
               }}
               placeholder="e.g. tiffany-alvord"
               className="input w-full text-[12px]"
@@ -515,6 +556,7 @@ export default function SettingsPage() {
               onChange={(e) => {
                 setBandsintownApiKey(e.target.value);
                 setBandsintownTestStatus({ kind: 'idle' });
+                setBandsintownScanStatus({ kind: 'idle' });
               }}
               placeholder="paste your bandsintown api key"
               className="input w-full text-[12px]"
@@ -522,7 +564,7 @@ export default function SettingsPage() {
               spellCheck={false}
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
               onClick={testBandsintownConnection}
@@ -537,6 +579,22 @@ export default function SettingsPage() {
             </button>
             <button onClick={handleSave} disabled={saving} className="btn text-[12px]">
               {saving ? 'saving...' : saved ? 'saved' : 'save'}
+            </button>
+            <button
+              type="button"
+              onClick={scanBandsintownNow}
+              disabled={
+                !canScanBandsintownNow({
+                  apiKey: bandsintownApiKey,
+                  artistSlug: bandsintownArtistSlug,
+                  scanning: bandsintownScanStatus.kind === 'scanning',
+                  testing: bandsintownTestStatus.kind === 'testing',
+                  saving,
+                })
+              }
+              className="btn text-[12px]"
+            >
+              {bandsintownScanStatus.kind === 'scanning' ? 'scanning...' : 'scan now'}
             </button>
             {(bandsintownApiKey || bandsintownArtistSlug) && (
               <button
@@ -556,6 +614,35 @@ export default function SettingsPage() {
           {bandsintownTestStatus.kind === 'error' && (
             <p className="text-[11px] text-status-expired">
               ✗ {bandsintownTestStatus.message}
+            </p>
+          )}
+          {bandsintownScanStatus.kind === 'ok' && (
+            <p className="text-[11px] text-status-confirmed">
+              ✓ {bandsintownScanStatus.artistName}: {bandsintownScanStatus.events} event
+              {bandsintownScanStatus.events === 1 ? '' : 's'} found,{' '}
+              {bandsintownScanStatus.newPerformances} new performance
+              {bandsintownScanStatus.newPerformances === 1 ? '' : 's'}
+              {bandsintownScanStatus.newPerformances > 0 && (
+                <>
+                  {' — '}
+                  <Link
+                    href="/performances?source=bandsintown"
+                    className="underline hover:text-text-primary transition-colors"
+                  >
+                    review at /performances
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
+          {bandsintownScanStatus.kind === 'skipped' && (
+            <p className="text-[11px] text-text-muted">
+              · {bandsintownScanStatus.message}
+            </p>
+          )}
+          {bandsintownScanStatus.kind === 'error' && (
+            <p className="text-[11px] text-status-expired">
+              ✗ {bandsintownScanStatus.message}
             </p>
           )}
         </div>
