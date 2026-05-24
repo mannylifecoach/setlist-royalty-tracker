@@ -72,7 +72,7 @@ export function InstallPrompt() {
   if (!showInitial || userDismissed) return null;
 
   return (
-    <div className="border-b border-border-subtle bg-bg-card/40 px-[2vw] py-2 flex items-start gap-3">
+    <div className="border-b border-border-subtle bg-bg-card/40 px-4 md:px-[2vw] py-2 flex items-start gap-3">
       <p className="flex-1 text-[11px] text-text-secondary leading-[1.5]">
         <span className="text-text">install SRT to your home screen</span>
         {' · '}

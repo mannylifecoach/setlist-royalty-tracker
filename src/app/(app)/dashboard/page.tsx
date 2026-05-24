@@ -101,9 +101,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Title + scan button stack on mobile (button is wider than narrow phones can fit alongside the title), single row from sm+. */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-[18px] font-light tracking-[-0.3px]">dashboard</h1>
-        <button onClick={handleScan} disabled={scanning} className="btn">
+        <button onClick={handleScan} disabled={scanning} className="btn self-start sm:self-auto">
           {scanning ? 'checking...' : 'check for new performances'}
         </button>
       </div>
@@ -163,28 +164,39 @@ export default function DashboardPage() {
                 <div
                   key={performance.id}
                   onClick={() => router.push(`/performances/${performance.id}`)}
-                  className="flex items-center justify-between px-4 py-3 border-b border-border-subtle cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-0 px-2 md:px-4 py-3 border-b border-border-subtle cursor-pointer hover:bg-white/[0.02] transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-[12px] text-text-muted w-[80px]">
+                  {/* On mobile, two stacked rows: title + badge on top; date · artist · city below.
+                      On md+, original single-row layout: [date] [song] [artist] | [city] [badge]. */}
+                  <div className="flex items-center justify-between md:justify-start md:gap-4 min-w-0">
+                    <span className="hidden md:inline text-[12px] text-text-muted w-[80px] shrink-0">
                       {performance.eventDate}
                     </span>
-                    <span className="text-[13px] text-text font-medium">
+                    <span className="text-[13px] text-text font-medium truncate min-w-0 flex-1 md:flex-initial">
                       {song.title}
                     </span>
-                    <span className="text-[12px] text-text-secondary">
+                    <span className="hidden md:inline text-[12px] text-text-secondary truncate">
                       by {artist.artistName}
                     </span>
+                    <span className="md:hidden shrink-0 ml-2">
+                      <StatusBadge
+                        status={performance.status as 'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'}
+                      />
+                    </span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 md:gap-3 text-[11px] text-text-muted md:text-inherit">
+                    <span className="md:hidden">{performance.eventDate}</span>
+                    <span className="md:hidden">· by {artist.artistName}</span>
                     {performance.venueCity && (
-                      <span className="text-[11px] text-text-muted">
+                      <span className="text-[11px] text-text-muted truncate">
                         {performance.venueCity}
                       </span>
                     )}
-                    <StatusBadge
-                      status={performance.status as 'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'}
-                    />
+                    <span className="hidden md:inline">
+                      <StatusBadge
+                        status={performance.status as 'discovered' | 'confirmed' | 'submitted' | 'expired' | 'ineligible'}
+                      />
+                    </span>
                   </div>
                 </div>
               ))}
