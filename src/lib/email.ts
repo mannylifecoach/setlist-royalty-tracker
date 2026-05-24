@@ -63,13 +63,32 @@ function statusBadge(label: string, color: string): string {
   return `<span style="display:inline-block;padding:2px 8px;font-size:11px;color:${color};border:1px solid ${color};opacity:0.8;">${label}</span>`;
 }
 
-export function magicLinkEmail(url: string): { subject: string; html: string; text: string } {
+export function magicLinkEmail(
+  url: string,
+  code?: string
+): { subject: string; html: string; text: string } {
   const time = new Date().toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
     timeZoneName: 'short',
   });
+
+  // Code block is rendered when sendVerificationRequest passes a code (which
+  // is also the URL token — generateSixDigitCode in auth.ts makes the token
+  // itself the user-facing code). Lets PWA users sign in without leaving the
+  // app — they paste the code instead of tapping the link that would open
+  // in Safari and break the standalone session context.
+  const codeBlock = code
+    ? `
+    <p style="margin:0 0 8px 0;color:#aaaaaa;font-size:12px;">
+      or enter this code in the app:
+    </p>
+    <p style="margin:0 0 24px 0;font-family:'SF Mono','Menlo','Monaco','Consolas',monospace;font-size:32px;font-weight:600;letter-spacing:4px;color:#ffffff;background-color:#252525;border:1px solid #444444;padding:16px 24px;display:inline-block;">
+      ${code}
+    </p>
+  `
+    : '';
 
   const content = `
     <p style="margin:0 0 24px 0;color:#ffffff;font-size:15px;font-weight:400;letter-spacing:-0.3px;">
@@ -79,19 +98,21 @@ export function magicLinkEmail(url: string): { subject: string; html: string; te
     <p style="margin:0 0 24px 0;">
       ${button('sign in', url)}
     </p>
-
+    ${codeBlock}
     <p style="margin:0 0 8px 0;color:#aaaaaa;font-size:12px;">
       if you did not request this email you can safely ignore it.
     </p>
     <p style="margin:0;color:#999999;font-size:11px;">
-      this link expires in 24 hours and can only be used once.
+      this link${code ? ' and code' : ''} expires in 24 hours and can only be used once.
     </p>
   `;
+
+  const textCodeBlock = code ? `\n\nor enter this code in the app: ${code}\n` : '';
 
   return {
     subject: `sign in to setlistroyalty.com · ${time}`,
     html: layout(content),
-    text: `sign in to setlistroyalty.com\n\n${url}\n\nif you did not request this email you can safely ignore it.\nthis link expires in 24 hours and can only be used once.`,
+    text: `sign in to setlistroyalty.com\n\n${url}${textCodeBlock}\n\nif you did not request this email you can safely ignore it.\nthis link${code ? ' and code' : ''} expires in 24 hours and can only be used once.`,
   };
 }
 
