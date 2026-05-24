@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Sora } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { Providers } from '@/components/providers';
@@ -34,6 +34,21 @@ export const metadata: Metadata = {
     description: 'bmi and ascap only auto-track the the highest-grossing tours. we find the rest using 9.6m+ crowdsourced setlists.',
     images: ['/og-image.png'],
   },
+  // iOS standalone-mode chrome + home-screen title. Pairs with the web app
+  // manifest (app/manifest.ts) and the apple-icon.png file-convention.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'SRT',
+  },
+};
+
+// Next.js 16 moved themeColor + colorScheme out of metadata into a separate
+// viewport export. The black theme matches the app's dark UI so the iOS
+// status bar + Android nav blend in when running standalone.
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  colorScheme: 'dark',
 };
 
 export default function RootLayout({

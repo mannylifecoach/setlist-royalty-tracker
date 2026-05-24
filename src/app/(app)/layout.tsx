@@ -5,6 +5,7 @@ import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { AppNav } from '@/components/app-nav';
+import { InstallPrompt } from '@/components/install-prompt';
 
 export default async function AppLayout({
   children,
@@ -28,6 +29,7 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
+      <InstallPrompt />
       <nav className="flex items-center px-[2vw] py-[1.2vw] border-b border-border-subtle">
         <Link
           href="/"
