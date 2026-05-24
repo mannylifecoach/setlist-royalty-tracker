@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MorphingText } from '@/components/ui/morphing-text';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { isValidSixDigitCode } from '@/lib/auth-code';
@@ -29,7 +28,12 @@ function LoginForm() {
             href="/"
             className="flex flex-col items-center hover:opacity-50 transition-opacity"
           >
-            <MorphingText className="text-[32px]" />
+            <span
+              className="text-[32px] lowercase tracking-[-2px] inline-block"
+              style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
+            >
+              setlist
+            </span>
             <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
           </Link>
           <h1 className="text-[18px] font-light tracking-[-0.3px]">
@@ -77,7 +81,12 @@ function LoginForm() {
             href="/"
             className="flex flex-col items-center hover:opacity-50 transition-opacity"
           >
-            <MorphingText className="text-[32px]" />
+            <span
+              className="text-[32px] lowercase tracking-[-2px] inline-block"
+              style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
+            >
+              setlist
+            </span>
             <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
           </Link>
           <h1 className="text-[18px] font-light tracking-[-0.3px]">sign in</h1>
