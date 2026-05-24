@@ -139,10 +139,18 @@ function VerifyScreen() {
     setVerifying(true);
     setVerifyError(null);
     try {
-      const res = await fetch('/api/auth/verify-code', {
+      // Use an absolute URL so iOS Safari PWAs (which sometimes resolve
+      // relative URLs against the install snapshot, not the current page)
+      // hit the right endpoint. cache: 'no-store' and credentials: 'same-origin'
+      // are explicit defaults — also workarounds for sporadic iOS standalone
+      // fetch bugs reported in WebKit.
+      const url = `${window.location.origin}/api/auth/verify-code`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: pendingEmail, code }),
+        credentials: 'same-origin',
+        cache: 'no-store',
       });
       if (res.ok) {
         try { localStorage.removeItem(PENDING_EMAIL_KEY); } catch { /* ignore */ }
@@ -153,10 +161,18 @@ function VerifyScreen() {
         setVerifyError('too many attempts — try again in a few minutes.');
       } else {
         const body = await res.json().catch(() => ({}));
-        setVerifyError(body.error || 'something went wrong');
+        setVerifyError(body.error || `request failed (status ${res.status})`);
       }
-    } catch {
-      setVerifyError('network error — try again');
+    } catch (err) {
+      // Surface the actual error message — "network error" alone is
+      // useless for diagnosing iOS standalone fetch failures. Keep the
+      // detail visible until we've validated the path on real devices.
+      const msg =
+        err instanceof Error
+          ? `${err.name}: ${err.message}`
+          : String(err);
+      console.error('verify-code fetch failed:', err);
+      setVerifyError(`fetch failed — ${msg}`);
     } finally {
       setVerifying(false);
     }
