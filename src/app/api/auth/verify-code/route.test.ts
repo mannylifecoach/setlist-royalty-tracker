@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createHash } from 'crypto';
 import { _resetForTests as resetRateLimit } from '@/lib/route-rate-limit';
 
 const EMAIL = 'test@example.com';
 const VALID_CODE = '123456';
+const AUTH_SECRET = 'test-auth-secret-for-unit-tests';
 const USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+// Auth.js stores tokens as SHA-256(token + secret), hex-encoded. The route's
+// lookup re-hashes the user-supplied code the same way, so our mock DB row
+// has to hold the hash, not the raw code.
+const HASHED_VALID_CODE = createHash('sha256')
+  .update(`${VALID_CODE}${AUTH_SECRET}`)
+  .digest('hex');
 
 type Vt = { identifier: string; token: string; expires: Date };
 type UserRow = { id: string; email: string; emailVerified: Date | null };
@@ -96,9 +105,10 @@ function makeRequest(body: unknown, opts: { url?: string; ip?: string } = {}): u
 
 beforeEach(() => {
   resetRateLimit();
+  process.env.AUTH_SECRET = AUTH_SECRET;
   mockDb.verificationToken = {
     identifier: EMAIL,
-    token: VALID_CODE,
+    token: HASHED_VALID_CODE,
     expires: new Date(Date.now() + 60 * 60 * 1000),
   };
   mockDb.user = null;
@@ -150,7 +160,7 @@ describe('POST /api/auth/verify-code — token lookup', () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toMatch(/expired/i);
-    expect(mockDb.deletedTokens).toContain(VALID_CODE);
+    expect(mockDb.deletedTokens).toContain(HASHED_VALID_CODE);
   });
 });
 
@@ -180,7 +190,7 @@ describe('POST /api/auth/verify-code — happy path', () => {
 
   it('consumes the verification token (single-use)', async () => {
     await POST(makeRequest({ email: EMAIL, code: VALID_CODE }) as never);
-    expect(mockDb.deletedTokens).toContain(VALID_CODE);
+    expect(mockDb.deletedTokens).toContain(HASHED_VALID_CODE);
   });
 
   it('creates a session row with a 30-day expiry', async () => {
@@ -220,15 +230,23 @@ describe('POST /api/auth/verify-code — rate limiting', () => {
   it('returns 429 after exceeding per-email limit', async () => {
     // Per-email limit is 10/hour. After 10 successful attempts (each consumes
     // the token; we'll re-set it for each call), the 11th should be blocked.
-    mockDb.verificationToken = { identifier: EMAIL, token: VALID_CODE, expires: new Date(Date.now() + 60_000) };
+    mockDb.verificationToken = { identifier: EMAIL, token: HASHED_VALID_CODE, expires: new Date(Date.now() + 60_000) };
     for (let i = 0; i < 10; i++) {
       // re-seed token so each call has a valid lookup (rate limit checks BEFORE lookup)
-      mockDb.verificationToken = { identifier: EMAIL, token: VALID_CODE, expires: new Date(Date.now() + 60_000) };
+      mockDb.verificationToken = { identifier: EMAIL, token: HASHED_VALID_CODE, expires: new Date(Date.now() + 60_000) };
       await POST(makeRequest({ email: EMAIL, code: VALID_CODE }, { ip: '1.1.1.1' }) as never);
     }
-    mockDb.verificationToken = { identifier: EMAIL, token: VALID_CODE, expires: new Date(Date.now() + 60_000) };
+    mockDb.verificationToken = { identifier: EMAIL, token: HASHED_VALID_CODE, expires: new Date(Date.now() + 60_000) };
     const res = await POST(makeRequest({ email: EMAIL, code: VALID_CODE }, { ip: '1.1.1.1' }) as never);
     expect(res.status).toBe(429);
     expect(res.headers.get('Retry-After')).toBeTruthy();
+  });
+});
+
+describe('POST /api/auth/verify-code — AUTH_SECRET required', () => {
+  it('returns 500 when AUTH_SECRET is missing (loud failure, not silent invalid-code)', async () => {
+    delete process.env.AUTH_SECRET;
+    const res = await POST(makeRequest({ email: EMAIL, code: VALID_CODE }) as never);
+    expect(res.status).toBe(500);
   });
 });

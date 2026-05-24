@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db';
@@ -7,6 +7,21 @@ import { users, sessions, verificationTokens } from '@/db/schema';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { isValidSixDigitCode } from '@/lib/auth-code';
 import { checkRateLimit, getClientIp } from '@/lib/route-rate-limit';
+
+// Auth.js v5 stores verification tokens as SHA-256(token + secret), hex-
+// encoded. Match that here so our code-path lookup hits the same row the
+// magic-link callback would find. Source:
+//   @auth/core/lib/actions/signin/send-token.js:63
+//   @auth/core/lib/utils/web.js (createHash helper)
+async function hashAuthToken(token: string): Promise<string> {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    // Without AUTH_SECRET nothing will ever match — fail loudly instead of
+    // silently returning "invalid code" for every user.
+    throw new Error('AUTH_SECRET env var is required for code verification');
+  }
+  return createHash('sha256').update(`${token}${secret}`).digest('hex');
+}
 
 // POST /api/auth/verify-code — completes a sign-in by verifying a 6-digit
 // code instead of clicking the magic-link URL. Required for PWA users on
@@ -63,16 +78,17 @@ export const POST = withHandler(async (request: NextRequest) => {
     );
   }
 
-  // Look up the verification token. Auth.js stores tokens unhashed by default
-  // (no `secret` set in the Resend provider config), so a direct equality
-  // check matches the value the user typed.
+  // Hash the user-supplied code with AUTH_SECRET so it matches what Auth.js
+  // stored when it sent the email. The raw 6-digit code never appears in
+  // the database — only the hash.
+  const hashedToken = await hashAuthToken(code);
   const [vt] = await db
     .select()
     .from(verificationTokens)
     .where(
       and(
         eq(verificationTokens.identifier, email),
-        eq(verificationTokens.token, code)
+        eq(verificationTokens.token, hashedToken)
       )
     );
 
@@ -86,7 +102,7 @@ export const POST = withHandler(async (request: NextRequest) => {
       .where(
         and(
           eq(verificationTokens.identifier, email),
-          eq(verificationTokens.token, code)
+          eq(verificationTokens.token, hashedToken)
         )
       );
     return NextResponse.json({ error: 'code expired' }, { status: 400 });
@@ -98,7 +114,7 @@ export const POST = withHandler(async (request: NextRequest) => {
     .where(
       and(
         eq(verificationTokens.identifier, email),
-        eq(verificationTokens.token, code)
+        eq(verificationTokens.token, hashedToken)
       )
     );
 
