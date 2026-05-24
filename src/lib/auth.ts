@@ -47,8 +47,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
     },
     callbacks: {
       session({ session, user }) {
+        // DrizzleAdapter loads the full user row on every session lookup, so
+        // exposing onboardingComplete here is free — saves the (app) layout
+        // from making a separate DB call on every page navigation. Cast the
+        // user param since AdapterUser's published type doesn't include
+        // SRT-specific columns (and `export type *` re-export breaks module
+        // augmentation through next-auth/adapters).
+        const fullUser = user as typeof user & { onboardingComplete?: Date | null };
         if (session.user) {
           session.user.id = user.id;
+          session.user.onboardingComplete = !!fullUser.onboardingComplete;
         }
         return session;
       },

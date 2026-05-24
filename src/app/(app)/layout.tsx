@@ -1,8 +1,5 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { db } from '@/db';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { AppNav } from '@/components/app-nav';
 import { InstallPrompt } from '@/components/install-prompt';
@@ -12,18 +9,14 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // session.user.onboardingComplete is populated in the Auth.js session
+  // callback (src/lib/auth.ts) from the user row DrizzleAdapter already
+  // loaded — so checking it here costs zero extra DB roundtrips.
   const session = await auth();
   if (!session?.user) {
     redirect('/login');
   }
-
-  // Redirect to onboarding if profile not completed
-  const [user] = await db
-    .select({ onboardingComplete: users.onboardingComplete })
-    .from(users)
-    .where(eq(users.id, session.user.id!));
-
-  if (user && !user.onboardingComplete) {
+  if (!session.user.onboardingComplete) {
     redirect('/onboarding');
   }
 
@@ -36,7 +29,7 @@ export default async function AppLayout({
         <div className="flex items-center justify-between md:contents">
           <Link
             href="/"
-            className="flex flex-col items-start hover:opacity-50 transition-opacity shrink-0"
+            className="flex flex-col items-start hover:opacity-50 transition-opacity shrink-0 touch-manipulation"
           >
             <span className="text-[24px] uppercase tracking-[-2px]" style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}>srt</span>
             <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
@@ -46,7 +39,7 @@ export default async function AppLayout({
             <span className="text-[11px] text-text-muted hidden sm:inline">
               {process.env.DEMO_EMAIL || session.user.email}
             </span>
-            <Link href="/settings" className="text-[11px] text-text-disabled hover:opacity-50 transition-opacity">
+            <Link href="/settings" className="text-[11px] text-text-disabled hover:opacity-50 transition-opacity touch-manipulation">
               settings
             </Link>
           </div>

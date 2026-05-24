@@ -26,10 +26,15 @@ export function AppNav() {
         <Link
           key={href}
           href={href}
-          className={`text-[12px] pb-[2px] transition-all ${
+          // touch-manipulation: kills the 300ms tap delay + double-tap zoom
+          // on iOS Safari for these links. active:opacity for explicit tap
+          // feedback so users see something happened. Tailwind's hover:
+          // variant is already gated by `(hover: hover)` in v4, but the
+          // explicit active: variant fires on touch + is the right signal.
+          className={`text-[12px] pb-[2px] transition-all touch-manipulation ${
             pathname.startsWith(href)
               ? 'text-text border-b border-white'
-              : 'text-text-muted border-b border-transparent hover:opacity-60'
+              : 'text-text-muted border-b border-transparent hover:opacity-60 active:opacity-60'
           }`}
         >
           {label}

@@ -29,10 +29,10 @@ function LoginForm() {
             className="flex flex-col items-center hover:opacity-50 transition-opacity"
           >
             <span
-              className="text-[32px] lowercase tracking-[-2px] inline-block"
+              className="text-[32px] uppercase tracking-[-2px] inline-block"
               style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
             >
-              setlist
+              srt
             </span>
             <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
           </Link>
@@ -82,10 +82,10 @@ function LoginForm() {
             className="flex flex-col items-center hover:opacity-50 transition-opacity"
           >
             <span
-              className="text-[32px] lowercase tracking-[-2px] inline-block"
+              className="text-[32px] uppercase tracking-[-2px] inline-block"
               style={{ fontFamily: "var(--font-marker), 'Sora', sans-serif", fontWeight: 800 }}
             >
-              setlist
+              srt
             </span>
             <span className="text-[14px] tracking-[-0.3px]">setlist royalty tracker</span>
           </Link>
