@@ -193,24 +193,21 @@ describe('POST /api/auth/verify-code — happy path', () => {
     expect(mockDb.deletedTokens).toContain(HASHED_VALID_CODE);
   });
 
-  it('creates a session row with a 30-day expiry', async () => {
+  it('does NOT insert a sessions table row (JWT strategy)', async () => {
     await POST(makeRequest({ email: EMAIL, code: VALID_CODE }) as never);
-    expect(mockDb.insertedSessions).toHaveLength(1);
-    const sess = mockDb.insertedSessions[0];
-    expect(sess.sessionToken).toBeTypeOf('string');
-    expect(sess.sessionToken.length).toBeGreaterThan(32);
-    const ttlDays = (sess.expires.getTime() - Date.now()) / (24 * 60 * 60 * 1000);
-    expect(ttlDays).toBeGreaterThan(29);
-    expect(ttlDays).toBeLessThan(31);
+    expect(mockDb.insertedSessions).toHaveLength(0);
   });
 
-  it('sets the http (non-Secure) cookie name in dev (http URL)', async () => {
+  it('sets the http (non-Secure) cookie name in dev (http URL) with a JWT value', async () => {
     const res = await POST(
       makeRequest({ email: EMAIL, code: VALID_CODE }, { url: 'http://localhost:3000/api/auth/verify-code' }) as never
     );
     const setCookie = res.headers.get('set-cookie') || '';
     expect(setCookie).toMatch(/^authjs\.session-token=/);
     expect(setCookie).not.toMatch(/__Secure-/);
+    // JWE compact serialization = 5 base64url segments separated by dots
+    const cookieValue = setCookie.split(';')[0].split('=')[1];
+    expect(cookieValue.split('.').length).toBe(5);
   });
 
   it('sets the __Secure-prefixed cookie name on HTTPS', async () => {
@@ -223,6 +220,17 @@ describe('POST /api/auth/verify-code — happy path', () => {
     const setCookie = res.headers.get('set-cookie') || '';
     expect(setCookie).toMatch(/^__Secure-authjs\.session-token=/);
     expect(setCookie).toMatch(/Secure/);
+  });
+
+  it('sets a cookie expiry ~30 days out', async () => {
+    const res = await POST(makeRequest({ email: EMAIL, code: VALID_CODE }) as never);
+    const setCookie = res.headers.get('set-cookie') || '';
+    const expiresMatch = setCookie.match(/Expires=([^;]+)/);
+    expect(expiresMatch).toBeTruthy();
+    const cookieExpires = new Date(expiresMatch![1]);
+    const ttlDays = (cookieExpires.getTime() - Date.now()) / (24 * 60 * 60 * 1000);
+    expect(ttlDays).toBeGreaterThan(29);
+    expect(ttlDays).toBeLessThan(31);
   });
 });
 

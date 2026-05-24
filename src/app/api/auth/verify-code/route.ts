@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { encode } from '@auth/core/jwt';
 import { db } from '@/db';
-import { users, sessions, verificationTokens } from '@/db/schema';
+import { users, verificationTokens } from '@/db/schema';
 import { withHandler, parseBody } from '@/lib/api-utils';
 import { isValidSixDigitCode } from '@/lib/auth-code';
 import { checkRateLimit, getClientIp } from '@/lib/route-rate-limit';
@@ -132,16 +133,33 @@ export const POST = withHandler(async (request: NextRequest) => {
       .where(eq(users.id, user.id));
   }
 
-  // Mint a session row identical in shape to what Auth.js would have created
-  // via the standard callback. The cookie value IS the sessionToken; Auth.js
-  // looks it up via the DrizzleAdapter on every authenticated request.
-  const sessionToken = randomBytes(32).toString('hex');
-  const expires = new Date(Date.now() + SESSION_DURATION_MS);
-  await db.insert(sessions).values({ sessionToken, userId: user.id, expires });
+  // Mint a JWT identical in shape to what Auth.js would produce on its own
+  // sign-in flow. Salt MUST be the cookie name (Auth.js derives the
+  // encryption key from secret + salt; mismatched salt = decryption failure
+  // on the next request). Payload mirrors the jwt callback in src/lib/auth.ts.
+  const expiresMs = Date.now() + SESSION_DURATION_MS;
+  const expires = new Date(expiresMs);
+  const cookieName = sessionCookieName(request);
+  const sessionToken = await encode({
+    salt: cookieName,
+    secret: process.env.AUTH_SECRET!,
+    maxAge: Math.floor(SESSION_DURATION_MS / 1000),
+    token: {
+      sub: user.id,
+      id: user.id,
+      email: user.email,
+      // onboardingComplete reflects the actual user state. For brand-new
+      // users this will be false; the jwt callback in src/lib/auth.ts will
+      // lazy-refresh to true once they finish the /onboarding flow.
+      onboardingComplete: !!user.onboardingComplete,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(expiresMs / 1000),
+    },
+  });
 
   const response = NextResponse.json({ success: true });
   const useSecure = new URL(request.url).protocol === 'https:';
-  response.cookies.set(sessionCookieName(request), sessionToken, {
+  response.cookies.set(cookieName, sessionToken, {
     httpOnly: true,
     secure: useSecure,
     sameSite: 'lax',

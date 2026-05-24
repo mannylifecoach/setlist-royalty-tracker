@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import Resend from 'next-auth/providers/resend';
+import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { users, accounts, sessions, verificationTokens } from '@/db/schema';
 import { magicLinkEmail } from '@/lib/email';
@@ -40,23 +41,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         },
       }),
     ],
+    // JWT session strategy: tokens are signed with AUTH_SECRET and decoded
+    // stateless on every request — no DB roundtrip per page navigation.
+    // Tradeoff: server-side revocation requires a token denylist (deferred —
+    // not needed at current scale). Existing DB-session users get logged out
+    // on deploy + sign back in via the 6-digit code path.
+    session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days
     pages: {
       signIn: '/login',
       verifyRequest: '/login?verify=true',
       error: '/login',
     },
     callbacks: {
-      session({ session, user }) {
-        // DrizzleAdapter loads the full user row on every session lookup, so
-        // exposing onboardingComplete here is free — saves the (app) layout
-        // from making a separate DB call on every page navigation. Cast the
-        // user param since AdapterUser's published type doesn't include
-        // SRT-specific columns (and `export type *` re-export breaks module
-        // augmentation through next-auth/adapters).
-        const fullUser = user as typeof user & { onboardingComplete?: Date | null };
-        if (session.user) {
-          session.user.id = user.id;
-          session.user.onboardingComplete = !!fullUser.onboardingComplete;
+      // jwt runs on initial sign-in (when `user` is present from the adapter)
+      // and on every subsequent request (when only `token` is present). Stash
+      // the user id + onboarding flag in the token on sign-in so they're
+      // available to the session callback below without further DB work.
+      //
+      // Lazy refresh: if the cached value is "not onboarded yet," DB-check on
+      // each request so a freshly-completed onboarding flow flips the JWT
+      // without requiring the user to sign in again. Once true, the JWT
+      // caches that forever (until expiry) — zero DB calls in steady state.
+      jwt: async ({ token, user }) => {
+        if (user) {
+          token.id = user.id;
+          const fullUser = user as typeof user & { onboardingComplete?: Date | null };
+          token.onboardingComplete = !!fullUser.onboardingComplete;
+        }
+        if (!token.onboardingComplete && token.id) {
+          const [dbUser] = await db
+            .select({ onboardingComplete: users.onboardingComplete })
+            .from(users)
+            .where(eq(users.id, token.id as string));
+          if (dbUser?.onboardingComplete) {
+            token.onboardingComplete = true;
+          }
+        }
+        return token;
+      },
+      session({ session, token }) {
+        if (session.user && token) {
+          session.user.id = token.id as string;
+          session.user.onboardingComplete = !!token.onboardingComplete;
         }
         return session;
       },
