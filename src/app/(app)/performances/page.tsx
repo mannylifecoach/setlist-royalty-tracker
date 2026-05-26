@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PerformanceTable } from '@/components/performance-table';
 import { CoverageBanner } from '@/components/coverage-banner';
+import { MobileFilingBanner } from '@/components/mobile-filing-banner';
 import { analytics } from '@/lib/analytics';
 import type { PerformanceRow } from '@/lib/performance-grouping';
 import type { PerformanceStatus } from '@/lib/constants';
@@ -186,6 +187,8 @@ export default function PerformancesPage() {
           })}
         </div>
       )}
+
+      <MobileFilingBanner />
 
       <CoverageBanner />
 
