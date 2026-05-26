@@ -67,23 +67,23 @@ export default function ArtistsPage() {
         {artists.map((artist) => (
           <div
             key={artist.id}
-            className="flex items-center justify-between px-4 py-3 border-b border-border-subtle"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 px-4 py-3 border-b border-border-subtle"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] font-medium">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-[13px] font-medium truncate">
                 {artist.artistName}
               </span>
               {artist.mbid ? (
-                <span className="text-[10px] text-status-confirmed bg-status-confirmed/10 px-1.5 py-0.5 rounded-[2px]">
+                <span className="text-[10px] text-status-confirmed bg-status-confirmed/10 px-1.5 py-0.5 rounded-[2px] shrink-0">
                   resolved
                 </span>
               ) : (
-                <span className="text-[10px] text-status-expiring bg-status-expiring/10 px-1.5 py-0.5 rounded-[2px]">
+                <span className="text-[10px] text-status-expiring bg-status-expiring/10 px-1.5 py-0.5 rounded-[2px] shrink-0">
                   no mbid
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {!artist.mbid && (
                 <ResolveButton
                   artistName={artist.artistName}
@@ -92,7 +92,7 @@ export default function ArtistsPage() {
               )}
               <button
                 onClick={() => handleDelete(artist.id)}
-                className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
+                className="text-[11px] text-text-disabled hover:text-status-expired active:text-status-expired transition-colors touch-manipulation"
               >
                 delete
               </button>
@@ -148,7 +148,7 @@ function ResolveButton({
 
   if (!open) {
     return (
-      <button onClick={search} className="btn text-[10px] px-2 py-1">
+      <button onClick={search} className="btn text-[10px] px-2 py-1 touch-manipulation">
         resolve
       </button>
     );

@@ -344,7 +344,7 @@ export default function SongsPage() {
               </div>
               <button
                 onClick={() => handleDelete(song.id)}
-                className="text-[11px] text-text-disabled hover:text-status-expired transition-colors shrink-0"
+                className="text-[11px] text-text-disabled hover:text-status-expired active:text-status-expired transition-colors shrink-0 touch-manipulation"
               >
                 delete
               </button>
