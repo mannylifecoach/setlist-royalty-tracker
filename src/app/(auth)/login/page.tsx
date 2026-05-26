@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { isValidSixDigitCode } from '@/lib/auth-code';
+import { robustPost } from '@/lib/robust-post';
 
 // Where we stash the email between the "send magic link" click and the
 // verify screen so the user doesn't have to retype it on the PWA. Cleared
@@ -139,18 +140,15 @@ function VerifyScreen() {
     setVerifying(true);
     setVerifyError(null);
     try {
-      // Use an absolute URL so iOS Safari PWAs (which sometimes resolve
-      // relative URLs against the install snapshot, not the current page)
-      // hit the right endpoint. cache: 'no-store' and credentials: 'same-origin'
-      // are explicit defaults — also workarounds for sporadic iOS standalone
-      // fetch bugs reported in WebKit.
+      // robustPost wraps fetch with an XMLHttpRequest fallback — iOS Safari
+      // in PWA standalone mode intermittently throws "TypeError: Load
+      // failed" on fetch even when the server is reachable. XHR is more
+      // reliable in that context and kicks in only when fetch throws (not
+      // on 4xx/5xx responses, which flow through fetch normally).
       const url = `${window.location.origin}/api/auth/verify-code`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: pendingEmail, code }),
-        credentials: 'same-origin',
-        cache: 'no-store',
+      const res = await robustPost<{ error?: string }>(url, {
+        email: pendingEmail,
+        code,
       });
       if (res.ok) {
         try { localStorage.removeItem(PENDING_EMAIL_KEY); } catch { /* ignore */ }
@@ -160,19 +158,18 @@ function VerifyScreen() {
       if (res.status === 429) {
         setVerifyError('too many attempts — try again in a few minutes.');
       } else {
-        const body = await res.json().catch(() => ({}));
-        setVerifyError(body.error || `request failed (status ${res.status})`);
+        setVerifyError(res.json.error || `request failed (status ${res.status})`);
       }
     } catch (err) {
-      // Surface the actual error message — "network error" alone is
-      // useless for diagnosing iOS standalone fetch failures. Keep the
-      // detail visible until we've validated the path on real devices.
+      // Reaching here means BOTH fetch AND the XHR fallback threw — truly
+      // offline or a catastrophic transport failure. Surface the underlying
+      // message so we can diagnose if it ever happens in practice.
       const msg =
         err instanceof Error
           ? `${err.name}: ${err.message}`
           : String(err);
-      console.error('verify-code fetch failed:', err);
-      setVerifyError(`fetch failed — ${msg}`);
+      console.error('verify-code: both fetch and XHR failed:', err);
+      setVerifyError(`request failed — ${msg}`);
     } finally {
       setVerifying(false);
     }
