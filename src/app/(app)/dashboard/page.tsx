@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/status-badge';
 import { CoverageBanner } from '@/components/coverage-banner';
+import { GetStartedChecklist } from '@/components/get-started-checklist';
 import { useRouter } from 'next/navigation';
 import { analytics } from '@/lib/analytics';
 
@@ -121,6 +122,12 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+
+      {/* Renders only while the user has unfinished onboarding steps;
+          auto-hides at 7/7 done. Sits above the stat cards because for new
+          users the stats are all zeros — the checklist is the actionable
+          surface, the stat cards are reference. */}
+      <GetStartedChecklist />
 
       <CoverageBanner />
 
