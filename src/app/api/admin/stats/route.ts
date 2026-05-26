@@ -8,6 +8,7 @@ import {
   performances,
   scanLog,
 } from '@/db/schema';
+import { safeCompareSecret } from '@/lib/safe-compare';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   const providedSecret = request.headers.get('x-admin-secret');
-  if (!process.env.ADMIN_SECRET || providedSecret !== process.env.ADMIN_SECRET) {
+  if (!safeCompareSecret(providedSecret, process.env.ADMIN_SECRET)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withHandler } from '@/lib/api-utils';
 import { runBmiSelectorHealthCheck } from '@/lib/bmi-selector-health';
 import { sendBmiSelectorHealthAlert } from '@/lib/email';
+import { safeCompareSecret } from '@/lib/safe-compare';
 
 // Vercel cron: daily at 8am Hawaii / 18:00 UTC. See vercel.json.
 // Manual trigger: curl -H "Authorization: Bearer $CRON_SECRET" https://setlistroyalty.com/api/cron/bmi-health-check
 
 async function handler(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!safeCompareSecret(authHeader, `Bearer ${process.env.CRON_SECRET}`)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
