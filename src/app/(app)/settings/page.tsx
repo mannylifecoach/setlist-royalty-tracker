@@ -339,10 +339,10 @@ export default function SettingsPage() {
                   key={opt.value}
                   type="button"
                   onClick={() => toggleCapability(opt.value)}
-                  className={`w-full text-left px-3 py-2 border transition-colors ${
+                  className={`w-full text-left px-3 py-2 border transition-colors touch-manipulation ${
                     isChecked
                       ? 'border-status-confirmed bg-status-confirmed/10'
-                      : 'border-border-subtle hover:bg-white/[0.02]'
+                      : 'border-border-subtle hover:bg-white/[0.02] active:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -415,7 +415,10 @@ export default function SettingsPage() {
           bmi live requires start and end times for each performance. set your defaults here —
           they&apos;ll be used for new performances. you can override them per-performance.
         </p>
-        <div className="grid grid-cols-2 gap-4">
+        {/* Time picker: hour select + AM/PM select per side. 2-col is too tight on 375px (each side
+            gets ~150px, hour dropdown crushed after the AM/PM box). Stack the start + end pair on
+            mobile so each gets full width; side-by-side from sm+ where there's room. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-[11px] text-text-muted block mb-1">start time</label>
             <div className="flex gap-2">
@@ -486,10 +489,10 @@ export default function SettingsPage() {
                   key={s.id}
                   type="button"
                   onClick={() => toggleDefaultSetlistSong(s.id)}
-                  className={`w-full text-left px-3 py-2 border transition-colors ${
+                  className={`w-full text-left px-3 py-2 border transition-colors touch-manipulation ${
                     isChecked
                       ? 'border-status-confirmed bg-status-confirmed/10'
-                      : 'border-border-subtle hover:bg-white/[0.02]'
+                      : 'border-border-subtle hover:bg-white/[0.02] active:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
