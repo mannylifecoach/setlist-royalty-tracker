@@ -242,7 +242,8 @@ export default function PerformanceDetailPage({
           value={perf.venueAddress}
           onSave={(v) => handleSave('venueAddress', v)}
         />
-        <div className="grid grid-cols-3 gap-3">
+        {/* 3-col grid is too tight on mobile (~110px per cell at 375px); stack on phones, side-by-side from sm+ */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <EditableField
             label="city"
             value={perf.venueCity}
@@ -343,12 +344,13 @@ export default function PerformanceDetailPage({
 
       <ProReadiness perf={perf} song={song} pro={userPro} />
 
-      <div className="flex gap-2">
+      {/* Primary action row wraps on mobile so 2 btn + text link don't overflow 375px */}
+      <div className="flex flex-wrap items-center gap-2">
         {perf.status === 'discovered' && (
           <button
             onClick={() => handleStatusChange('confirmed')}
             disabled={saving}
-            className="btn"
+            className="btn touch-manipulation"
           >
             confirm
           </button>
@@ -357,7 +359,7 @@ export default function PerformanceDetailPage({
           <button
             onClick={() => handleStatusChange('submitted')}
             disabled={saving}
-            className="btn"
+            className="btn touch-manipulation"
           >
             mark as submitted
           </button>
@@ -366,7 +368,7 @@ export default function PerformanceDetailPage({
           <button
             onClick={() => handleStatusChange('ineligible')}
             disabled={saving}
-            className="text-[11px] text-text-disabled hover:text-status-expired transition-colors"
+            className="text-[11px] text-text-disabled hover:text-status-expired transition-colors touch-manipulation"
           >
             mark ineligible
           </button>
@@ -468,7 +470,7 @@ function DeleteConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="card p-5 max-w-[420px] space-y-4"
+        className="card p-5 w-full max-w-[420px] space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-[13px] text-text font-medium">
@@ -524,7 +526,7 @@ function ReverseConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="card p-5 max-w-[420px] space-y-4"
+        className="card p-5 w-full max-w-[420px] space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-[13px] text-text font-medium">
