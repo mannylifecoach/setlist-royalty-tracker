@@ -90,21 +90,22 @@ export default function ImportPage() {
         </p>
       </div>
 
-      {/* Source switcher — Serato now, Traktor/Rekordbox later */}
-      <div className="flex gap-2 border-b border-border-subtle">
-        <button className="px-4 py-2 text-[12px] border-b-2 border-white -mb-px">
+      {/* Source switcher — Serato now, Traktor/Rekordbox later. Horizontal scroll on mobile
+          if a future source pushes the row over 375px (matches AppNav + status-filter pattern). */}
+      <div className="flex gap-2 border-b border-border-subtle overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <button className="px-4 py-2 text-[12px] border-b-2 border-white -mb-px shrink-0 touch-manipulation">
           serato dj
         </button>
         <button
           disabled
-          className="px-4 py-2 text-[12px] text-text-disabled cursor-not-allowed"
+          className="px-4 py-2 text-[12px] text-text-disabled cursor-not-allowed shrink-0"
           title="coming soon"
         >
           traktor · soon
         </button>
         <button
           disabled
-          className="px-4 py-2 text-[12px] text-text-disabled cursor-not-allowed"
+          className="px-4 py-2 text-[12px] text-text-disabled cursor-not-allowed shrink-0"
           title="coming soon"
         >
           rekordbox · soon
@@ -183,7 +184,9 @@ export default function ImportPage() {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          {/* city/state/country: 3-col is too tight on 375px (~110px per cell crushes the inputs).
+              Stack on mobile, side-by-side from sm+. Matches the same fix on /performances/[id]. */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-[11px] text-text-muted block mb-1">
                 city
