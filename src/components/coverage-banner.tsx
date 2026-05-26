@@ -45,7 +45,11 @@ export function CoverageBanner() {
             <Link href="/performances/new" className="text-status-discovered hover:underline">
               add them manually
             </Link>
-            . bandsintown integration is on the way to close more of the gap automatically.
+            {' '}— or{' '}
+            <Link href="/settings" className="text-status-discovered hover:underline">
+              connect bandsintown
+            </Link>
+            {' '}for automatic pulls.
           </p>
         </div>
         <button
