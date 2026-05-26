@@ -397,14 +397,22 @@ export default function SongsPage() {
         ))}
 
         {songs.length === 0 && (
-          <div className="text-center py-12 text-text-muted text-[13px] space-y-2">
-            <p>no songs yet — add your first song above</p>
+          <div className="card text-center py-10 px-6 space-y-3">
+            <div className="text-[28px]" aria-hidden="true">🎼</div>
+            <h3 className="text-[14px] font-medium text-text">
+              Songs you&apos;ve written live here
+            </h3>
+            <p className="text-[12px] text-text-muted leading-[1.5] max-w-[400px] mx-auto">
+              Add a title using the form above. Optional: paste your BMI Work
+              ID or ASCAP Work ID for faster catalog matching when you file
+              performances later.
+            </p>
             {artists.length === 0 && (
-              <p>
-                <a href="/artists" className="text-status-discovered hover:underline">
-                  add artists first
-                </a>{' '}
-                so you can link them to your songs
+              <p className="text-[11px] pt-1">
+                <Link href="/artists" className="text-status-discovered hover:underline touch-manipulation">
+                  Add tracked artists first →
+                </Link>{' '}
+                <span className="text-text-disabled">so you can link them to each song.</span>
               </p>
             )}
           </div>

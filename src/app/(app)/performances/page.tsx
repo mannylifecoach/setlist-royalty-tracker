@@ -232,12 +232,51 @@ export default function PerformancesPage() {
         );
       })()}
 
-      <PerformanceTable
-        data={visibleData}
-        onConfirm={handleConfirm}
-        onRowClick={(id) => router.push(`/performances/${id}`)}
-        showSourceBadge={multiSource}
-      />
+      {data.length === 0 ? (
+        // Page-level rich empty state — replaces the PerformanceTable
+        // entirely when the user has zero performances. The table's own
+        // "no performances found" message is reserved for the
+        // filter-excludes-everything case (data > 0, visibleData === 0).
+        <div className="card text-center py-10 px-6 space-y-3">
+          <div className="text-[28px]" aria-hidden="true">🔍</div>
+          <h3 className="text-[14px] font-medium text-text">
+            Discovered performances will appear here
+          </h3>
+          <p className="text-[12px] text-text-muted leading-[1.5] max-w-[420px] mx-auto">
+            Run a scan to find shows on setlist.fm, import a Serato DJ set, or
+            add a show manually if you played somewhere setlist.fm hasn&apos;t
+            logged yet.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+            <button
+              onClick={handleScan}
+              disabled={scanning}
+              className="btn touch-manipulation"
+            >
+              {scanning ? 'scanning...' : 'scan now'}
+            </button>
+            <Link
+              href="/performances/new"
+              className="text-[12px] text-text-muted hover:text-text-secondary active:text-text-secondary touch-manipulation"
+            >
+              + add manually
+            </Link>
+            <Link
+              href="/import"
+              className="text-[12px] text-text-muted hover:text-text-secondary active:text-text-secondary touch-manipulation"
+            >
+              import serato csv
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <PerformanceTable
+          data={visibleData}
+          onConfirm={handleConfirm}
+          onRowClick={(id) => router.push(`/performances/${id}`)}
+          showSourceBadge={multiSource}
+        />
+      )}
     </div>
   );
 }

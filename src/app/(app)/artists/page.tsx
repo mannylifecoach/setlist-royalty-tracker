@@ -101,8 +101,20 @@ export default function ArtistsPage() {
         ))}
 
         {artists.length === 0 && (
-          <div className="text-center py-12 text-text-muted text-[13px]">
-            no artists yet — search above to add one
+          <div className="card text-center py-10 px-6 space-y-3">
+            <div className="text-[28px]" aria-hidden="true">🎤</div>
+            <h3 className="text-[14px] font-medium text-text">
+              Add the artists who perform your songs
+            </h3>
+            <p className="text-[12px] text-text-muted leading-[1.5] max-w-[380px] mx-auto">
+              SRT scans setlist.fm for shows by these artists. Add yourself by
+              stage name (if you perform your own songs), the bands you write
+              for, and any cover bands or DJs who play your work.{' '}
+              <span className="text-text-secondary">Cover bands count too — those royalties are yours.</span>
+            </p>
+            <p className="text-[11px] text-text-disabled">
+              Use the search above to find each one.
+            </p>
           </div>
         )}
       </div>
