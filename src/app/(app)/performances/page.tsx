@@ -141,19 +141,21 @@ export default function PerformancesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Title row stacks on mobile (7 status chips can't share a 375px row with the h1) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-[18px] font-light tracking-[-0.3px]">
           performances
         </h1>
-        <div className="flex items-center gap-1">
+        {/* Status chips: horizontal scroll on mobile (-mx + px bleed pattern matches AppNav) */}
+        <div className="flex items-center gap-1 overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0 whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`text-[11px] px-2.5 py-1 rounded-[2px] transition-colors ${
+              className={`text-[11px] px-2.5 py-1 rounded-[2px] transition-colors touch-manipulation shrink-0 ${
                 filter === s
                   ? 'bg-bg-hover text-text border border-border'
-                  : 'text-text-muted hover:text-text-secondary'
+                  : 'text-text-muted hover:text-text-secondary active:text-text-secondary'
               }`}
             >
               {s} <span className="text-text-disabled">({counts[s]})</span>
@@ -163,8 +165,8 @@ export default function PerformancesPage() {
       </div>
 
       {multiSource && (
-        <div className="flex items-center gap-1 justify-end flex-wrap">
-          <span className="text-[11px] text-text-disabled mr-1">source:</span>
+        <div className="flex items-center gap-1 sm:justify-end flex-wrap overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <span className="text-[11px] text-text-disabled mr-1 shrink-0">source:</span>
           {SOURCE_FILTERS.map((s) => {
             const label = s === 'all' ? 'all' : SOURCE_CHIP_LABELS[s];
             const count = s === 'all' ? data.length : sourceCounts[s];
@@ -172,10 +174,10 @@ export default function PerformancesPage() {
               <button
                 key={s}
                 onClick={() => setSourceFilter(s)}
-                className={`text-[11px] px-2.5 py-1 rounded-[2px] transition-colors ${
+                className={`text-[11px] px-2.5 py-1 rounded-[2px] transition-colors touch-manipulation shrink-0 ${
                   sourceFilter === s
                     ? 'bg-bg-hover text-text border border-border'
-                    : 'text-text-muted hover:text-text-secondary'
+                    : 'text-text-muted hover:text-text-secondary active:text-text-secondary'
                 }`}
               >
                 {label} <span className="text-text-disabled">({count})</span>
@@ -187,13 +189,16 @@ export default function PerformancesPage() {
 
       <CoverageBanner />
 
-      <div className="flex items-center gap-4">
-        <button onClick={handleScan} disabled={scanning} className="btn">
-          {scanning ? 'scanning...' : 'scan now'}
-        </button>
-        <Link href="/performances/new" className="text-[12px] text-text-muted hover:text-text-secondary">
-          + add manually
-        </Link>
+      {/* Scan action row: stacks on mobile so scanResult message has room */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-4">
+          <button onClick={handleScan} disabled={scanning} className="btn touch-manipulation">
+            {scanning ? 'scanning...' : 'scan now'}
+          </button>
+          <Link href="/performances/new" className="text-[12px] text-text-muted hover:text-text-secondary touch-manipulation">
+            + add manually
+          </Link>
+        </div>
         {scanResult && (
           <span className="text-[12px] text-text-secondary">
             scanned {scanResult.scanned} setlists —{' '}

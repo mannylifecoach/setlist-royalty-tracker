@@ -114,7 +114,10 @@ export function PerformanceTable({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      {/* Desktop / tablet table view (md+). Mobile gets a stacked card list
+          below — semantically the same data, restructured so it fits on a
+          375px screen. */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-[12px]">
           <thead>
             <tr className="border-b border-border-subtle text-text-muted text-left">
@@ -163,6 +166,35 @@ export function PerformanceTable({
         </table>
       </div>
 
+      {/* Mobile card list (below md). Each row is a self-contained card —
+          tappable to open the detail page, with a checkbox for bulk-select. */}
+      <div className="md:hidden space-y-2">
+        {groups.map((group) =>
+          group.songCount === 1 ? (
+            <MobileSingleSongCard
+              key={group.key}
+              group={group}
+              selected={selected}
+              toggleSelect={toggleSelect}
+              onRowClick={onRowClick}
+              showSourceBadge={showSourceBadge}
+            />
+          ) : (
+            <MobileShowGroupCard
+              key={group.key}
+              group={group}
+              expanded={expanded.has(group.key)}
+              toggleExpand={() => toggleExpand(group.key)}
+              selected={selected}
+              toggleSelect={toggleSelect}
+              selectIds={selectIds}
+              onRowClick={onRowClick}
+              showSourceBadge={showSourceBadge}
+            />
+          )
+        )}
+      </div>
+
       {data.length === 0 && (
         <div className="text-center py-12 text-text-muted text-[13px]">
           no performances found
@@ -171,6 +203,203 @@ export function PerformanceTable({
     </div>
   );
 }
+
+// ----------------------------------------------------------------------------
+// Mobile card components — render the same data as the desktop table rows,
+// but stacked vertically to fit a phone screen. Tap the card to open detail;
+// tap the checkbox to bulk-select.
+// ----------------------------------------------------------------------------
+
+function MobileSingleSongCard({
+  group,
+  selected,
+  toggleSelect,
+  onRowClick,
+  showSourceBadge,
+}: {
+  group: ShowGroup;
+  selected: Set<string>;
+  toggleSelect: (id: string) => void;
+  onRowClick?: (id: string) => void;
+  showSourceBadge: boolean;
+}) {
+  const row = group.rows[0];
+  const { performance, song, artist } = row;
+  const days = daysUntilExpiration(performance.expiresAt);
+  const expiring = isExpiringSoon(performance.expiresAt);
+  const displayStatus =
+    expiring && performance.status !== 'submitted' ? 'expiring' : performance.status;
+  const location = formatLocation(group);
+
+  return (
+    <div
+      onClick={() => onRowClick?.(performance.id)}
+      className="card p-3 cursor-pointer active:bg-bg-hover transition-colors touch-manipulation"
+    >
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={selected.has(performance.id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleSelect(performance.id);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="accent-status-discovered mt-1 shrink-0"
+        />
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] text-text-muted">{performance.eventDate}</span>
+            <StatusBadge status={displayStatus} />
+          </div>
+          <div className="text-[14px] text-text font-medium truncate">{song.title}</div>
+          <div className="text-[12px] text-text-secondary truncate">
+            by {artist.artistName}
+          </div>
+          <div className="text-[11px] text-text-muted truncate">
+            @ {performance.venueName || '—'}
+            {location !== '—' && ` · ${location}`}
+            {showSourceBadge && <SourceBadge sources={group.sources} />}
+          </div>
+          {days !== null && performance.expiresAt && (
+            <div
+              className={`text-[10px] ${
+                expiring ? 'text-status-expiring font-medium' : 'text-text-disabled'
+              }`}
+            >
+              expires {performance.expiresAt} · {days > 0 ? `${days}d left` : 'expired'}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileShowGroupCard({
+  group,
+  expanded,
+  toggleExpand,
+  selected,
+  toggleSelect,
+  selectIds,
+  onRowClick,
+  showSourceBadge,
+}: {
+  group: ShowGroup;
+  expanded: boolean;
+  toggleExpand: () => void;
+  selected: Set<string>;
+  toggleSelect: (id: string) => void;
+  selectIds: (ids: string[], shouldSelect: boolean) => void;
+  onRowClick?: (id: string) => void;
+  showSourceBadge: boolean;
+}) {
+  const earliestDays = daysUntilExpiration(group.earliestExpiresAt);
+  const earliestExpiring = isExpiringSoon(group.earliestExpiresAt);
+  const allDiscoveredSelected =
+    group.discoveredIds.length > 0 &&
+    group.discoveredIds.every((id) => selected.has(id));
+  const noDiscovered = group.discoveredIds.length === 0;
+  const location = formatLocation(group);
+
+  return (
+    <div className="card">
+      <div
+        onClick={toggleExpand}
+        className="p-3 cursor-pointer active:bg-bg-hover transition-colors touch-manipulation"
+      >
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={allDiscoveredSelected}
+            disabled={noDiscovered}
+            onChange={(e) => {
+              e.stopPropagation();
+              selectIds(group.discoveredIds, !allDiscoveredSelected);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="accent-status-discovered mt-1 shrink-0"
+          />
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-[11px] text-text-muted">
+                <span>{group.eventDate}</span>
+                <span>{expanded ? '▼' : '▶'}</span>
+                <span className="text-text-secondary">{group.songCount} songs</span>
+              </div>
+            </div>
+            <div className="text-[12px] text-text-secondary truncate">
+              by {group.artist.artistName}
+            </div>
+            <div className="text-[11px] text-text-muted truncate">
+              @ {group.venueName || '—'}
+              {location !== '—' && ` · ${location}`}
+              {showSourceBadge && <SourceBadge sources={group.sources} />}
+            </div>
+            <div className="text-[10px] text-text-muted">
+              {formatStatusSummary(group.statusCounts)}
+            </div>
+            {earliestDays !== null && group.earliestExpiresAt && (
+              <div
+                className={`text-[10px] ${
+                  earliestExpiring ? 'text-status-expiring font-medium' : 'text-text-disabled'
+                }`}
+              >
+                earliest expires {group.earliestExpiresAt} ·{' '}
+                {earliestDays > 0 ? `${earliestDays}d left` : 'expired'}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {expanded && (
+        <div className="border-t border-border-subtle bg-bg-card/30 px-3 py-2 space-y-1">
+          {group.rows.map((row) => {
+            const { performance, song } = row;
+            const days = daysUntilExpiration(performance.expiresAt);
+            const expiring = isExpiringSoon(performance.expiresAt);
+            const displayStatus =
+              expiring && performance.status !== 'submitted' ? 'expiring' : performance.status;
+            return (
+              <div
+                key={performance.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRowClick?.(performance.id);
+                }}
+                className="flex items-center gap-2 py-1.5 cursor-pointer active:opacity-60 touch-manipulation"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(performance.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleSelect(performance.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="accent-status-discovered shrink-0"
+                />
+                <span className="text-[12px] text-text flex-1 truncate">{song.title}</span>
+                <StatusBadge status={displayStatus} />
+                {days !== null && performance.expiresAt && (
+                  <span
+                    className={`text-[10px] whitespace-nowrap ${
+                      expiring ? 'text-status-expiring' : 'text-text-disabled'
+                    }`}
+                  >
+                    {days > 0 ? `${days}d` : 'exp'}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function renderSingleSongRow(
   group: ShowGroup,
