@@ -236,7 +236,9 @@ export default function ChromeExtensionHelpPage() {
           support@setlistroyalty.com
         </a>
         {' '}·{' '}
-        <a href="/privacy" className="hover:underline">privacy</a>
+        <Link href="/feedback" className="hover:underline">feedback</Link>
+        {' '}·{' '}
+        <Link href="/privacy" className="hover:underline">privacy</Link>
       </footer>
     </div>
   );

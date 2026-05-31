@@ -57,6 +57,8 @@ export default async function AppLayout({
         setlist royalty tracker · powered by setlist.fm api ·{' '}
         <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">support@setlistroyalty.com</a>
         {' '}·{' '}
+        <Link href="/feedback" className="hover:text-text-muted transition-colors">feedback</Link>
+        {' '}·{' '}
         <Link href="/privacy" className="hover:text-text-muted transition-colors">privacy</Link>
       </footer>
     </div>

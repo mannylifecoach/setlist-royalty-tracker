@@ -227,6 +227,8 @@ export default function PrivacyPage() {
         <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">
           support@setlistroyalty.com
         </a>
+        {' '}·{' '}
+        <a href="/feedback" className="hover:text-text-muted transition-colors">feedback</a>
       </footer>
     </div>
   );

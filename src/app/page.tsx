@@ -123,6 +123,8 @@ export default function LandingPage() {
         setlist royalty tracker · powered by setlist.fm api ·{' '}
         <a href="mailto:support@setlistroyalty.com" className="hover:text-text-muted transition-colors">support@setlistroyalty.com</a>
         {' '}·{' '}
+        <a href="/feedback" className="hover:text-text-muted transition-colors">feedback</a>
+        {' '}·{' '}
         <a href="/privacy" className="hover:text-text-muted transition-colors">privacy</a>
       </footer>
     </div>
