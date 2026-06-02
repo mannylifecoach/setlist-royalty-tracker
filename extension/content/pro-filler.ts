@@ -4,6 +4,12 @@ import {
   fillAscapSetlist,
   type AscapEventInput,
 } from './ascap-filler';
+import {
+  fillSesacPerformanceDetails,
+  fillSesacSongSelection,
+  type SesacEventInput,
+  type SesacFillResult,
+} from './sesac-filler';
 
 // Hostname routing — manifest matches both ols.bmi.com and www.ascap.com.
 // Each PRO has its own form structure, so we branch early. ASCAP fillers
@@ -13,6 +19,7 @@ import {
 const HOSTNAME = window.location.hostname;
 const ON_BMI = HOSTNAME === 'ols.bmi.com';
 const ON_ASCAP = HOSTNAME === 'www.ascap.com';
+const ON_SESAC = HOSTNAME === 'affiliates.sesac.com';
 
 interface EventData {
   eventKey: string;
@@ -725,7 +732,7 @@ function showFillResults(results: FillResult[], overlay: HTMLElement) {
 
   overlay.innerHTML = `
     <div class="srt-overlay-header">
-      <span class="srt-overlay-title">BMI Auto-Fill</span>
+      <span class="srt-overlay-title">SRT Auto-Fill</span>
       <button class="srt-overlay-close" id="srt-close">&times;</button>
     </div>
     <div class="srt-overlay-body">
@@ -864,6 +871,51 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return;
   }
 
+  // SESAC — affiliates.sesac.com "Live Performance Registration" 3-step wizard
+  // (Angular/Material/Kendo SPA). Per-step fill, like BMI's default variant:
+  // we fill the current step and pause so the user reviews + clicks Next, and
+  // never auto-check the Step-3 legal attestation or click Submit to SESAC.
+  if (ON_SESAC) {
+    if (message.type === 'GET_CURRENT_STEP') {
+      sendResponse({ step: detectSesacRoute() });
+      return;
+    }
+
+    if (message.type === 'FILL_SESAC') {
+      const overlay = createOverlay();
+      const event = message.event as SesacEventInput;
+      (async () => {
+        const step = detectSesacRoute();
+        if (step === 2) {
+          const results = await fillSesacSongSelection(event);
+          showSesacResults(
+            'SESAC · Song Selection',
+            results,
+            overlay,
+            'Review the set list, then click SESAC’s Next to reach Review & Submit.'
+          );
+          sendResponse({ success: true, results });
+        } else if (step === 3) {
+          showSesacSummary(event, overlay);
+          sendResponse({ success: true, results: [] });
+        } else {
+          const results = await fillSesacPerformanceDetails(event);
+          showSesacResults(
+            'SESAC · Performance Details',
+            results,
+            overlay,
+            'Review the venue, date + ranges, then click SESAC’s Next to go to Song Selection.'
+          );
+          sendResponse({ success: true, results });
+        }
+      })();
+      return true; // async sendResponse
+    }
+
+    sendResponse({ success: false, error: 'SESAC: unsupported message for this route' });
+    return;
+  }
+
   // Other hosts (setlistroyalty.com, vercel preview) — no-op, no BMI/ASCAP
   // forms to fill. The content script is matched there so we can communicate
   // with the SRT page when needed, not for form-filling.
@@ -926,6 +978,102 @@ function detectAscapRoute(): number {
   return 0; // unknown / not on a fillable route
 }
 
+// SESAC is an Angular SPA at affiliates.sesac.com/live-performance/registration/*.
+// Route path → wizard step: /performance = 1, /set-list = 2, /review = 3.
+function detectSesacRoute(): number {
+  const path = window.location.pathname;
+  if (/\/review(\/|$)/.test(path)) return 3;
+  if (/\/set-list(\/|$)/.test(path)) return 2;
+  if (/\/performance(\/|$)/.test(path)) return 1;
+  return 1;
+}
+
+// SESAC step-fill result overlay. Mirrors showAscapResults' visual style but
+// with a step-specific next-action hint (SESAC has no reCAPTCHA).
+function showSesacResults(
+  title: string,
+  results: SesacFillResult[],
+  overlay: HTMLElement,
+  nextHint: string
+) {
+  const ok = results.filter((r) => r.ok);
+  const failed = results.filter((r) => !r.ok);
+
+  overlay.innerHTML = `
+    <div class="srt-overlay-header">
+      <span class="srt-overlay-title">${escapeText(title)}</span>
+      <button class="srt-overlay-close" id="srt-close">&times;</button>
+    </div>
+    <div class="srt-overlay-body">
+      ${ok.length > 0
+        ? `<div class="srt-status-group srt-success">
+            <span class="srt-icon">&#10003;</span> ${ok.length} field${ok.length !== 1 ? 's' : ''} filled
+          </div>`
+        : ''}
+      ${failed.length > 0
+        ? `<div class="srt-status-group srt-warning">
+            <span class="srt-icon">&#9888;</span> Needs attention:
+            <ul style="margin: 4px 0 0 18px; padding: 0;">
+              ${failed.map((r) => `<li>${escapeText(r.step)}${r.detail ? ` — ${escapeText(r.detail)}` : ''}</li>`).join('')}
+            </ul>
+          </div>`
+        : ''}
+      <div class="srt-status-group srt-info" style="margin-top:8px">
+        <span class="srt-icon">&#8505;</span> ${escapeText(nextHint)}
+      </div>
+    </div>
+  `;
+
+  overlay.querySelector('#srt-close')?.addEventListener('click', () => {
+    overlay.remove();
+  });
+}
+
+// SESAC Step 3 (Review & Submit) — user-handoff. We never auto-check the legal
+// attestation or click Submit. Offer Mark Submitted so the user can update SRT
+// after SESAC confirms.
+function showSesacSummary(event: SesacEventInput, overlay: HTMLElement) {
+  const performanceIds = event.songs.map((s) => s.performanceId);
+
+  overlay.innerHTML = `
+    <div class="srt-overlay-header">
+      <span class="srt-overlay-title">Review &amp; Submit</span>
+      <button class="srt-overlay-close" id="srt-close">&times;</button>
+    </div>
+    <div class="srt-overlay-body">
+      <p>Check the attestation box and click <strong>Submit to SESAC</strong> yourself — we never auto-submit a legal attestation.</p>
+      <p>After SESAC confirms, click below to update your tracker.</p>
+      <button class="srt-btn-submit" id="srt-mark-submitted">Mark Submitted</button>
+      <div id="srt-submit-status"></div>
+    </div>
+  `;
+
+  overlay.querySelector('#srt-close')?.addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  overlay.querySelector('#srt-mark-submitted')?.addEventListener('click', async () => {
+    const statusEl = overlay.querySelector('#srt-submit-status')!;
+    statusEl.textContent = 'Updating...';
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'MARK_SUBMITTED',
+        performanceIds,
+      });
+      if (response?.success) {
+        statusEl.innerHTML =
+          '<span class="srt-status-group srt-success"><span class="srt-icon">&#10003;</span> Marked as submitted!</span>';
+      } else {
+        statusEl.innerHTML =
+          '<span class="srt-status-group srt-warning"><span class="srt-icon">&#9888;</span> Failed to update</span>';
+      }
+    } catch {
+      statusEl.innerHTML =
+        '<span class="srt-status-group srt-warning"><span class="srt-icon">&#9888;</span> Error connecting to extension</span>';
+    }
+  });
+}
+
 // Auto-detect which wizard step we're on
 // BMI uses Syncfusion tab components — look for active tab/step indicators
 function detectWizardStep(): number {
@@ -970,4 +1118,4 @@ function showActiveBadge() {
 
 // Initialize
 showActiveBadge();
-console.log('[SRT] BMI Live Auto-Fill extension loaded, wizard step:', detectWizardStep());
+console.log('[SRT] Auto-Fill extension loaded, wizard step:', detectWizardStep());

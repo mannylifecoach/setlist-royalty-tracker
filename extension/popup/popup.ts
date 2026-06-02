@@ -114,6 +114,9 @@ async function init() {
     case 'ascap-other':
       renderAscapNeutral(events.length);
       break;
+    case 'sesac':
+      await renderSesacEvents(events, tab!.id!);
+      break;
     case 'neutral':
     default:
       renderNeutral(events.length, user);
@@ -135,8 +138,10 @@ function renderUnconfigured() {
 }
 
 function renderEmpty(user: UserProfile | undefined) {
+  const proLabel =
+    user?.pro === 'ascap' ? 'ASCAP OnStage' : user?.pro === 'sesac' ? 'SESAC' : 'BMI Live';
   const proHint = user?.pro
-    ? `Once you confirm performances in SRT, we'll fill ${user.pro === 'ascap' ? 'ASCAP OnStage' : 'BMI Live'} for you.`
+    ? `Once you confirm performances in SRT, we'll fill ${proLabel} for you.`
     : `Once you confirm performances in SRT, we'll fill them for you.`;
   content.innerHTML = `
     <div class="empty">
@@ -154,13 +159,20 @@ function renderNeutral(eventCount: number, user: UserProfile | undefined) {
   // Neutral state: user opened the popup somewhere that isn't a PRO portal.
   // Default-CTA picks ASCAP if the user's PRO is ASCAP, BMI otherwise (BMI is
   // the historical default + safer fallback when pro is unset).
-  const isAscap = user?.pro === 'ascap';
-  const primaryCta = isAscap
-    ? { url: PRO_DEEP_LINKS.ascapOnstage, label: 'Open ASCAP OnStage' }
-    : { url: PRO_DEEP_LINKS.bmi, label: 'Open BMI Live' };
-  const secondaryCta = isAscap
-    ? { url: PRO_DEEP_LINKS.bmi, label: 'Open BMI Live' }
-    : { url: PRO_DEEP_LINKS.ascapOnstage, label: 'Open ASCAP OnStage' };
+  // Default-CTA points at the user's own PRO; the other major US PROs are the
+  // secondary option. BMI is the historical fallback when pro is unset.
+  let primaryCta: { url: string; label: string };
+  let secondaryCta: { url: string; label: string };
+  if (user?.pro === 'sesac') {
+    primaryCta = { url: PRO_DEEP_LINKS.sesac, label: 'Open SESAC' };
+    secondaryCta = { url: PRO_DEEP_LINKS.bmi, label: 'Open BMI Live' };
+  } else if (user?.pro === 'ascap') {
+    primaryCta = { url: PRO_DEEP_LINKS.ascapOnstage, label: 'Open ASCAP OnStage' };
+    secondaryCta = { url: PRO_DEEP_LINKS.bmi, label: 'Open BMI Live' };
+  } else {
+    primaryCta = { url: PRO_DEEP_LINKS.bmi, label: 'Open BMI Live' };
+    secondaryCta = { url: PRO_DEEP_LINKS.ascapOnstage, label: 'Open ASCAP OnStage' };
+  }
 
   content.innerHTML = `
     <div class="not-on-bmi">
@@ -225,6 +237,34 @@ async function renderBmiEvents(events: EventData[], tabId: number) {
       } else {
         await markSubmitted(event, btn);
       }
+    },
+  });
+}
+
+// SESAC — affiliates.sesac.com "Live Performance Registration" 3-step wizard.
+// Per-step fill (like BMI's default variant): we fill the current step and let
+// the user click SESAC's Next themselves. Step 3 is review-only — the user
+// checks the attestation + clicks Submit to SESAC, then marks it submitted here.
+async function renderSesacEvents(events: EventData[], tabId: number) {
+  let currentStep = 1;
+  try {
+    const stepResponse = await chrome.tabs.sendMessage(tabId, { type: 'GET_CURRENT_STEP' });
+    if (stepResponse?.step) currentStep = stepResponse.step;
+  } catch {
+    // content script not ready — assume step 1
+  }
+  const stepName =
+    currentStep === 2 ? 'Step 2 · Song Selection' : currentStep === 3 ? 'Step 3 · Review' : 'Step 1 · Performance Details';
+  renderEventList(events, tabId, {
+    primaryLabel: currentStep === 3 ? 'Review & Mark Submitted' : 'Auto-Fill Performance',
+    hint:
+      currentStep === 3
+        ? 'Review your performance on SESAC, check the attestation box, and click Submit to SESAC. Then mark it submitted here.'
+        : `Pick a performance — SRT fills SESAC's ${stepName}, then you click SESAC's Next.`,
+    onClick: async (event, btn) => {
+      chrome.tabs.sendMessage(tabId, { type: 'FILL_SESAC', event }).catch(() => undefined);
+      btn.textContent = currentStep === 3 ? 'See SESAC page' : 'Filling… see SESAC page';
+      btn.setAttribute('disabled', 'true');
     },
   });
 }

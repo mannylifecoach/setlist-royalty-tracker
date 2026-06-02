@@ -76,3 +76,32 @@ describe('getMissingFields — ASCAP', () => {
     expect(getMissingFields(row, 'ascap')).toEqual([]);
   });
 });
+
+describe('getMissingFields — SESAC', () => {
+  it('returns empty when name + city + state are filled, with no work id needed', () => {
+    const row = {
+      performance: { ...baseRow.performance },
+      song: { bmiWorkId: null, ascapWorkId: null },
+    };
+    expect(getMissingFields(row, 'sesac')).toEqual([]);
+  });
+
+  it('flags venue name, city + state when missing (like BMI; SESAC is venue-centric)', () => {
+    const row = {
+      performance: { venueName: null, venueCity: null, venueState: null },
+      song: { ...baseRow.song },
+    };
+    const missing = getMissingFields(row, 'sesac');
+    expect(missing).toContain('venue name');
+    expect(missing).toContain('venue city');
+    expect(missing).toContain('venue state');
+  });
+
+  it('does not require an ASCAP work id (songs matched by title on SESAC)', () => {
+    const row = {
+      performance: { ...baseRow.performance },
+      song: { bmiWorkId: null, ascapWorkId: null },
+    };
+    expect(getMissingFields(row, 'sesac')).not.toContain('ascap work id');
+  });
+});
