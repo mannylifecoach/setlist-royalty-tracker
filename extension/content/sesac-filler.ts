@@ -167,13 +167,24 @@ export async function fillSesacPerformanceDetails(
   const billingLabel = event.isHeadliner === false ? SESAC_SELECTORS.supportingLabel : SESAC_SELECTORS.headlineLabel;
   push({ step: 'billing', ok: clickMatRadioByLabel(billingLabel), detail: `Set "${billingLabel}"` });
 
-  // Date — Kendo datepicker, MM/DD/YYYY.
+  // Date — Kendo MaskedDateInput. LIVE-VALIDATED 2026-06-01: this field REJECTS
+  // every programmatic fill we tried (native value-set + input event garbles it
+  // to "MM/DD/0006"; execCommand insertText is ignored; synthetic keydown does
+  // nothing) — only genuinely trusted typing works. So rather than corrupt it we
+  // focus the field and ask the user to type the one date; everything else on
+  // Step 1 auto-fills. (Future: route through the chrome.debugger CDP typing path
+  // ASCAP uses for its trusted-input-only fields.)
+  const dateStr = event.eventDateFormatted || formatSesacDate(event.eventDate);
   const dateEl = document.querySelector<HTMLInputElement>(SESAC_SELECTORS.datePickerInput);
   if (dateEl) {
-    setSesacInputValue(dateEl, event.eventDateFormatted || formatSesacDate(event.eventDate));
-    push({ step: 'date', ok: true });
+    dateEl.focus();
+    push({
+      step: 'date',
+      ok: false,
+      detail: `Type the date yourself: ${dateStr} — SESAC's date box only accepts typed input (cursor is in it for you)`,
+    });
   } else {
-    push({ step: 'date', ok: false, detail: 'Date picker not found' });
+    push({ step: 'date', ok: false, detail: `Enter the date: ${dateStr}` });
   }
 
   // Country — setting it reveals the venue block.
