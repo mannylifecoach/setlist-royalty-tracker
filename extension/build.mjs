@@ -65,7 +65,7 @@ if (watch) {
   if (autoAdvance) {
     const mPath = path.resolve('dist', 'manifest.json');
     const m = JSON.parse(fs.readFileSync(mPath, 'utf8'));
-    m.name = 'BMI Live Auto-Fill (Auto-Advance)';
+    m.name = 'SRT Auto-Fill (Auto-Advance)';
     m.description =
       'Auto-fill BMI Live performance forms from Setlist Royalty Tracker data. Auto-advance variant: clicks Next between wizard steps automatically.';
     fs.writeFileSync(mPath, JSON.stringify(m, null, 2));
