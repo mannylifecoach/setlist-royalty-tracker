@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useSyncExternalStore } from 'react';
+import { isStandalonePWA } from '@/lib/pwa';
 
 // iOS Safari does not surface a native install prompt — users have to
 // manually tap Share → Add to Home Screen. This banner appears for iOS
@@ -28,10 +29,7 @@ function shouldShowOnClient(): boolean {
     !(window as unknown as { MSStream?: unknown }).MSStream;
   if (!isIOS) return false;
 
-  const isStandalone =
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as unknown as { standalone?: boolean }).standalone === true;
-  if (isStandalone) return false;
+  if (isStandalonePWA()) return false;
 
   try {
     const dismissedAt = localStorage.getItem(DISMISS_KEY);

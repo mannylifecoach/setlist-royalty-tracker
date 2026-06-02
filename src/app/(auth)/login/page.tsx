@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { isValidSixDigitCode } from '@/lib/auth-code';
 import { robustPost } from '@/lib/robust-post';
+import { isStandalonePWA, chooseVerifyLayout } from '@/lib/pwa';
 
 // Where we stash the email between the "send magic link" click and the
 // verify screen so the user doesn't have to retype it on the PWA. Cleared
@@ -119,12 +120,31 @@ function LoginForm() {
   );
 }
 
+// SSR-safe subscription boilerplate for one-shot browser-state reads, matching
+// the pattern in install-prompt.tsx / mobile-filing-banner.tsx. The standalone
+// signal doesn't change within a session, so subscribe is a no-op.
+function subscribeStandalone() {
+  return () => {};
+}
+
 function VerifyScreen() {
   const router = useRouter();
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  // Reveal toggle for the demoted code path in the link-first (browser) layout.
+  const [showCodeFallback, setShowCodeFallback] = useState(false);
+
+  // Standalone detection is a client-only signal. useSyncExternalStore renders
+  // the server snapshot (false → link-first) first, then refines on the client
+  // after mount — no hydration mismatch, no setState-in-effect lint warning.
+  const isStandalone = useSyncExternalStore(
+    subscribeStandalone,
+    isStandalonePWA,
+    () => false
+  );
+  const layout = chooseVerifyLayout({ isStandalone });
 
   useEffect(() => {
     try {
@@ -175,59 +195,121 @@ function VerifyScreen() {
     }
   }
 
+  // The code form is identical across both layouts — only its prominence and
+  // surrounding copy change. Kept as a single block so the auth logic (submit,
+  // validation, error display) has exactly one definition.
+  const codeForm = pendingEmail ? (
+    <form onSubmit={handleVerify} className="space-y-3">
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="one-time-code"
+        maxLength={6}
+        value={code}
+        onChange={(e) => {
+          setCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+          setVerifyError(null);
+        }}
+        placeholder="123456"
+        className="input text-center text-[20px] tracking-[8px] font-mono"
+        aria-label="6-digit sign-in code"
+      />
+      <button
+        type="submit"
+        disabled={!isValidSixDigitCode(code) || verifying}
+        className="btn btn-primary w-full"
+      >
+        {verifying ? 'verifying...' : 'sign in with code'}
+      </button>
+      {verifyError && (
+        <p className="text-[11px] text-status-expired">{verifyError}</p>
+      )}
+    </form>
+  ) : null;
+
+  const sentToLine = pendingEmail ? (
+    <p className="text-[12px] text-text-muted">
+      we sent it to <span className="text-text">{pendingEmail}</span>
+    </p>
+  ) : null;
+
+  const footer = (
+    <>
+      <p className="text-[11px] text-text-muted">
+        look for the most recent email from notifications@setlistroyalty.com.
+        the link and code both expire in 24 hours.
+      </p>
+      <Link href="/login" className="text-[12px] text-text-muted hover:opacity-50 transition-opacity">
+        try again
+      </Link>
+    </>
+  );
+
+  // Installed PWA: the magic link breaks out of the standalone window, so the
+  // 6-digit code is the only clean in-app path — lead with it. "tap" wording
+  // is correct here (touch-first context).
+  if (layout === 'code-first') {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-[360px] w-full text-center space-y-4">
+          <h1 className="text-[18px] font-light tracking-[-0.3px]">
+            check your email
+          </h1>
+          {pendingEmail && (
+            <p className="text-[12px] text-text-muted">
+              we sent a sign-in email to{' '}
+              <span className="text-text">{pendingEmail}</span>
+            </p>
+          )}
+          <p className="text-[13px] text-text-secondary">
+            tap the link in the email — or enter the 6-digit code below.
+          </p>
+
+          {codeForm && <div className="pt-2">{codeForm}</div>}
+
+          {footer}
+        </div>
+      </div>
+    );
+  }
+
+  // Normal browser tab (desktop, or mobile web before install): the magic LINK
+  // is the one-click path — lead with it. Demote the code to a progressively
+  // disclosed fallback. "click" wording (not "tap") for the desktop context.
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-[360px] w-full text-center space-y-4">
         <h1 className="text-[18px] font-light tracking-[-0.3px]">
-          check your email
+          check your email and click the sign-in link
         </h1>
-        {pendingEmail && (
-          <p className="text-[12px] text-text-muted">
-            we sent a sign-in email to{' '}
-            <span className="text-text">{pendingEmail}</span>
-          </p>
-        )}
+        {sentToLine}
         <p className="text-[13px] text-text-secondary">
-          tap the link in the email — or enter the 6-digit code below.
+          it signs you in instantly — no code to type.
         </p>
 
-        {pendingEmail && (
-          <form onSubmit={handleVerify} className="space-y-3 pt-2">
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value.replace(/\D/g, '').slice(0, 6));
-                setVerifyError(null);
-              }}
-              placeholder="123456"
-              className="input text-center text-[20px] tracking-[8px] font-mono"
-              aria-label="6-digit sign-in code"
-            />
-            <button
-              type="submit"
-              disabled={!isValidSixDigitCode(code) || verifying}
-              className="btn btn-primary w-full"
-            >
-              {verifying ? 'verifying...' : 'sign in with code'}
-            </button>
-            {verifyError && (
-              <p className="text-[11px] text-status-expired">{verifyError}</p>
+        {codeForm && (
+          <div className="pt-2">
+            {showCodeFallback ? (
+              <div className="space-y-3">
+                <p className="text-[11px] text-text-muted">
+                  enter the 6-digit code from the same email:
+                </p>
+                {codeForm}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowCodeFallback(true)}
+                className="text-[12px] text-text-muted hover:text-text transition-colors underline underline-offset-2"
+              >
+                can&apos;t click the link? enter the 6-digit code instead
+              </button>
             )}
-          </form>
+          </div>
         )}
 
-        <p className="text-[11px] text-text-muted">
-          look for the most recent email from notifications@setlistroyalty.com.
-          the link and code both expire in 24 hours.
-        </p>
-        <Link href="/login" className="text-[12px] text-text-muted hover:opacity-50 transition-opacity">
-          try again
-        </Link>
+        {footer}
       </div>
     </div>
   );
