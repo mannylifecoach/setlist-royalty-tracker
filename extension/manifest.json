@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "BMI Live Auto-Fill",
-  "version": "1.3.5",
-  "description": "Auto-fill BMI Live and ASCAP OnStage performance forms from Setlist Royalty Tracker data",
+  "name": "SRT Auto-Fill",
+  "version": "1.4.0",
+  "description": "Auto-fill BMI Live, ASCAP OnStage, and SESAC live-performance forms from Setlist Royalty Tracker data",
   "permissions": ["storage", "activeTab", "debugger"],
   "host_permissions": [
     "https://ols.bmi.com/*",
     "https://www.ascap.com/*",
+    "https://affiliates.sesac.com/*",
     "https://setlistroyalty.com/*",
     "https://setlist-royalty-tracker.vercel.app/*"
   ],
@@ -18,6 +19,7 @@
       "matches": [
         "https://ols.bmi.com/*",
         "https://www.ascap.com/*",
+        "https://affiliates.sesac.com/*",
         "https://setlistroyalty.com/*",
         "https://setlist-royalty-tracker.vercel.app/*"
       ],

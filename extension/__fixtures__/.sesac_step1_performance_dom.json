@@ -1,0 +1,14 @@
+[
+  { "t": "INPUT", "tp": "text", "id": "app-form-field-15", "cls": "form-field ng-dirty ng-valid ng-touched", "lb": ["Artist/Performer Name"] },
+  { "t": "INPUT", "tp": "radio", "id": "mat-radio-11-input", "n": "mat-radio-group-9", "cls": "mat-radio-input cdk-visually-hidden", "lb": ["Headline Act"] },
+  { "t": "INPUT", "tp": "radio", "id": "mat-radio-12-input", "n": "mat-radio-group-9", "cls": "mat-radio-input cdk-visually-hidden", "lb": ["Supporting Act"] },
+  { "t": "INPUT", "tp": "text", "id": "k-99365ad2-60f7-49fd-9dc0-59dc26f495e8", "cls": "k-input", "p": "null", "lb": [] },
+  { "t": "SELECT", "tp": "select-one", "id": "app-form-field-18", "cls": "form-field select-arrow-padding ng-dirty ng-valid ng-touched", "lb": ["Country"] },
+  { "t": "INPUT", "tp": "text", "id": "app-form-field-19", "cls": "mat-autocomplete-trigger form-field ng-star-inserted ng-dirty ng-touched ng-valid", "lb": ["Name of Venue"] },
+  { "t": "INPUT", "tp": "text", "id": "app-form-field-22", "cls": "mat-autocomplete-trigger ng-touched ng-pristine ng-invalid form-field", "lb": ["Street Address of Venue"] },
+  { "t": "INPUT", "tp": "text", "id": "app-form-field-23", "cls": "ng-touched ng-pristine ng-invalid form-field", "lb": ["City"] },
+  { "t": "SELECT", "tp": "select-one", "id": "app-form-field-24", "cls": "ng-touched ng-pristine ng-invalid form-field select-arrow-padding ng-star-inserted", "lb": ["State/Province"] },
+  { "t": "SELECT", "tp": "select-one", "id": "app-form-field-20", "cls": "form-field select-arrow-padding ng-dirty ng-valid ng-touched", "lb": ["Venue Capacity"] },
+  { "t": "SELECT", "tp": "select-one", "id": "app-form-field-21", "cls": "form-field select-arrow-padding ng-dirty ng-valid ng-touched", "lb": ["Number of Attendees"] },
+  { "t": "INPUT", "tp": "checkbox", "id": "mat-checkbox-2-input", "cls": "mat-checkbox-input cdk-visually-hidden", "lb": ["Check this box if an admission fee was charged"] }
+]

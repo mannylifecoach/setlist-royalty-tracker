@@ -83,6 +83,11 @@ export function generateAscapOnStageCsv(rows: ExportRow[]): string {
 // reasonable range when missing).
 //
 // ASCAP OnStage: CSV export needs an ASCAP work id; the portal otherwise needs venue + state.
+//
+// SESAC Live Performance Registration: the extension fills name → street address → city →
+// state (the address auto-fills from the venue autocomplete / Google Places, like BMI), so the
+// user-must-have minimum is venue name + city + state. Songs are matched by title against the
+// writer's SESAC catalog — there's no per-song work-id field on the form, so none is required.
 type RequiredFieldsRow = {
   performance: { venueName: string | null; venueCity?: string | null; venueState: string | null };
   song: { bmiWorkId?: string | null; ascapWorkId: string | null };
@@ -90,11 +95,11 @@ type RequiredFieldsRow = {
 
 export function getMissingFields(
   row: RequiredFieldsRow,
-  pro: 'bmi' | 'ascap'
+  pro: 'bmi' | 'ascap' | 'sesac'
 ): string[] {
   const missing: string[] = [];
   if (!row.performance.venueName) missing.push('venue name');
-  if (pro === 'bmi') {
+  if (pro === 'bmi' || pro === 'sesac') {
     if (!row.performance.venueCity) missing.push('venue city');
     if (!row.performance.venueState) missing.push('venue state');
   }

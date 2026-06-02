@@ -1,0 +1,9 @@
+[
+  { "t": "INPUT", "tp": "text", "cls": "lg:w-64 form-field grid-search-input placeholder-gray-500 ng-untouched ng-pristine ng-valid", "p": "Set List Search" },
+  { "t": "INPUT", "tp": "text", "cls": "form-field grid-search-input placeholder-gray-500 ng-untouched ng-pristine ng-valid", "p": "Song Search (Use Song # or Keyword)" },
+  { "t": "INPUT", "tp": "text", "cls": "form-field grid-search-input placeholder-gray-500 ng-untouched ng-pristine ng-valid", "p": "Set List Name" },
+  { "t": "DIV", "cls": "song-item cdk-drag ng-star-inserted", "lb": [] },
+  { "t": "SPAN", "cls": "song-item-value", "lb": [] },
+  { "t": "DIV", "cls": "song-item cdk-drag ng-star-inserted", "lb": [] },
+  { "t": "SPAN", "cls": "song-item-value", "lb": [] }
+]

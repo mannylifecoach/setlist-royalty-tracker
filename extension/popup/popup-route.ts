@@ -7,6 +7,7 @@ export type PopupRoute =
   | { kind: 'ascap-onstage-perf' }
   | { kind: 'ascap-onstage-setlist' }
   | { kind: 'ascap-other' }
+  | { kind: 'sesac' }
   | { kind: 'neutral' };
 
 export function detectRoute(url: string | undefined): PopupRoute {
@@ -25,6 +26,7 @@ export function detectRoute(url: string | undefined): PopupRoute {
     if (hash.includes('onstage/setlist/add')) return { kind: 'ascap-onstage-setlist' };
     return { kind: 'ascap-other' };
   }
+  if (parsed.hostname === 'affiliates.sesac.com') return { kind: 'sesac' };
   return { kind: 'neutral' };
 }
 
@@ -32,4 +34,5 @@ export const PRO_DEEP_LINKS = {
   bmi: 'https://ols.bmi.com/',
   ascapOnstage: 'https://www.ascap.com/member-access#onstage',
   ascapWorkReg: 'https://www.ascap.com/member-access#works/online-work-registration',
+  sesac: 'https://affiliates.sesac.com/live-performance/registration/performance',
 } as const;
