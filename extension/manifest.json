@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SRT Auto-Fill",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Auto-fill BMI Live, ASCAP OnStage, and SESAC live-performance forms from Setlist Royalty Tracker data",
   "permissions": ["storage", "activeTab", "debugger"],
   "host_permissions": [
