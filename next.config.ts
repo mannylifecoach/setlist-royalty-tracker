@@ -6,7 +6,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 // PostHog, Vercel Analytics, Next inline bootstrap) and is tracked as a
 // separate card. These five are unambiguous and safe to ship as-is.
 const securityHeaders = [
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  // `preload` intentionally omitted — it requires manual submission at
+  // hstspreload.org and is hard to reverse; add it deliberately later if wanted.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
